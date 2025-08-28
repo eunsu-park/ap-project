@@ -6,8 +6,9 @@ Reusable components for any data download task
 import os
 import logging
 import time
+import yaml
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from dataclasses import dataclass
@@ -144,6 +145,117 @@ class SimpleDownloader:
                 os.remove(temp_path)
             return False
 
+class ConfigLoader:
+    """YAML configuration file loader"""
+    
+    @staticmethod
+    def load_config(config_path: str) -> Dict[str, Any]:
+        """Load YAML configuration file"""
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                return yaml.safe_load(f)
+        except Exception as e:
+            logging.getLogger(__name__).error(f"Failed to load config: {e}")
+            raise
+
+class FixedWidthParser:
+    """Parser for fixed-width text files"""
+    
+    def __init__(self, field_specs: List[Dict[str, Any]]):
+        """
+        Initialize parser with field specifications
+        
+        Args:
+            field_specs: List of field specifications with format info
+        """
+        self.field_specs = field_specs
+        self.field_widths = self._calculate_field_widths()
+        self.fill_values = {spec['name']: spec.get('fill_value') 
+                           for spec in field_specs 
+                           if spec.get('fill_value') is not None}
+    
+    def _calculate_field_widths(self) -> List[int]:
+        """Calculate field widths from format strings"""
+        widths = []
+        for spec in self.field_specs:
+            fmt = spec.get('format', 'F8.2')
+            if fmt.startswith('I'):
+                width = int(fmt[1:])
+            elif fmt.startswith('F'):
+                if '.' in fmt:
+                    width = int(fmt[1:fmt.index('.')])
+                else:
+                    width = int(fmt[1:])
+            else:
+                width = 8  # default
+            widths.append(width)
+        return widths
+    
+    def _clean_value(self, value: str, field_spec: Dict[str, Any]) -> Any:
+        """Clean and convert field value"""
+        if not value or not value.strip():
+            return None
+        
+        value = value.strip()
+        name = field_spec['name']
+        fmt = field_spec.get('format', 'F8.2')
+        fill_value = field_spec.get('fill_value')
+        
+        try:
+            if fmt.startswith('I'):  # Integer
+                int_val = int(float(value))
+                if fill_value is not None and int_val == fill_value:
+                    return None
+                return int_val
+            elif fmt.startswith('F'):  # Float
+                float_val = float(value)
+                if fill_value is not None and abs(float_val - fill_value) < 1e-3:
+                    return None
+                return float_val
+        except (ValueError, TypeError):
+            return None
+        
+        return value
+    
+    def parse_line(self, line: str) -> Dict[str, Any]:
+        """Parse a single line of fixed-width data"""
+        result = {}
+        pos = 0
+        
+        for i, spec in enumerate(self.field_specs):
+            width = self.field_widths[i]
+            
+            if pos + width <= len(line):
+                field_value = line[pos:pos + width]
+                result[spec['name']] = self._clean_value(field_value, spec)
+            else:
+                result[spec['name']] = None
+            
+            pos += width
+        
+        return result
+
+class FilePatternSource(DataSourceConfig):
+    """Data source with file pattern URLs"""
+    
+    def __init__(self, config: Dict[str, Any]):
+        self.base_url = config['base_url']
+        self.file_pattern = config['file_pattern']
+        self.output_pattern = config.get('output_pattern', self.file_pattern.replace('.dat', '.csv'))
+    
+    def get_url(self, **kwargs) -> str:
+        filename = self.file_pattern.format(**kwargs)
+        return f"{self.base_url}{filename}"
+    
+    def get_save_path(self, destination_root: str, **kwargs) -> str:
+        filename = self.output_pattern.format(**kwargs)
+        return str(Path(destination_root) / filename)
+    
+    def get_file_list(self, base_url: str, extensions: List[str]) -> List[str]:
+        """For pattern-based sources, return single file"""
+        filename = Path(base_url).name
+        return [filename] if any(filename.endswith(ext) for ext in extensions) else []
+        
 class GenericDataDownloader:
     """Generic data downloader with concurrent processing"""
     
@@ -228,3 +340,48 @@ class GenericDataDownloader:
             "failed": len(failed),
             "duration": duration
         }
+
+class TextFileDownloader(GenericDataDownloader):
+    """Downloader for text files with parsing capability"""
+    
+    def __init__(self, config: DataSourceConfig, parser: FixedWidthParser = None, **kwargs):
+        super().__init__(config, **kwargs)
+        self.parser = parser
+    
+    def download_and_convert(self, output_path: str, **params) -> bool:
+        """Download file and convert to CSV if parser is available"""
+        # Get source file info
+        url = self.config.get_url(**params)
+        temp_file = Path(output_path).with_suffix('.tmp')
+        
+        # Download file
+        success = self.downloader.download(url, str(temp_file))
+        if not success:
+            return False
+        
+        # Convert to CSV if parser available
+        if self.parser:
+            try:
+                import pandas as pd
+                
+                data_rows = []
+                with open(temp_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#'):
+                            parsed = self.parser.parse_line(line)
+                            data_rows.append(parsed)
+                
+                if data_rows:
+                    df = pd.DataFrame(data_rows)
+                    df.to_csv(output_path, index=False)
+                    temp_file.unlink()  # Remove temp file
+                    self.logger.info(f"Converted to CSV: {output_path} ({len(df)} rows)")
+                    return True
+                
+            except Exception as e:
+                self.logger.error(f"Failed to convert to CSV: {e}")
+        
+        # If no parser or conversion failed, just move the file
+        Path(temp_file).rename(output_path)
+        return True
