@@ -25,34 +25,73 @@ echo "python sdo_jp2.py --days 5"
 python sdo_jp2.py --days 5
 echo
 
-# Example 4: Download specific wavelengths
-echo "Example 4: Download specific wavelengths (94, 171, 304)"
-echo "python sdo_jp2.py --waves 94 171 304"
-python sdo_jp2.py --waves 94 171 304
+# Example 4: Download specific date range
+echo "Example 4: Download data from 2024-01-01 to 2024-01-31"
+echo "python sdo_jp2.py --start-date 2024-01-01 --end-date 2024-01-31"
+python sdo_jp2.py --start-date 2024-01-01 --end-date 2024-01-31
 echo
 
-# Example 5: Parallel download with 4 threads
-echo "Example 5: Parallel download with 4 threads"
-echo "python sdo_jp2.py --parallel 4"
-python sdo_jp2.py --parallel 4
+# Example 5: Download from start date to today
+echo "Example 5: Download from 2024-01-15 to today"
+echo "python sdo_jp2.py --start-date 2024-01-15"
+python sdo_jp2.py --start-date 2024-01-15
+echo
+
+# Example 6: Download until end date (using SDO mission start date 2010-09-01)
+echo "Example 6: Download from SDO mission start to 2024-01-31"
+echo "python sdo_jp2.py --end-date 2024-01-31"
+python sdo_jp2.py --end-date 2024-01-31
+echo
+
+# Example 7: Date range with specific wavelengths
+echo "Example 7: Download specific wavelengths for date range"
+echo "python sdo_jp2.py --start-date 2024-01-01 --end-date 2024-01-07 --waves 94 171 304"
+python sdo_jp2.py --start-date 2024-01-01 --end-date 2024-01-07 --waves 94 171 304
+echo
+
+# Example 8: Parallel download with date range
+echo "Example 8: Parallel download with date range"
+echo "python sdo_jp2.py --start-date 2024-01-01 --end-date 2024-01-31 --parallel 4"
+python sdo_jp2.py --start-date 2024-01-01 --end-date 2024-01-31 --parallel 4
 echo
 
 # Example 6: Download with custom destination
-echo "Example 6: Download to custom directory"
-echo "python sdo_jp2.py --destination /data/solar/aia"
-python sdo_jp2.py --destination /data/solar/aia
+echo "Example 9: Download to custom directory with date range"
+echo "python sdo_jp2.py --start-date 2024-01-01 --end-date 2024-01-07 --destination ./sdo_data"
+python sdo_jp2.py --start-date 2024-01-01 --end-date 2024-01-07 --destination ./sdo_data
 echo
 
 # Example 7: Download with overwrite and detailed logging
-echo "Example 7: Download with overwrite and debug logging"
-echo "python sdo_jp2.py --overwrite --log-level DEBUG --log-file sdo_download.log"
-python sdo_jp2.py --overwrite --log-level DEBUG --log-file sdo_download.log
+echo "Example 10: Download with overwrite, debug logging and date range"
+echo "python sdo_jp2.py --start-date 2024-01-01 --end-date 2024-01-03 --overwrite --log-level DEBUG --log-file sdo_download.log"
+python sdo_jp2.py --start-date 2024-01-01 --end-date 2024-01-03 --overwrite --log-level DEBUG --log-file sdo_download.log
 echo
 
-# Example 8: Comprehensive download command
-echo "Example 8: Comprehensive download"
-echo "python sdo_jp2.py --year 2024 --month 1 --day 10 --waves 193 211 171 --parallel 3 --destination ./sdo_data --overwrite --max-retries 5"
-python sdo_jp2.py --year 2024 --month 1 --day 10 --waves 193 211 171 --parallel 3 --destination ./sdo_data --overwrite --max-retries 5
+# Example 8: Comprehensive download command with date range
+echo "Example 11: Comprehensive download with date range"
+echo "python sdo_jp2.py --start-date 2024-01-10 --end-date 2024-01-12 --waves 193 211 171 --parallel 3 --destination ./sdo_data --overwrite --max-retries 5"
+python sdo_jp2.py --start-date 2024-01-10 --end-date 2024-01-12 --waves 193 211 171 --parallel 3 --destination ./sdo_data --overwrite --max-retries 5
+echo
+
+echo "=== Additional Date Range Examples ==="
+echo
+
+# Example 12: Download entire SDO mission data (mission start to today)
+echo "Example 12: Download entire SDO mission data (2010-09-01 to today) - WARNING: Very large download!"
+echo "# python sdo_jp2.py --start-date 2010-09-01 --waves 193"
+echo "(Commented out - would download 14+ years of data)"
+echo
+
+# Example 13: Download one year of data
+echo "Example 13: Download one year of SDO data (2023)"
+echo "python sdo_jp2.py --start-date 2023-01-01 --end-date 2023-12-31 --waves 193"
+python sdo_jp2.py --start-date 2023-01-01 --end-date 2023-12-31 --waves 193
+echo
+
+# Example 14: Download recent data with mission start as default
+echo "Example 14: Download recent data (uses SDO mission start 2010-09-01 as default start)"
+echo "python sdo_jp2.py --end-date 2024-01-07"
+python sdo_jp2.py --end-date 2024-01-07
 echo
 
 echo "=== All examples completed ==="
