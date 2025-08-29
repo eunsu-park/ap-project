@@ -13,6 +13,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from dataclasses import dataclass
 
+import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -362,7 +363,6 @@ class TextFileDownloader(GenericDataDownloader):
         # Convert to CSV if parser available
         if self.parser:
             try:
-                import pandas as pd
                 
                 data_rows = []
                 with open(temp_file, 'r', encoding='utf-8', errors='ignore') as f:
