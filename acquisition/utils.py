@@ -13,7 +13,6 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from dataclasses import dataclass
 
-import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -342,6 +341,149 @@ class GenericDataDownloader:
             "duration": duration
         }
 
+class TimeSeriesProcessor:
+    """Time series data processor for matching datasets"""
+    
+    def __init__(self, data_dir: str, columns: Optional[List[str]] = None):
+        self.data_dir = data_dir
+        self.columns = columns  # None means all columns
+        self.logger = logging.getLogger(__name__)
+        self._data_cache = {}
+    
+    def _load_year_data(self, year: int) -> Optional[Any]:
+        """Load OMNI data for specific year"""
+        if year in self._data_cache:
+            return self._data_cache[year]
+        
+        import pandas as pd
+        csv_path = Path(self.data_dir) / f"omni2_{year}.csv"
+        
+        if not csv_path.exists():
+            self.logger.warning(f"Data file not found: {csv_path}")
+            return None
+        
+        try:
+            df = pd.read_csv(csv_path)
+            self._data_cache[year] = df
+            return df
+        except Exception as e:
+            self.logger.error(f"Error loading {csv_path}: {e}")
+            return None
+    
+    def find_matching_data(self, target_datetime, time_offset_hours: int = -1) -> Optional[Dict[str, Any]]:
+        """Find data matching target datetime with offset"""
+        import pandas as pd
+        from datetime import timedelta
+        
+        # Apply time offset
+        search_datetime = target_datetime + timedelta(hours=time_offset_hours)
+        year = search_datetime.year
+        
+        # Load year data
+        df = self._load_year_data(year)
+        if df is None:
+            return None
+        
+        # Create datetime from Year, Day, Hour columns
+        try:
+            df['search_datetime'] = pd.to_datetime(df['Year'], format='%Y') + \
+                                  pd.to_timedelta(df['Day'] - 1, unit='D') + \
+                                  pd.to_timedelta(df['Hour'], unit='h')
+        except KeyError as e:
+            self.logger.error(f"Required time columns missing: {e}")
+            return None
+        
+        # Find exact match
+        matching_rows = df[df['search_datetime'] == search_datetime]
+        
+        if len(matching_rows) == 0:
+            return None
+        
+        # Extract columns
+        result = {}
+        row = matching_rows.iloc[0]
+        
+        # If no specific columns specified, use all columns (except time-related ones)
+        if self.columns is None:
+            exclude_cols = {'search_datetime', 'Year', 'Day', 'Hour'}
+            data_columns = [col for col in df.columns if col not in exclude_cols]
+        else:
+            data_columns = self.columns
+        
+        for col in data_columns:
+            if col in df.columns:
+                value = row[col]
+                # Convert to numeric, NaN if invalid
+                result[col] = pd.to_numeric(value, errors='coerce')
+            else:
+                result[col] = None
+        
+        return result
+    
+    def process_time_range(self, start_datetime, end_datetime, interval_hours: int = 3, 
+                         time_offset_hours: int = -1) -> List[Dict[str, Any]]:
+        """Process time range and extract matching data"""
+        from datetime import timedelta
+        
+        results = []
+        current_time = start_datetime
+        
+        # Get column names from first successful data extraction
+        data_columns = None
+        
+        while current_time <= end_datetime:
+            data = self.find_matching_data(current_time, time_offset_hours)
+            
+            result_row = {
+                'base_time': current_time.strftime('%Y-%m-%d %H'),
+                'target_time': (current_time + timedelta(hours=time_offset_hours)).strftime('%Y-%m-%d %H')
+            }
+            
+            if data:
+                result_row.update(data)
+                # Store column names from first successful extraction
+                if data_columns is None:
+                    data_columns = list(data.keys())
+            else:
+                # Fill with None for missing data (use previously found columns or empty)
+                if data_columns is not None:
+                    for col in data_columns:
+                        result_row[col] = None
+            
+            results.append(result_row)
+            current_time += timedelta(hours=interval_hours)
+        
+        return results
+    
+    def save_results(self, results: List[Dict[str, Any]], output_path: str) -> bool:
+        """Save results to CSV file"""
+        if not results:
+            return False
+        
+        try:
+            import pandas as pd
+            df = pd.DataFrame(results)
+            df.to_csv(output_path, index=False)
+            return True
+        except Exception as e:
+            self.logger.error(f"Error saving results: {e}")
+            return False
+
+class DirectoryTimeExtractor:
+    """Extract datetime from directory names"""
+    
+    @staticmethod
+    def extract_from_pattern(dirname: str, pattern: str = '%Y%m%d%H') -> Optional[Any]:
+        """Extract datetime from directory name using pattern"""
+        from datetime import datetime
+        
+        try:
+            # Extract time part from directory name (before '-' if exists)
+            time_str = dirname.split('-')[0]
+            return datetime.strptime(time_str, pattern)
+        except (ValueError, IndexError):
+            return None
+
 class TextFileDownloader(GenericDataDownloader):
     """Downloader for text files with parsing capability"""
     
@@ -363,6 +505,7 @@ class TextFileDownloader(GenericDataDownloader):
         # Convert to CSV if parser available
         if self.parser:
             try:
+                import pandas as pd
                 
                 data_rows = []
                 with open(temp_file, 'r', encoding='utf-8', errors='ignore') as f:
