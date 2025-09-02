@@ -1,0 +1,23 @@
+# 기본 데이터 처리
+numpy>=1.19.0
+pandas>=1.3.0
+h5py>=3.1.0
+
+# 이미지 처리
+opencv-python>=4.5.0
+Pillow>=8.0.0
+
+# 웹 요청 및 파싱  
+requests>=2.25.0
+beautifulsoup4>=4.9.0
+
+# 설정 파일 처리
+PyYAML>=5.4.0
+
+# 시각화 (선택사항)
+matplotlib>=3.3.0
+
+# 병렬 처리 (Python 3.6+ 기본 포함)
+# concurrent.futures는 표준 라이브러리
+
+# Python 3.6+ 필수

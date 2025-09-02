@@ -435,8 +435,8 @@ class TimeSeriesProcessor:
             data = self.find_matching_data(current_time, time_offset_hours)
             
             result_row = {
-                'base_time': current_time.strftime('%Y-%m-%d %H'),
-                'target_time': (current_time + timedelta(hours=time_offset_hours)).strftime('%Y-%m-%d %H')
+                'base_time': current_time.strftime('%Y-%m-%d %H')#,
+                #'target_time': (current_time + timedelta(hours=time_offset_hours)).strftime('%Y-%m-%d %H')
             }
             
             if data:

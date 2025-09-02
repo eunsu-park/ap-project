@@ -1,0 +1,161 @@
+# NASA OMNI Data Processor Configuration File
+# 서로 다른 OMNI 데이터 형식에 대한 설정을 정의합니다.
+
+datasets:
+  # OMNI Low Resolution (Hourly) Data
+  omni_low_res:
+    name: "OMNI Low Resolution Hourly Data"
+    description: "NASA OMNI 저해상도 시간별 데이터 (1963-현재)"
+    base_url: "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/"
+    file_pattern: "omni2_{year}.dat"
+    output_pattern: "omni2_{year}.csv"
+    resolution: "1 hour"
+    time_range: "1963 - Present"
+    coordinate_systems: ["GSE", "GSM"]
+    
+    # 컬럼 정의 (name, format, fill_value, description, unit)
+    columns:
+      - ["Year", "I4", null, "Year", "1963, 1964, etc."]
+      - ["Day", "I4", null, "Decimal Day", "January 1 = Day 1"]
+      - ["Hour", "I3", null, "Hour", "0, 1,...,23"]
+      - ["Bartels_rotation", "I5", 9999, "Bartels rotation number", ""]
+      - ["ID_IMF", "I3", 99, "ID for IMF spacecraft", ""]
+      - ["ID_SW", "I3", 99, "ID for SW plasma spacecraft", ""]
+      - ["Points_IMF", "I4", 999, "# of points in the IMF averages", ""]
+      - ["Points_SW", "I4", 999, "# of points in the plasma averages", ""]
+      - ["B_magnitude", "F6.1", 999.9, "Field Magnitude Average |B|", "nT"]
+      - ["B_mag_vector", "F6.1", 999.9, "Magnitude of Average Field Vector", "nT"]
+      - ["B_lat_angle", "F6.1", 999.9, "Lat.Angle of Aver. Field Vector", "Degrees"]
+      - ["B_lon_angle", "F6.1", 999.9, "Long.Angle of Aver.Field Vector", "Degrees"]
+      - ["Bx_GSE", "F6.1", 999.9, "Bx GSE, GSM", "nT"]
+      - ["By_GSE", "F6.1", 999.9, "By GSE", "nT"]
+      - ["Bz_GSE", "F6.1", 999.9, "Bz GSE", "nT"]
+      - ["By_GSM", "F6.1", 999.9, "By GSM", "nT"]
+      - ["Bz_GSM", "F6.1", 999.9, "Bz GSM", "nT"]
+      - ["sigma_B_mag", "F6.1", 999.9, "sigma|B| RMS Standard Deviation", "nT"]
+      - ["sigma_B_vector", "F6.1", 999.9, "sigma B RMS Standard Deviation", "nT"]
+      - ["sigma_Bx", "F6.1", 999.9, "sigma Bx RMS Standard Deviation", "nT"]
+      - ["sigma_By", "F6.1", 999.9, "sigma By RMS Standard Deviation", "nT"]
+      - ["sigma_Bz", "F6.1", 999.9, "sigma Bz RMS Standard Deviation", "nT"]
+      - ["Temperature", "F9.0", 9999999.0, "Proton temperature", "Degrees, K"]
+      - ["Proton_density", "F6.1", 999.9, "Proton Density", "N/cm^3"]
+      - ["Flow_speed", "F6.0", 9999.0, "Plasma (Flow) speed", "km/s"]
+      - ["Flow_lon_angle", "F6.1", 999.9, "Plasma Flow Long. Angle", "Degrees"]
+      - ["Flow_lat_angle", "F6.1", 999.9, "Plasma Flow Lat. Angle", "Degrees"]
+      - ["Na_Np_ratio", "F6.3", 9.999, "Na/Np Alpha/Proton ratio", ""]
+      - ["Flow_pressure", "F6.2", 99.99, "Flow Pressure", "nPa"]
+      - ["sigma_T", "F9.0", 9999999.0, "sigma T", "Degrees, K"]
+      - ["sigma_N", "F6.1", 999.9, "sigma N", "N/cm^3"]
+      - ["sigma_V", "F6.0", 9999.0, "sigma V", "km/s"]
+      - ["sigma_phi_V", "F6.1", 999.9, "sigma phi V", "Degrees"]
+      - ["sigma_theta_V", "F6.1", 999.9, "sigma theta V", "Degrees"]
+      - ["sigma_Na_Np", "F6.3", 9.999, "sigma-Na/Np", ""]
+      - ["Electric_field", "F7.2", 999.99, "Electric field", "mV/m"]
+      - ["Plasma_beta", "F7.2", 999.99, "Plasma beta", ""]
+      - ["Alfven_mach", "F6.1", 999.9, "Alfven mach number", ""]
+      - ["Kp_index", "I3", 99, "Kp Planetary Geomagnetic Activity Index", ""]
+      - ["R_sunspot", "I4", 999, "R Sunspot number", ""]
+      - ["DST_index", "I6", 99999, "DST Index", "nT"]
+      - ["AE_index", "I5", 9999, "AE-index", "nT"]
+      - ["Proton_flux_1MeV", "F10.2", 999999.99, "Proton flux >1 MeV", "number/cmsq sec sr"]
+      - ["Proton_flux_2MeV", "F9.2", 99999.99, "Proton flux >2 MeV", "number/cmsq sec sr"]
+      - ["Proton_flux_4MeV", "F9.2", 99999.99, "Proton flux >4 MeV", "number/cmsq sec sr"]
+      - ["Proton_flux_10MeV", "F9.2", 99999.99, "Proton flux >10 MeV", "number/cmsq sec sr"]
+      - ["Proton_flux_30MeV", "F9.2", 99999.99, "Proton flux >30 MeV", "number/cmsq sec sr"]
+      - ["Proton_flux_60MeV", "F9.2", 99999.99, "Proton flux >60 MeV", "number/cmsq sec sr"]
+      - ["Flux_flag", "I3", 0, "Flag", ""]
+      - ["ap_index", "I4", 999, "ap-index", "nT"]
+      - ["f107_index", "F6.1", 999.9, "f10.7_index", "sfu"]
+      - ["PC_N_index", "F6.1", 999.9, "PC(N) index", ""]
+      - ["AL_index", "I6", 99999, "AL-index", "nT"]
+      - ["AU_index", "I6", 99999, "AU-index", "nT"]
+      - ["Magnetosonic_mach", "F5.1", 99.9, "Magnetosonic mach number", ""]
+
+  # OMNI High Resolution (1-minute) Data
+  omni_high_res:
+    name: "OMNI High Resolution 1-minute Data"
+    description: "NASA OMNI 고해상도 1분 데이터 (1995-현재)"
+    base_url: "https://spdf.gsfc.nasa.gov/pub/data/omni/high_res_omni/modified/"
+    file_pattern: "omni_min{year}.asc"
+    output_pattern: "omni_min{year}.csv"
+    resolution: "1 minute"
+    time_range: "1995 - Present"
+    coordinate_systems: ["GSE", "GSM"]
+    
+    # 컬럼 정의 (name, format, fill_value, description, unit)
+    columns:
+      - ["Year", "I4", null, "Year", ""]
+      - ["Day", "I4", null, "Day of year (1-366)", ""]
+      - ["Hour", "I3", null, "Hour (0-23)", ""]
+      - ["Minute", "I3", null, "Minute (0-59)", ""]
+      - ["ID_IMF", "I3", 99, "IMF spacecraft ID", ""]
+      - ["ID_SW", "I3", 99, "Solar wind plasma spacecraft ID", ""]
+      - ["Points_IMF", "I4", 999, "Number of points in IMF averages", ""]
+      - ["Points_SW", "I4", 999, "Number of points in plasma averages", ""]
+      - ["Percent_interp", "I4", 999, "Percent interpolation", ""]
+      - ["Timeshift", "I7", 999999, "Time shift", "sec"]
+      - ["RMS_timeshift", "I7", 999999, "RMS time shift", "sec"]
+      - ["RMS_phase_front", "F6.2", 99.99, "RMS phase front normal", ""]
+      - ["Time_btwn_obs", "I7", 999999, "Time between observations", "sec"]
+      - ["B_mag", "F8.2", 9999.99, "Magnetic field magnitude average", "nT"]
+      - ["Bx_GSE", "F8.2", 9999.99, "Bx GSE coordinate", "nT"]
+      - ["By_GSE", "F8.2", 9999.99, "By GSE coordinate", "nT"]
+      - ["Bz_GSE", "F8.2", 9999.99, "Bz GSE coordinate", "nT"]
+      - ["By_GSM", "F8.2", 9999.99, "By GSM coordinate", "nT"]
+      - ["Bz_GSM", "F8.2", 9999.99, "Bz GSM coordinate", "nT"]
+      - ["RMS_SD_B_scalar", "F8.2", 9999.99, "RMS SD B scalar", "nT"]
+      - ["RMS_SD_B_vector", "F8.2", 9999.99, "RMS SD B vector", "nT"]
+      - ["Flow_speed", "F8.1", 99999.9, "Solar wind speed", "km/s"]
+      - ["Vx_GSE", "F8.1", 99999.9, "Vx velocity GSE", "km/s"]
+      - ["Vy_GSE", "F8.1", 99999.9, "Vy velocity GSE", "km/s"]
+      - ["Vz_GSE", "F8.1", 99999.9, "Vz velocity GSE", "km/s"]
+      - ["Proton_density", "F7.2", 999.99, "Proton density", "n/cc"]
+      - ["Temperature", "F9.0", 9999999.0, "Proton temperature", "K"]
+      - ["Flow_pressure", "F6.2", 99.99, "Flow pressure", "nPa"]
+      - ["Electric_field", "F7.2", 999.99, "Electric field", "mV/m"]
+      - ["Plasma_beta", "F7.2", 999.99, "Plasma beta", ""]
+      - ["Alfven_mach", "F6.1", 999.9, "Alfven Mach number", ""]
+      - ["SC_X_GSE", "F8.2", 9999.99, "Spacecraft X position GSE", "Re"]
+      - ["SC_Y_GSE", "F8.2", 9999.99, "Spacecraft Y position GSE", "Re"]
+      - ["SC_Z_GSE", "F8.2", 9999.99, "Spacecraft Z position GSE", "Re"]
+      - ["BSN_X_GSE", "F8.2", 9999.99, "Bow shock nose X position GSE", "Re"]
+      - ["BSN_Y_GSE", "F8.2", 9999.99, "Bow shock nose Y position GSE", "Re"]
+      - ["BSN_Z_GSE", "F8.2", 9999.99, "Bow shock nose Z position GSE", "Re"]
+      - ["AE_index", "I6", 99999, "AE geomagnetic activity index", "nT"]
+      - ["AL_index", "I6", 99999, "AL geomagnetic activity index", "nT"]
+      - ["AU_index", "I6", 99999, "AU geomagnetic activity index", "nT"]
+      - ["SYM_D", "I6", 99999, "SYM/D index", "nT"]
+      - ["SYM_H", "I6", 99999, "SYM/H index", "nT"]
+      - ["ASY_D", "I6", 99999, "ASY/D index", "nT"]
+      - ["ASY_H", "I6", 99999, "ASY/H index", "nT"]
+      - ["Na_Np_ratio", "F7.3", 9.999, "Na/Np ratio", ""]
+      - ["Magnetosonic_mach", "F5.1", 99.9, "Magnetosonic Mach number", ""]
+
+# 기본 설정
+default_settings:
+  output_dir: "omni_data"
+  default_years:
+    start_year: 2024
+    end_year: 2024
+  log_level: "INFO"
+  encoding: "utf-8"
+  chunk_size: 8192
+  timeout: 60
+
+# 데이터 품질 검증 설정
+quality_checks:
+  physical_ranges:
+    Temperature: [0, 100000000]  # K
+    Proton_density: [0, 1000]    # N/cm^3
+    Flow_speed: [0, 3000]        # km/s
+    B_magnitude: [0, 100]        # nT
+    B_mag: [0, 100]              # nT (high res)
+  missing_data_threshold: 50     # 50% 이상 missing이면 경고
+  
+# 출력 형식 설정
+output_settings:
+  add_datetime_column: true
+  datetime_column_name: "Datetime"
+  datetime_position: "first"  # first, last
+  csv_index: false
+  na_representation: null
