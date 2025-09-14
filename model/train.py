@@ -334,10 +334,6 @@ def main():
         # Load configuration
         options = Config().from_args_and_yaml(yaml_path=args.config, args=args)
         print(args.config, options.experiment_name)
-
-        # import sys
-        # print(options)
-        # sys.exit()
         
         # Override with command line arguments
         if args.epochs is not None:
@@ -350,14 +346,14 @@ def main():
         options.validate()
         options.make_directories()
 
-        print(options.experiment_dir)
-        print(options.checkpoint_dir)
-        print(options.log_dir)
-        print(options.snapshot_dir)
-        print(options.validation_dir)
+        # print(options.experiment_dir)
+        # print(options.checkpoint_dir)
+        # print(options.log_dir)
+        # print(options.snapshot_dir)
+        # print(options.validation_dir)
 
-        import sys
-        sys.exit()
+        # import sys
+        # sys.exit()
 
         # Run training
         run_train(options)
