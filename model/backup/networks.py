@@ -22,19 +22,6 @@ INCEPTION_BRANCHES = 4
 
 
 class InceptionBlock(nn.Module):
-    """Inception block with four parallel branches.
-    
-    Implements a 3D Inception block with branches for different receptive fields:
-    - Branch 1: 1x1x1 convolution
-    - Branch 2: 1x1x1 -> 1x3x3 convolution  
-    - Branch 3: 1x1x1 -> 1x5x5 convolution
-    - Branch 4: MaxPool -> 1x1x1 convolution
-    
-    Args:
-        in_channels: Number of input channels.
-        out_channels: Number of output channels per branch.
-    """
-    
     def __init__(self, in_channels, out_channels):
         super(InceptionBlock, self).__init__()
         
@@ -68,16 +55,17 @@ class InceptionBlock(nn.Module):
         )
     
     def _create_conv_branch(self, in_channels, out_channels, kernel_size, padding):
-        """Create a simple convolution branch with ReLU activation.
+        """
+        Create a simple convolution branch with ReLU activation.
         
         Args:
-            in_channels: Number of input channels.
-            out_channels: Number of output channels.
-            kernel_size: Convolution kernel size.
-            padding: Padding size.
+            in_channels: Number of input channels
+            out_channels: Number of output channels
+            kernel_size: Convolution kernel size
+            padding: Padding size
             
         Returns:
-            Sequential module containing conv + ReLU.
+            Sequential module containing conv + ReLU
         """
         return nn.Sequential(
             nn.Conv3d(
@@ -89,16 +77,17 @@ class InceptionBlock(nn.Module):
         )
     
     def _create_sequential_conv_branch(self, in_channels, out_channels, second_kernel, second_padding):
-        """Create a sequential convolution branch: 1x1 conv -> larger conv + ReLU.
+        """
+        Create a sequential convolution branch: 1x1 conv -> larger conv + ReLU.
         
         Args:
-            in_channels: Number of input channels.
-            out_channels: Number of output channels.
-            second_kernel: Kernel size for the second convolution.
-            second_padding: Padding for the second convolution.
+            in_channels: Number of input channels
+            out_channels: Number of output channels
+            second_kernel: Kernel size for the second convolution
+            second_padding: Padding for the second convolution
             
         Returns:
-            Sequential module containing 1x1 conv + ReLU + larger conv + ReLU.
+            Sequential module containing 1x1 conv + ReLU + larger conv + ReLU
         """
         return nn.Sequential(
             nn.Conv3d(
@@ -116,7 +105,7 @@ class InceptionBlock(nn.Module):
         )
         
     def forward(self, x):
-        """Forward pass concatenating all branch outputs."""
+        # Execute all branches and concatenate
         return torch.cat([
             self.branch1(x),
             self.branch2(x),
@@ -126,19 +115,8 @@ class InceptionBlock(nn.Module):
 
 
 class InceptionModel(nn.Module):
-    """Inception-based 3D CNN model.
-    
-    Processes 3D image sequences using inception blocks with pooling layers
-    for spatial and temporal feature extraction.
-    
-    Args:
-        in_channels: Number of input channels.
-        out_channels: Number of output channels per inception branch.
-    """
-    
     def __init__(self, in_channels, out_channels):
         super(InceptionModel, self).__init__()
-        
         # Initial conv layer
         self.initial_layers = nn.Sequential(
             nn.Conv3d(
@@ -173,7 +151,7 @@ class InceptionModel(nn.Module):
         )
 
     def forward(self, x):
-        """Forward pass through inception blocks with pooling."""
+        # Chain operations without intermediate variables
         x = self.initial_layers(x)
         x = self.pool1(self.inception1(x))
         x = self.pool2(self.inception2(x))
@@ -181,18 +159,6 @@ class InceptionModel(nn.Module):
 
 
 class InceptionLSTMModel(nn.Module):
-    """Inception-LSTM model for 3D image sequence processing.
-    
-    Combines 3D Inception CNN for spatial feature extraction with LSTM
-    for temporal sequence modeling.
-    
-    Args:
-        in_channels: Number of input channels.
-        out_channels: Number of output channels per inception branch.
-        image_size: Input image size (square images).
-        hidden_size: LSTM hidden size.
-    """
-
     def __init__(self, in_channels, out_channels, image_size, hidden_size):
         super(InceptionLSTMModel, self).__init__()
 
@@ -207,18 +173,14 @@ class InceptionLSTMModel(nn.Module):
         self.inception = InceptionModel(in_channels, out_channels)
         
         # Calculate feature size after convolutions
-        # Corrected pooling count: initial_pool + pool1 + pool2 + pool3 = 4 operations
+        # InceptionModel has 4 pooling operations with stride 2: initial_pool + pool1 + pool2 + pool3
         num_pooling_operations = 4
         pooling_stride = 2
         final_spatial_size = image_size // (pooling_stride ** num_pooling_operations)
         
         # Check if image size is valid for pooling operations
         if final_spatial_size <= 0:
-            raise ValueError(
-                f"Image size {image_size} is too small for {num_pooling_operations} "
-                f"pooling operations with stride {pooling_stride}. "
-                f"Minimum required size: {pooling_stride ** num_pooling_operations}"
-            )
+            raise ValueError(f"Image size {image_size} is too small for {num_pooling_operations} pooling operations with stride {pooling_stride}")
         
         final_channels = out_channels * INCEPTION_BRANCHES
         lstm_input_size = final_channels * final_spatial_size * final_spatial_size
@@ -229,17 +191,6 @@ class InceptionLSTMModel(nn.Module):
         self.act = nn.ReLU()
 
     def forward(self, x):
-        """Forward pass through Inception CNN and LSTM.
-        
-        Args:
-            x: Input tensor of shape (batch, channels, seq_len, height, width).
-            
-        Returns:
-            LSTM output tensor of shape (batch, hidden_size).
-            
-        Raises:
-            ValueError: If input tensor has invalid dimensions.
-        """
         # Validate input tensor dimensions
         if x.dim() != 5:
             raise ValueError(f"Expected 5D input tensor (batch, channels, seq_len, height, width), got {x.dim()}D tensor")
@@ -255,7 +206,7 @@ class InceptionLSTMModel(nn.Module):
         inception_out = self.inception(x)
         batch_size, channels, seq_len, height, width = inception_out.size()
 
-        # Reshape for LSTM: (batch, seq_len, features)
+        # Use reshape instead of view for better memory efficiency
         lstm_input = inception_out.permute(0, 2, 1, 3, 4).reshape(batch_size, seq_len, -1)
         
         # LSTM processing
@@ -263,18 +214,26 @@ class InceptionLSTMModel(nn.Module):
         return self.act(lstm_out[:, -1, :])
 
 
-class LinearModel(nn.Module):
-    """Efficient linear model for sequential data processing.
-    
-    Processes multiple input variables through a unified linear transformation
-    instead of separate blocks for each variable.
-    
-    Args:
-        num_input_variables: Number of input variables.
-        input_sequence_length: Length of input sequences.
-        num_linear_output: Number of linear output units.
-    """
+class LinearBlock(nn.Module):
+    def __init__(self, input_variables, output_variables):
+        super(LinearBlock, self).__init__()
+        
+        # Validate input parameters
+        if input_variables <= 0 or output_variables <= 0:
+            raise ValueError(f"Input and output variables must be positive, got input={input_variables}, output={output_variables}")
+        
+        self.layers = nn.Sequential(
+            nn.Linear(input_variables, output_variables),
+            nn.ReLU(),
+            nn.Linear(output_variables, output_variables),
+            nn.ReLU()
+        )
 
+    def forward(self, x):
+        return self.layers(x)
+    
+
+class LinearModel(nn.Module):
     def __init__(self, num_input_variables, input_sequence_length, num_linear_output):
         super(LinearModel, self).__init__()
         
@@ -288,29 +247,14 @@ class LinearModel(nn.Module):
         
         self.num_input_variables = num_input_variables
         self.input_sequence_length = input_sequence_length
-        
-        # Unified processing instead of separate blocks per variable
-        total_input_size = num_input_variables * input_sequence_length
-        
-        self.linear_layers = nn.Sequential(
-            nn.Linear(total_input_size, num_linear_output * num_input_variables),
-            nn.ReLU(),
-            nn.Linear(num_linear_output * num_input_variables, num_linear_output * num_input_variables),
-            nn.ReLU()
-        )
+
+        # Create blocks using ModuleList for better organization
+        self.linear_blocks = nn.ModuleList([
+            LinearBlock(input_sequence_length, num_linear_output)
+            for _ in range(num_input_variables)
+        ])
 
     def forward(self, x):
-        """Forward pass through unified linear layers.
-        
-        Args:
-            x: Input tensor of shape (batch, sequence, variables).
-            
-        Returns:
-            Processed tensor of shape (batch, num_linear_output * num_input_variables).
-            
-        Raises:
-            ValueError: If input tensor has invalid dimensions.
-        """
         # Validate input tensor dimensions
         if x.dim() != 3:
             raise ValueError(f"Expected 3D input tensor (batch, sequence, variables), got {x.dim()}D tensor")
@@ -322,30 +266,14 @@ class LinearModel(nn.Module):
         if num_vars != self.num_input_variables:
             raise ValueError(f"Expected {self.num_input_variables} variables, got {num_vars}")
 
-        # Flatten and process through unified layers
-        x_flat = x.reshape(batch_size, -1)  # Shape: (batch, seq_len * num_vars)
-        return self.linear_layers(x_flat)
+        # Process each variable and concatenate directly
+        return torch.cat([
+            self.linear_blocks[variable_idx](x[:, :, variable_idx])
+            for variable_idx in range(self.num_input_variables)
+        ], dim=-1)
 
 
 class MultiModalModel(nn.Module):
-    """Multi-modal model combining solar wind data and image sequences.
-    
-    Integrates linear processing of solar wind time series with 
-    Inception-LSTM processing of image sequences for prediction tasks.
-    
-    Args:
-        num_input_variables: Number of solar wind input variables.
-        input_sequence_length: Length of input sequences.
-        num_target_variables: Number of target variables to predict.
-        target_sequence_length: Length of target sequences.
-        num_linear_output: Number of linear output units.
-        inception_in_channels: Number of input channels for inception model.
-        inception_out_channels: Number of output channels for inception model.
-        inception_in_image_size: Input image size (square).
-        inception_in_image_frames: Number of input image frames.
-        lstm_hidden_size: Hidden size of LSTM layer.
-    """
-    
     def __init__(
         self, num_input_variables, input_sequence_length,
         num_target_variables, target_sequence_length,
@@ -379,14 +307,15 @@ class MultiModalModel(nn.Module):
         self.target_sequence_length = target_sequence_length
 
     def forward(self, solar_wind_input, image_input):
-        """Forward pass through the multi-modal model.
+        """
+        Forward pass through the multi-modal model.
         
         Args:
-            solar_wind_input: Solar wind data of shape (batch, sequence, variables).
-            image_input: Image data of shape (batch, channels, seq_len, height, width).
+            solar_wind_input (torch.Tensor): Solar wind data of shape (batch, sequence, variables).
+            image_input (torch.Tensor): Image data of shape (batch, channels, seq_len, height, width).
             
         Returns:
-            Predicted output of shape (batch, target_sequence_length, num_target_variables).
+            torch.Tensor: Predicted output of shape (batch, target_sequence_length, num_target_variables).
             
         Raises:
             ValueError: If inputs are None or batch sizes don't match.
@@ -409,23 +338,17 @@ class MultiModalModel(nn.Module):
         return output.reshape(output.size(0), self.target_sequence_length, self.num_target_variables)
 
 
-def create_model(options, logger=None):
-    """Create MultiModalModel instance from configuration options.
+# Usage example:
+def create_model(options):
+    """
+    Create MultiModalModel instance from configuration options.
     
     Args:
-        options: Configuration object containing model parameters.
-        logger: Optional logger for output.
+        options: Configuration object containing model parameters
         
     Returns:
-        MultiModalModel instance.
+        MultiModalModel instance
     """
-    message = "MultiModalModel created."
-    
-    if logger:
-        logger.info(message)
-    else:
-        print(message)
-        
     return MultiModalModel(
         num_input_variables=options.num_input_variables,
         input_sequence_length=options.input_sequence_length,
@@ -437,4 +360,4 @@ def create_model(options, logger=None):
         inception_in_image_size=options.inception_in_image_size,
         inception_in_image_frames=options.inception_in_image_frames,
         lstm_hidden_size=options.lstm_hidden_size
-        )
+    )

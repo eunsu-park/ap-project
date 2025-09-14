@@ -1,0 +1,55 @@
+# Test Configuration for Model Testing
+# This YAML file contains all necessary parameters for testing the models
+
+# Basic settings
+seed: 250104
+device: 'cuda'
+experiment_name: 'wulver_base'
+
+# Data paths
+data_root: '/mmfs1/home/hl545/ap/data/dataset'
+save_root: '/mmfs1/home/hl545/ap/results'
+stat_file_path: '/mmfs1/home/hl545/ap/data/statistics.pkl'
+train_list_path: '/mmfs1/home/hl545/ap/data/train_list.csv'
+validation_list_path: '/mmfs1/home/hl545/ap/data/validation_list.csv'
+
+# Model architecture
+## Linear Model
+input_variables:
+  - 'Bx_GSE'
+  - 'By_GSM'
+  - 'Bz_GSM'
+  - 'B_magnitude'
+  - 'Flow_speed'
+  - 'Proton_density'
+  - 'Temperature'
+  - 'Kp_index'
+  - 'ap_index'
+  - 'DST_index'
+  - 'R_sunspot'
+input_sequence_length: 40
+target_variables:
+  - 'ap_index'
+target_sequence_length: 24
+num_linear_output: 256
+
+## Inception-LSTM Model
+inception_in_channels: 2
+inception_out_channels: 96
+inception_in_image_size: 64
+inception_in_image_frames: 20
+lstm_hidden_size: 512
+
+# Training settings
+batch_size: 2
+num_workers: 0
+phase: 'train'
+num_epochs: 100
+
+# Optimization
+loss_type: 'mse'
+learning_rate: 0.0002
+
+# Logging and saving
+report_freq: 1000
+model_save_freq: 10

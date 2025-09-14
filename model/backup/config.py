@@ -23,7 +23,7 @@ class Config:
         save_root (str): Root directory for saving results. Defaults to './results'.
         stat_file_path (str): Path to statistics file. Defaults to './data/statistics.pkl'.
         train_list_path (str): Path to training data list CSV file. Defaults to './data/train_list.csv'.
-        validation_list_path (str): Path to validation data list CSV file. Defaults to './data/validation_list.csv'.
+        test_list_path (str): Path to testing data list CSV file. Defaults to './data/test_list.csv'.
         
         input_variables (List[str]): List of input variable names for solar wind data.
         input_sequence_length (int): Length of input sequences. Defaults to 40.
@@ -45,8 +45,8 @@ class Config:
         learning_rate (float): Learning rate for optimizer. Defaults to 2e-4.
         
         report_freq (int): Frequency of progress reporting. Defaults to 100.
-        model_save_freq (int): Frequency of model saving. Defaults to 5.
-        validation_freq (int): Frequency of validation. Defaults to 1.
+        save_freq (int): Frequency of model saving. Defaults to 5.
+        test_freq (int): Frequency of testing. Defaults to 1.
     """
     
     # Basic settings
@@ -59,7 +59,7 @@ class Config:
     save_root: str = './results'
     stat_file_path: str = './data/statistics.pkl'
     train_list_path: str = './data/train_list.csv'
-    validation_list_path: str = './data/validation_list.csv'
+    test_list_path: str = './data/test_list.csv'
     
     # Model architecture
     ## Linear Model
@@ -87,12 +87,12 @@ class Config:
     num_epochs: int = 100
     
     # Optimization
-    loss_type: str = 'mse'
     learning_rate: float = 2e-4
     
     # Logging and saving
     report_freq: int = 100
-    model_save_freq: int = 5
+    save_freq: int = 5
+    test_freq: int = 5
         
     # Computed properties (calculated in __post_init__)
     num_input_variables: int = field(init=False)
@@ -119,11 +119,12 @@ class Config:
         self.num_target_variables = len(self.target_variables)
 
         # Define necessary directories
-        self.experiment_dir = f"{self.save_root}/{self.experiment_name}"
-        self.checkpoint_dir = f"{self.experiment_dir}/checkpoint"
-        self.log_dir = f"{self.experiment_dir}/log"
-        self.snapshot_dir = f"{self.experiment_dir}/snapshot"
-        self.validation_dir = f"{self.experiment_dir}/validation"
+        self.checkpoint_dir = f"{self.save_root}/{self.experiment_name}/checkpoint"
+        self.log_dir = f"{self.save_root}/{self.experiment_name}/log"
+        self.snapshot_dir = f"{self.save_root}/{self.experiment_name}/snapshot"
+        self.validation_dir = f"{self.save_root}/{self.experiment_name}/validation"
+        self.test_dir = f"{self.save_root}/{self.experiment_name}/test"
+        self.tensorboard_dir = f"{self.save_root}/{self.experiment_name}/tensorboard"
 
     def make_directories(self):
         """
@@ -133,18 +134,14 @@ class Config:
         snapshots, validation results, test results, and tensorboard logs.
         All directories are created recursively if they don't exist.
         """
-        directories = [
-            self.save_root,
-            self.checkpoint_dir,
-            self.log_dir,
-            self.snapshot_dir,
-            self.validation_dir,
-            self.test_dir,
-            self.tensorboard_dir
-        ]
-        
-        for directory in directories:
-            Path(directory).mkdir(parents=True, exist_ok=True)
+        # Create necessary directories
+        Path(self.save_root).mkdir(parents=True, exist_ok=True)
+        Path(self.checkpoint_dir).mkdir(parents=True, exist_ok=True)
+        Path(self.log_dir).mkdir(parents=True, exist_ok=True)
+        Path(self.snapshot_dir).mkdir(parents=True, exist_ok=True)
+        Path(self.validation_dir).mkdir(parents=True, exist_ok=True)
+        Path(self.test_dir).mkdir(parents=True, exist_ok=True)
+        Path(self.tensorboard_dir).mkdir(parents=True, exist_ok=True)
         
     
     @classmethod
@@ -234,7 +231,7 @@ class Config:
             ValueError: If any configuration parameter is invalid.
             FileNotFoundError: If required directories cannot be created.
         """
-        # Variables validation
+        # Variables validation - ensure input and target variables are properly configured
         if not self.input_variables or not self.target_variables:
             raise ValueError("Input and target variables lists cannot be empty")
         
@@ -258,15 +255,15 @@ class Config:
         if self.device not in ['cpu', 'cuda', 'mps']:
             raise ValueError("Device must be one of: cpu, cuda, mps")
         
-        if self.phase not in ['train', 'validation']:
-            raise ValueError("Phase must be one of: train, validation")
-        
-        # Create statistics file directory if it doesn't exist
+        # Path validation - only validate paths that are critical and should exist
+        # Note: data_root validation removed as it may not exist at config validation time
         stat_file_parent = Path(self.stat_file_path).parent
-        try:
-            stat_file_parent.mkdir(parents=True, exist_ok=True)
-        except OSError as e:
-            raise FileNotFoundError(f"Cannot create statistics file directory: {stat_file_parent}") from e
+        if not stat_file_parent.exists():
+            # Try to create the directory instead of failing
+            try:
+                stat_file_parent.mkdir(parents=True, exist_ok=True)
+            except OSError as e:
+                raise FileNotFoundError(f"Cannot create statistics file directory: {stat_file_parent}") from e
     
     def to_dict(self) -> dict:
         """
@@ -287,25 +284,7 @@ class Config:
                 organized in a human-readable format suitable for logging.
         """
         lines = ["Configuration:"]
-        
-        # Group related fields for better readability
-        groups = {
-            "Basic Settings": ["seed", "device", "experiment_name"],
-            "Data Paths": ["data_root", "save_root", "stat_file_path", "train_list_path", "validation_list_path"],
-            "Model Architecture": ["input_variables", "input_sequence_length", "target_variables", 
-                                 "target_sequence_length", "num_linear_output", "inception_in_channels",
-                                 "inception_out_channels", "inception_in_image_size", "inception_in_image_frames",
-                                 "lstm_hidden_size"],
-            "Training Settings": ["batch_size", "num_workers", "phase", "num_epochs", "loss_type", "learning_rate"],
-            "Logging Settings": ["report_freq", "model_save_freq"],
-            "Computed Properties": ["num_input_variables", "num_target_variables"]
-        }
-        
-        for group_name, field_names in groups.items():
-            lines.append(f"  {group_name}:")
-            for field_name in field_names:
-                if hasattr(self, field_name):
-                    value = getattr(self, field_name)
-                    lines.append(f"    {field_name}: {value}")
-        
+        for field_info in self.__dataclass_fields__.values():
+            value = getattr(self, field_info.name)
+            lines.append(f"  {field_info.name}: {value}")
         return "\n".join(lines)
