@@ -103,8 +103,6 @@ class Config:
     log_dir: str = field(init=False)
     snapshot_dir: str = field(init=False)
     validation_dir: str = field(init=False)
-    test_dir: str = field(init=False)
-    tensorboard_dir: str = field(init=False)
     
     def __post_init__(self):
         """
@@ -135,12 +133,11 @@ class Config:
         """
         directories = [
             self.save_root,
+            self.experiment_dir,
             self.checkpoint_dir,
             self.log_dir,
             self.snapshot_dir,
-            self.validation_dir,
-            self.test_dir,
-            self.tensorboard_dir
+            self.validation_dir
         ]
         
         for directory in directories:
