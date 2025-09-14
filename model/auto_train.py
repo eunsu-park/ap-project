@@ -39,8 +39,11 @@ fixed = [
 if __name__ == "__main__" :
 
     for loss in loss_map :
-        # job_name = f"wulver_{loss}"
-        # print(f"Submitting job: {job_name}")
+
+        lines = fixed.copy()
+        job_name = f"wulver_{loss}"
+        print(f"Submitting job: {job_name}")
+        lines.insert(2, f"#SBATCH --job-name={job_name}")
         yaml_path = "./configs/config_wulver_base.yaml"
         with open(yaml_path, 'r') as f:
             config_dict = yaml.safe_load(f)
@@ -52,12 +55,12 @@ if __name__ == "__main__" :
         with open(yaml_path_run, 'w') as f:
             yaml.dump(config_dict, f)
 
-        line = f"srun /home/hl545/miniconda3/envs/ap/bin/python train.py --config {yaml_path_run}"
-        lines = fixed + [line]
+        command = f"srun /home/hl545/miniconda3/envs/ap/bin/python train.py --config {yaml_path_run}"
+        lines.append(command)
 
         with open("tmp.sh", "w") as f:
             f.write("\n".join(lines))    
-
+            
         os.system(f"sbatch tmp.sh")
         # os.system(f"python train.py --config {yaml_path_run}")
         # os.system(f"cat tmp.sh")  # For testing purpose, print out the script instead of submitting it
