@@ -33,7 +33,7 @@ if __name__ == "__main__" :
         'mae_outlier_focused',
         'adaptive_weight',
         'gradient_based_weight',
-        'quantile',
+        # 'quantile', # Error
         'multi_task',
         'weighted_mse'
     ]
