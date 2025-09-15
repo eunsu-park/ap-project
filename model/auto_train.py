@@ -65,5 +65,5 @@ if __name__ == "__main__" :
         # os.system(f"python train.py --config {yaml_path_run}")
         # os.system(f"cat tmp.sh")  # For testing purpose, print out the script instead of submitting it
         # os.system(f"cat tmp.yaml")  # For testing purpose, print out the script instead of submitting it
-        # time.sleep(3)
+        time.sleep(10)
         os.remove("tmp.sh")
