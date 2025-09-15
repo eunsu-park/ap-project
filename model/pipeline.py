@@ -329,7 +329,7 @@ class CustomDataset(Dataset):
 
             # Check for NaN in image data first
             if np.isnan(sdo).any() or not np.isfinite(sdo).all():
-                # self._log_warning(f"NaN or non-finite values found in image data for {file_name}")
+                self._log_warning(f"NaN or non-finite values found in image data for {file_name}")
                 return None
 
             # Process time series data with strict NaN checking
@@ -365,7 +365,7 @@ class CustomDataset(Dataset):
             }
             
         except Exception as e:
-            # self._log_warning(f"Failed to process {file_name}: {e}")
+            self._log_warning(f"Failed to process {file_name}: {e}")
             return None
 
     def _process_time_series(self, data_dict: Dict[str, np.ndarray], 
