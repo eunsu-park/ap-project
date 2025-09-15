@@ -59,6 +59,7 @@ if __name__ == "__main__" :
             lines = fixed.copy()
             job_name = f"wulver_{loss}_epoch_{epoch}"
             print(f"Submitting job: {job_name}")
+            lines.insert(2, f"#SBATCH --job-name={job_name}")
             
             checkpoint_path = os.path.join(checkpoint_dir, f'model_epoch{epoch}.pth')
             if not os.path.exists(checkpoint_path):
