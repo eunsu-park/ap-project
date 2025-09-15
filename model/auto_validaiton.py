@@ -52,6 +52,8 @@ if __name__ == "__main__" :
         save_root = '/mmfs1/home/hl545/ap/results'
         checkpoint_dir = os.path.join(save_root, config_dict["experiment_name"], 'checkpoint')
         
+
+
         for _epoch in range(10):
 
             epoch = (_epoch + 1) * 10
@@ -75,9 +77,9 @@ if __name__ == "__main__" :
             with open("tmp.sh", "w") as f:
                 f.write("\n".join(lines))
 
-            # os.system(f"sbatch tmp.sh")
-            print(lines)
+            os.system(f"sbatch tmp.sh")
+            # print(lines)
             os.remove("tmp.sh")
 
-            # time.sleep(30)
+            time.sleep(30)
 
