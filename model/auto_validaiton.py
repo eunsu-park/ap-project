@@ -6,8 +6,8 @@ import yaml
 fixed = [
     "#!/bin/bash -l",
     "",
-    "#SBATCH --output=%x.%j.out # %x.%j expands to slurm JobName.JobID",
-    "#SBATCH --error=%x.%j.err # prints the error message",
+    "#SBATCH --output=./outs/%x.%j.out # %x.%j expands to slurm JobName.JobID",
+    "#SBATCH --error=./errs/%x.%j.err # prints the error message",
     "#SBATCH --partition=gpu",
     "#SBATCH --nodes=1",
     "#SBATCH --ntasks-per-node=1",

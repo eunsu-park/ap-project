@@ -242,10 +242,11 @@ class CustomDataset(Dataset):
 
     def _log_warning(self, message: str):
         """Log warning message."""
-        if self.logger:
-            self.logger.warning(message)
-        else:
-            print(f"Warning: {message}")
+        pass
+        # if self.logger:
+        #     self.logger.warning(message)
+        # else:
+        #     print(f"Warning: {message}")
 
     def validate_data(self):
         """Validate and cache data items with strict NaN exclusion.
