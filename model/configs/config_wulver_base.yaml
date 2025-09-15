@@ -41,7 +41,7 @@ inception_in_image_frames: 20
 lstm_hidden_size: 512
 
 # Training settings
-batch_size: 2
+batch_size: 4
 num_workers: 0
 phase: 'train'
 num_epochs: 100

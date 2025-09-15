@@ -2,19 +2,6 @@ import os
 import yaml
 import time
 
-loss_map = [
-    'mse',
-    'mae',
-    'huber',
-    'huber_multi_criteria',
-    'mae_outlier_focused',
-    'adaptive_weight',
-    'gradient_based_weight',
-    'quantile',
-    'multi_task',
-    'weighted_mse'
-]
-
 fixed = [
     "#!/bin/bash -l",
     "",
@@ -37,6 +24,19 @@ fixed = [
 ]
 
 if __name__ == "__main__" :
+
+    loss_map = [
+        'mse',
+        'mae',
+        'huber',
+        'huber_multi_criteria',
+        'mae_outlier_focused',
+        'adaptive_weight',
+        'gradient_based_weight',
+        'quantile',
+        'multi_task',
+        'weighted_mse'
+    ]
 
     for loss in loss_map :
 
