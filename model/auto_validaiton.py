@@ -78,5 +78,5 @@ if __name__ == "__main__" :
             print(lines)
             os.remove("tmp.sh")
 
-            time.sleep(30)
+            # time.sleep(30)
 
