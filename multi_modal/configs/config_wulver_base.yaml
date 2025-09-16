@@ -25,7 +25,6 @@ input_variables:
   - 'Kp_index'
   - 'ap_index'
   - 'DST_index'
-  - 'f107_index'
   - 'R_sunspot'
 input_sequence_length: 40
 target_variables:
