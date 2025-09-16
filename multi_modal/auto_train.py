@@ -2,11 +2,13 @@ import os
 import yaml
 import time
 
+HOME = os.path.expanduser('~')
+
 fixed = [
     "#!/bin/bash -l",
     "",
-    "#SBATCH --output=~/outs/%x.%j.out # %x.%j expands to slurm JobName.JobID",
-    "#SBATCH --error=~/errs/%x.%j.err # prints the error message",
+    f"#SBATCH --output={HOME}/outs/%x.%j.out # %x.%j expands to slurm JobName.JobID",
+    f"#SBATCH --error={HOME}/errs/%x.%j.err # prints the error message",
     "#SBATCH --partition=gpu",
     "#SBATCH --nodes=1",
     "#SBATCH --ntasks-per-node=1",
@@ -49,7 +51,7 @@ if __name__ == "__main__" :
             config_dict = yaml.safe_load(f)
         config_dict["experiment_name"] = f"wulver_mm_{loss}"
         config_dict["loss_type"] = loss
-        yaml_path_run = f"~/configs/config_wulver_mm_{loss}.yaml"
+        yaml_path_run = f"{HOME}/configs/config_wulver_mm_{loss}.yaml"
         if os.path.exists(yaml_path_run):
             os.remove(yaml_path_run)
         with open(yaml_path_run, 'w') as f:
