@@ -45,13 +45,12 @@ if __name__ == "__main__" :
         job_name = f"wulver_{loss}"
         print(f"Submitting job: {job_name}")
         lines.insert(2, f"#SBATCH --job-name={job_name}")
-        yaml_path = f"~/configs/{uuid.uuid4().hex}.yaml"
-        # yaml_path = "~/configs/config_wulver_base.yaml"
+        yaml_path = "~/configs/config_wulver_base.yaml"
         with open(yaml_path, 'r') as f:
             config_dict = yaml.safe_load(f)
         config_dict["experiment_name"] = f"wulver_{loss}"
         config_dict["loss_type"] = loss
-        yaml_path_run = f"./configs/config_wulver_{loss}.yaml"
+        yaml_path_run = f"~/configs/config_wulver_{loss}.yaml"
         if os.path.exists(yaml_path_run):
             os.remove(yaml_path_run)
         with open(yaml_path_run, 'w') as f:

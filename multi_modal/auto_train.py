@@ -49,7 +49,7 @@ if __name__ == "__main__" :
             config_dict = yaml.safe_load(f)
         config_dict["experiment_name"] = f"wulver_mm_{loss}"
         config_dict["loss_type"] = loss
-        yaml_path_run = f"./configs/config_wulver_mm_{loss}.yaml"
+        yaml_path_run = f"~/configs/config_wulver_mm_{loss}.yaml"
         if os.path.exists(yaml_path_run):
             os.remove(yaml_path_run)
         with open(yaml_path_run, 'w') as f:
