@@ -44,7 +44,7 @@ if __name__ == "__main__" :
         job_name = f"wulver_mm_{loss}"
         print(f"Submitting job: {job_name}")
         lines.insert(2, f"#SBATCH --job-name={job_name}")
-        yaml_path = "./configs/config_wulver_base.yaml"
+        yaml_path = "./configs/config_wulver_mm_base.yaml"
         with open(yaml_path, 'r') as f:
             config_dict = yaml.safe_load(f)
         config_dict["experiment_name"] = f"wulver_mm_{loss}"
