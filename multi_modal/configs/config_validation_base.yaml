@@ -3,7 +3,7 @@
 
 # Basic Settings
 seed: 250104
-device: 'cpu'  # 'cuda', 'cpu', or 'mps'
+device: 'mps'  # 'cuda', 'cpu', or 'mps'
 experiment_name: 'wulver_mm_base'
 
 # Data Paths
