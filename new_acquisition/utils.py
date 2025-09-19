@@ -110,7 +110,9 @@ def parse_date_range(args) -> Tuple[datetime.date, datetime.date]:
     """
     # mission_start_date를 date 객체로 변환
     mission_start = datetime.datetime.strptime(args.mission_start_date, '%Y-%m-%d').date()
-    today = datetime.date.today()
+    # today = datetime.date.today(datetime.timezone.utc)
+    # today = datetime.datetime(datetime.timezone)
+    today = datetime.datetime.utcnow().date()
     
     # 입력 유효성 검사
     if args.days and (args.start_date or args.end_date):
