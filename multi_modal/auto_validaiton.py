@@ -3,6 +3,8 @@ import time
 import yaml
 
 
+HOME = os.path.expanduser('~')
+
 if __name__ == "__main__" :
     loss_map = [
         # 'mse',

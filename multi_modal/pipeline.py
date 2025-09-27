@@ -229,7 +229,7 @@ class CustomDataset(Dataset):
 
         # Initialize memory management
         self.memory_cache = {}
-        self.cache_enabled = False  # Can be disabled for low-memory scenarios
+        self.cache_enabled = True  # Can be disabled for low-memory scenarios
         
         # Validate and cache data
         self.validate_data()
