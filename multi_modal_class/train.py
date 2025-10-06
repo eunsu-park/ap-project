@@ -349,7 +349,7 @@ def run_train(options: Config) -> None:
 def main():
     """Main function for training script."""
     parser = argparse.ArgumentParser(description='Run model training.')
-    parser.add_argument('--config', default='configs/config_dev.yaml', type=str,
+    parser.add_argument('--config', default='configs/config_wulver.yaml', type=str,
                         help='Path to the config file')
     parser.add_argument('--resume', type=str, default=None,
                         help='Path to checkpoint to resume training from')

@@ -15,4 +15,4 @@ module purge > /dev/null 2>&1
 module load wulver # Load slurm, easybuild
 conda activate ap
 
-srun /home/hl545/miniconda3/envs/ap/bin/python train.py --config ./configs/config_wulver.yaml
+srun /home/hl545/miniconda3/envs/ap/bin/python train.py
