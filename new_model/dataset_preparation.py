@@ -15,8 +15,12 @@ import hydra
 
 @hydra.main(version_base=None, config_path="./configs")
 def main(config):
-    print(config.experiment_name)
-    print(config['experiment_name'])
+
+    data_path = f"{config.data.data_root}/original"
+
+    files = glob(f"{data_path}/*.h5")
+    num_files = len(files)
+    print(f"Number of .h5 files in {data_path}: {num_files}")
 
 if __name__ == "__main__" :
     main()
