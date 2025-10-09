@@ -442,7 +442,7 @@ def run_validation(options: Config, checkpoint_path: str,
 def main():
     """Main function for validation script."""
     parser = argparse.ArgumentParser(description='Run model validation')
-    parser.add_argument('--config', type=str, default='./configs/config_dev.yaml',
+    parser.add_argument('--config', type=str, default='configs/config_wulver.yaml',
                        help='Path to configuration file')
     parser.add_argument('--checkpoint', type=str, required=True,
                        help='Path to model checkpoint')
