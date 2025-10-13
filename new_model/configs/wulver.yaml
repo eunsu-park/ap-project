@@ -70,3 +70,7 @@ training:
   report_freq: 500
   num_epochs: 500
   model_save_freq: 50
+
+validation:
+  checkpoint_path: /home/hl545/ap/results/wulver_mm_class/checkpoint/model_epoch50.pth
+  output_dir: /home/hl545/ap/results/wulver_mm_class/epoch_050

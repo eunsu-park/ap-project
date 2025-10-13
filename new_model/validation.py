@@ -97,7 +97,8 @@ def validation_step(model: torch.nn.Module, data_dict: Dict[str, torch.Tensor],
     try:
         sdo = data_dict["sdo"].to(device)
         inputs = data_dict["inputs"].to(device)
-        targets = data_dict["targets"].to(device)
+        # targets = data_dict["targets"].to(device)
+        targets = data_dict["labels"].to(device)  # For binary classification
 
         with torch.no_grad():
             outputs = model(inputs, sdo)  # Logits
@@ -276,8 +277,7 @@ def save_validation_results(results: Dict[str, Any], output_path: str, logger=No
 
 
 @hydra.main(config_path="./configs", version_base=None)
-def main(config, checkpoint_path: str, 
-         output_dir: Optional[str] = None) -> Dict[str, Any]:
+def main(config) -> Dict[str, Any]:
     """Run validation on the dataset for binary classification.
     
     Args:
@@ -304,6 +304,9 @@ def main(config, checkpoint_path: str,
     for directory in [experiment_dir, checkpoint_dir, log_dir, snapshot_dir, validation_dir]:
         if not os.path.exists(directory):
             os.makedirs(directory)
+
+    checkpoint_path = config.validation.checkpoint_path
+    output_dir = config.validation.output_dir
 
     logger = setup_logger(__name__, log_dir=log_dir)
     logger.info("Starting validation...")
@@ -436,6 +439,19 @@ def main(config, checkpoint_path: str,
     # Save results to text file
     results_file_path = output_dir / "validation_results.txt"
     save_validation_results(results, str(results_file_path), logger)
+
+    print("=" * 60)
+    print("Validation completed successfully!")
+    print(f"Average Loss:     {results['average_loss']:.6f}")
+    print(f"Average Accuracy: {results['average_accuracy']:.4f}")
+    print(f"Success Rate:     {results['success_rate']:.1f}%")
+    print("\nKey Metrics by Variable:")
+    for var_name, metrics in results['metrics_per_variable'].items():
+        print(f"  {var_name}:")
+        print(f"    Accuracy: {metrics['accuracy']:.4f}, TSS: {metrics['TSS']:.4f}, "
+                f"CSI: {metrics['CSI']:.4f}")
+    print(f"\nDetailed results saved to: {results['output_directory']}")
+    print("=" * 60)
 
     # Log summary
     logger.info("\n" + "=" * 80)

@@ -72,3 +72,10 @@ training:
   report_freq: 100
   num_epochs: 10
   model_save_freq: 1
+
+validation:
+  checkpoint_path: /Users/eunsupark/ap_project/results/local_dev/checkpoint/model_epoch1.pth
+  output_dir: /Users/eunsupark/ap_project/results/local_dev/epoch_001
+
+
+# --checkpoint /home/hl545/ap/results/wulver_mm_class/checkpoint/model_epoch50.pth --output_dir /home/hl545/ap/results/wulver_mm_class/epoch_050
