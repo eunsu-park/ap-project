@@ -48,7 +48,7 @@ if __name__ == "__main__" :
         print(f"Submitting job: {job_name}")
         lines.insert(2, f"#SBATCH --job-name={job_name}")
 
-        checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch:03d}.pth"
+        checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
         if not os.path.exists(checkpoint_path):
             print(f"Checkpoint {checkpoint_path} does not exist, skipping...")
             continue
@@ -83,3 +83,5 @@ if __name__ == "__main__" :
         time.sleep(5)
         os.remove("tmp.sh")
         time.sleep(5)
+
+        break
