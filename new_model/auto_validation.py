@@ -72,11 +72,14 @@ if __name__ == "__main__" :
             yaml.dump(config, f)
             print(f"Saved config to: {config_path}")
 
-        command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
+        lines.append( f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}")
 
-        lines.append(command)
-
-        with open(f"{HOME}/TEMP/{experiment_name}_epoch{epoch:03d}.sh", "w") as f:
+        with open("tmp.sh", "w") as f:
             f.write("\n".join(lines))
 
+        command = "sbatch tmp.sh"
+        os.system(command)
+
+        time.sleep(5)
+        os.remove("tmp.sh")
         time.sleep(5)
