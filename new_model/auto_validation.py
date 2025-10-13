@@ -72,7 +72,7 @@ if __name__ == "__main__" :
             yaml.dump(config, f)
             print(f"Saved config to: {config_path}")
 
-        lines.append( f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}")
+        lines.append( f"/home/hl545/miniconda3/envs/ap/bin/python validation.py --config-name {config_name}")
 
         with open("tmp.sh", "w") as f:
             f.write("\n".join(lines))
