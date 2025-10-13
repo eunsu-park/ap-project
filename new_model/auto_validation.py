@@ -8,8 +8,8 @@ HOME = os.path.expanduser('~')
 fixed = [
     "#!/bin/bash -l",
     "",
-    f"#SBATCH --output={HOME}/outs/%x.%j.out # %x.%j expands to slurm JobName.JobID",
-    f"#SBATCH --error={HOME}/errs/%x.%j.err # prints the error message",
+    f"#SBATCH --output={HOME}/TEMP/%x.%j.out # %x.%j expands to slurm JobName.JobID",
+    f"#SBATCH --error={HOME}/TEMP/%x.%j.err # prints the error message",
     "#SBATCH --partition=gpu",
     "#SBATCH --nodes=1",
     "#SBATCH --ntasks-per-node=1",
