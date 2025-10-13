@@ -16,61 +16,6 @@ from pipeline import create_dataloader
 from networks import create_model
 
 
-def calculate_brier_score(targets: np.ndarray, probabilities: np.ndarray) -> float:
-    """Calculate Brier Score for probability predictions.
-    
-    Args:
-        targets: Binary target values (0 or 1)
-        probabilities: Predicted probabilities (between 0 and 1)
-        
-    Returns:
-        Brier Score (lower is better, ranges from 0 to 1)
-    """
-    return np.mean((probabilities - targets) ** 2)
-
-
-def calculate_brier_skill_score(targets: np.ndarray, probabilities: np.ndarray) -> Dict[str, float]:
-    """Calculate Brier Skill Score and related metrics.
-    
-    The Brier Skill Score (BSS) measures the improvement over a reference forecast
-    (typically climatology - the sample mean).
-    
-    BSS = 1 - (BS / BS_ref)
-    where BS_ref is the Brier Score of the reference forecast.
-    
-    Args:
-        targets: Binary target values (0 or 1)
-        probabilities: Predicted probabilities (between 0 and 1)
-        
-    Returns:
-        Dictionary containing:
-        - Brier_Score: The Brier Score of the model
-        - Brier_Score_Reference: Brier Score of climatology forecast
-        - Brier_Skill_Score: The skill score (BSS)
-    """
-    # Calculate Brier Score for the model
-    brier_score = calculate_brier_score(targets, probabilities)
-    
-    # Calculate reference Brier Score (climatology: always predict the mean)
-    climatology = np.mean(targets)
-    brier_score_ref = calculate_brier_score(targets, np.full_like(probabilities, climatology))
-    
-    # Calculate Brier Skill Score
-    # BSS = 1 means perfect forecast
-    # BSS = 0 means no improvement over climatology
-    # BSS < 0 means worse than climatology
-    if brier_score_ref > 0:
-        brier_skill_score = 1 - (brier_score / brier_score_ref)
-    else:
-        brier_skill_score = 0.0
-    
-    return {
-        'Brier_Score': brier_score,
-        'Brier_Score_Reference': brier_score_ref,
-        'Brier_Skill_Score': brier_skill_score
-    }
-
-
 def calculate_contingency_metrics(tp: int, fp: int, fn: int, tn: int) -> Dict[str, float]:
     """Calculate contingency table based metrics for binary classification.
     
@@ -179,14 +124,12 @@ def validation_step(model: torch.nn.Module, data_dict: Dict[str, torch.Tensor],
 
 def calculate_classification_metrics(all_targets: np.ndarray, 
                                      all_predictions: np.ndarray,
-                                     all_probabilities: np.ndarray,
                                      target_variables: list) -> Dict[str, Dict[str, float]]:
     """Calculate classification metrics for each target variable.
     
     Args:
         all_targets: Array of shape (n_samples, n_groups, n_variables)
         all_predictions: Array of shape (n_samples, n_groups, n_variables)
-        all_probabilities: Array of shape (n_samples, n_groups, n_variables)
         target_variables: List of target variable names
         
     Returns:
@@ -199,7 +142,6 @@ def calculate_classification_metrics(all_targets: np.ndarray,
         # Flatten across samples and groups for this variable
         var_targets = all_targets[:, :, var_idx].flatten()
         var_predictions = all_predictions[:, :, var_idx].flatten()
-        var_probabilities = all_probabilities[:, :, var_idx].flatten()
         
         # Calculate basic sklearn metrics
         accuracy = accuracy_score(var_targets, var_predictions)
@@ -224,9 +166,6 @@ def calculate_classification_metrics(all_targets: np.ndarray,
             tp=int(tp), fp=int(fp), fn=int(fn), tn=int(tn)
         )
         
-        # Calculate Brier Skill Score
-        brier_metrics = calculate_brier_skill_score(var_targets, var_probabilities)
-        
         # Combine all metrics
         metrics_dict[var_name] = {
             'accuracy': accuracy,
@@ -237,9 +176,7 @@ def calculate_classification_metrics(all_targets: np.ndarray,
             'positive_rate': var_targets.mean(),  # Class balance
             'predicted_positive_rate': var_predictions.mean(),
             # Add contingency metrics
-            **contingency_metrics,
-            # Add Brier metrics
-            **brier_metrics
+            **contingency_metrics
         }
     
     return metrics_dict
@@ -314,13 +251,6 @@ def save_validation_results(results: Dict[str, Any], output_path: str, logger=No
                 f.write(f"  Bias Score:                      {metrics['Bias']:.4f}\n")
                 f.write(f"  HSS (Heidke Skill Score):        {metrics['HSS']:.4f}\n")
                 f.write(f"  Specificity:                     {metrics['Specificity']:.4f}\n\n")
-                
-                # Brier Score Metrics
-                f.write("Probabilistic Metrics:\n")
-                f.write("-" * 40 + "\n")
-                f.write(f"  Brier Score:                     {metrics['Brier_Score']:.4f}\n")
-                f.write(f"  Brier Score (Reference):         {metrics['Brier_Score_Reference']:.4f}\n")
-                f.write(f"  Brier Skill Score:               {metrics['Brier_Skill_Score']:.4f}\n\n")
                 
                 # Class distribution
                 f.write("Class Distribution:\n")
@@ -471,9 +401,9 @@ def main(config) -> Dict[str, Any]:
     all_predictions = np.concatenate(all_predictions, axis=0)
     all_probabilities = np.concatenate(all_probabilities, axis=0)
     
-    # Calculate per-variable classification metrics (including contingency and Brier metrics)
+    # Calculate per-variable classification metrics (including contingency metrics)
     metrics_per_variable = calculate_classification_metrics(
-        all_targets, all_predictions, all_probabilities, config.data.target_variables
+        all_targets, all_predictions, config.data.target_variables
     )
     
     # Log individual variable metrics
@@ -492,8 +422,6 @@ def main(config) -> Dict[str, Any]:
         logger.info(f"  FAR:       {metrics['FAR']:.4f}")
         logger.info(f"  TSS:       {metrics['TSS']:.4f}")
         logger.info(f"  CSI:       {metrics['CSI']:.4f}")
-        logger.info(f"  Brier Score: {metrics['Brier_Score']:.4f}")
-        logger.info(f"  Brier Skill Score: {metrics['Brier_Skill_Score']:.4f}")
 
     # Compile results
     results = {
@@ -521,7 +449,7 @@ def main(config) -> Dict[str, Any]:
     for var_name, metrics in results['metrics_per_variable'].items():
         print(f"  {var_name}:")
         print(f"    Accuracy: {metrics['accuracy']:.4f}, TSS: {metrics['TSS']:.4f}, "
-                f"CSI: {metrics['CSI']:.4f}, BSS: {metrics['Brier_Skill_Score']:.4f}")
+                f"CSI: {metrics['CSI']:.4f}")
     print(f"\nDetailed results saved to: {results['output_directory']}")
     print("=" * 60)
 

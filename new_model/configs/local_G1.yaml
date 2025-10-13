@@ -23,13 +23,13 @@ environment:
   # validation_list_path: '/Users/eunsupark/ap_project/data/validation_list.csv'
 
 experiment:
-  experiment_name: 'local_dev'
+  experiment_name: 'class_G1'
   phase: 'train'  # 'train' or 'test'
   batch_size: 4
   num_workers: 4
 
 data:
-  dataset_name: 'local_dev'
+  dataset_name: 'class_G1'
   image_size: 64
   input_variables:
     - 'Bx_GSE'
