@@ -29,20 +29,20 @@ fixed = [
 if __name__ == "__main__" :
 
 
-    lines = fixed.copy()
-    lines.insert(2, f"#SBATCH --job-name=class_G1")
-    config_name = "wulver_G1"
-    command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
-    lines.append(command)
-    with open("tmp.sh", "w") as f:
-        f.write("\n".join(lines))
+    # lines = fixed.copy()
+    # lines.insert(2, f"#SBATCH --job-name=class_G1")
+    # config_name = "wulver_G1"
+    # command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
+    # lines.append(command)
+    # with open("tmp.sh", "w") as f:
+    #     f.write("\n".join(lines))
 
-    command = "sbatch tmp.sh"
-    os.system(command)
+    # command = "sbatch tmp.sh"
+    # os.system(command)
 
-    time.sleep(5)
-    os.remove("tmp.sh")
-    time.sleep(5)
+    # time.sleep(5)
+    # os.remove("tmp.sh")
+    # time.sleep(5)
 
 
     lines = fixed.copy()
@@ -61,17 +61,17 @@ if __name__ == "__main__" :
     time.sleep(5)
 
 
-    lines = fixed.copy()
-    lines.insert(2, f"#SBATCH --job-name=class_G3")
-    config_name = "wulver_G3"
-    command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
-    lines.append(command)
-    with open("tmp.sh", "w") as f:
-        f.write("\n".join(lines))
+    # lines = fixed.copy()
+    # lines.insert(2, f"#SBATCH --job-name=class_G3")
+    # config_name = "wulver_G3"
+    # command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
+    # lines.append(command)
+    # with open("tmp.sh", "w") as f:
+    #     f.write("\n".join(lines))
 
-    command = "sbatch tmp.sh"
-    os.system(command)
+    # command = "sbatch tmp.sh"
+    # os.system(command)
 
-    time.sleep(5)
-    os.remove("tmp.sh")
-    time.sleep(5)
+    # time.sleep(5)
+    # os.remove("tmp.sh")
+    # time.sleep(5)
