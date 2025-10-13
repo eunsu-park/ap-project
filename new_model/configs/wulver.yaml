@@ -15,21 +15,19 @@ hydra:
 
 environment:
   seed: 250104
-  device: 'mps'  # 'cuda', 'cpu', or 'mps'
-  data_root: '/Users/eunsupark/ap_project/data/datasets'
-  save_root: '/Users/eunsupark/ap_project/results'
-  # stat_file_path: '/Users/eunsupark/ap_project/data/statistics.pkl'
-  # train_list_path: '/Users/eunsupark/ap_project/data/train_list.csv'
-  # validation_list_path: '/Users/eunsupark/ap_project/data/validation_list.csv'
+  device: 'cuda'
+  data_root: '/mmfs1/home/hl545/ap/data/datasets'
+  save_root: '/mmfs1/home/hl545/ap/results'
+
 
 experiment:
-  experiment_name: 'local_dev'
+  experiment_name: 'default'
   phase: 'train'  # 'train' or 'test'
   batch_size: 4
-  num_workers: 4
+  num_workers: 0
 
 data:
-  dataset_name: 'local_dev'
+  dataset_name: 'default'
   image_size: 64
   input_variables:
     - 'Bx_GSE'
@@ -69,6 +67,6 @@ training:
   loss_type: 'mse'  # 'mse' or 'mae'
   optimizer: 'adam'  # 'adam' or 'sgd'
   learning_rate: 0.0002
-  report_freq: 100
-  num_epochs: 10
-  model_save_freq: 1
+  report_freq: 500
+  num_epochs: 500
+  model_save_freq: 50
