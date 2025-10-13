@@ -17,7 +17,7 @@ fixed = [
     "#SBATCH --mem-per-cpu=4000M # Maximum allowable mempry per CPU 4G",
     "#SBATCH --qos=standard",
     "#SBATCH --account=wangj # Replace PI_ucid which the NJIT UCID of PI",
-    "#SBATCH --time=00:59:59  # D-HH:MM:SS",
+    "#SBATCH --time=3:59:59  # D-HH:MM:SS",
     " ",
     "# Purge any module loaded by default",
     "module purge > /dev/null 2>&1",
