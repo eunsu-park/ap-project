@@ -28,7 +28,7 @@ fixed = [
 
 if __name__ == "__main__" :
 
-    base_config_path = "./configs/wulver_G2.yaml"
+    base_config_path = "./configs/wulver_G1.yaml"
 
     with open(base_config_path, 'r') as f:
         base_config = yaml.safe_load(f)
