@@ -98,27 +98,19 @@ def validate_and_thresholding(file_path, config, save_dir):
     sdo.append(sdo_211)
     sdo = np.concatenate(sdo, axis=1)  # Shape: (20, 2, 64, 64)
     sdo = np.transpose(sdo, (1, 0, 2, 3))  # Shape: (2, 20, 64, 64)
-    # print(sdo.shape)
 
     inputs = []
     for var in input_variables:
         inputs.append(omni_inputs[var][:input_sequence_length])
     inputs = np.array(inputs)  # Shape: (N, input_sequence_length)
-    # print(inputs.shape)
 
     targets = []
     for var in target_variables:
-        targets.append(omni_targets[var][:target_sequence_length])
+        targets.append(omni_targets[var][input_sequence_length:input_sequence_length+target_sequence_length])
     targets = np.array(targets)  # Shape: (M, target_sequence_length)
-    # print(targets.shape)
 
     max_values = np.max(targets, axis=1)
-
     labels = np.float32(max_values >= target_event_threshold)  # (num_groups, num_vector)
-    print(labels)
-
-    # max_value = targets[0].max()
-    # label = float(max_value >= target_event_threshold)#int(max_val >= target_event_threshold).float()
 
     if labels[0] == 0 :
         save_path = f"{save_dir}/negative/{os.path.basename(file_path)}"
@@ -165,75 +157,5 @@ def main(config):
         # break
     print(f"Number of valid files copied to {save_dir}: {num}")
 
-    # print(f"sdo_193 shape: {sdo_193.shape}")
-    # print(f"sdo_211 shape: {sdo_211.shape}")
-    # for var, data in omni_inputs.items():
-    #     print(f"Input variable '{var}' shape: {data.shape}")
-    # for var, data in omni_targets.items():
-    #     print(f"Target variable '{var}' shape: {data.shape}")
-    # print("Data loading complete.")
-
-
 if __name__ == "__main__":
     main()
-
-
-# def _validate_data(self):
-#     """Validate and cache data items with strict NaN exclusion.
-    
-#     Checks each data file for validity and caches successfully processed items.
-#     Any files containing NaN values are logged and excluded from the dataset.
-#     """
-#     valid_files = []
-#     invalid_files = []
-#     processing_errors = []
-#     nan_excluded_files = []
-    
-#     for file_name in self.list_data:
-#         try:
-#             file_path = f"{self.data_root}/{file_name}"
-            
-#             # Read data
-#             sdo_193, sdo_211, omni_inputs, omni_targets = read_h5(
-#                 file_path, self.input_variables, self.target_variables
-#             )
-
-#             # Process and validate data
-#             processed_data = self._process_data_item(
-#                 sdo_193, sdo_211, omni_inputs, omni_targets, file_name
-#             )
-            
-#             if processed_data is not None:
-#                 valid_files.append(file_name)
-#                 if self.cache_enabled:
-#                     self.cache_item(file_name, processed_data)
-#             else:
-#                 nan_excluded_files.append(file_name)
-#                 invalid_files.append(file_name)
-                
-#         except Exception as e:
-#             invalid_files.append(file_name)
-#             processing_errors.append(f"{file_name}: {str(e)}")
-
-#     # Update file list to only include valid files
-#     self.list_data = valid_files
-#     self.nb_data = len(self.list_data)
-#     self.valid_files = valid_files
-#     self.invalid_files = invalid_files
-
-#     # Log validation results
-#     total_files = len(valid_files) + len(invalid_files)
-#     self._log_info(
-#         f"Validation complete: {len(valid_files)}/{total_files} files valid, "
-#         f"{len(invalid_files)} files invalid."
-#     )
-#     self._log_info(f"NaN exclusions: {len(nan_excluded_files)} files contained NaN values")
-    
-#     if processing_errors and self.logger:
-#         self.logger.debug("Processing errors:")
-#         for error in processing_errors[:10]:  # Log first 10 errors
-#             self.logger.debug(f"  {error}")
-    
-#     if len(valid_files) == 0:
-#         raise RuntimeError("No valid data files found after validation")
-
