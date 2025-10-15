@@ -37,11 +37,11 @@ if __name__ == "__main__" :
     with open("tmp.sh", "w") as f:
         f.write("\n".join(lines))
     del lines
-    time.sleep(10)
+    time.sleep(5)
     command = "sbatch tmp.sh"
     os.system(command)
     os.remove("tmp.sh")
-    time.sleep(10)
+    time.sleep(5)
 
     lines = fixed.copy()
     lines.insert(2, f"#SBATCH --job-name=class_G2")
@@ -51,11 +51,11 @@ if __name__ == "__main__" :
     with open("tmp.sh", "w") as f:
         f.write("\n".join(lines))
     del lines
-    time.sleep(10)
+    time.sleep(5)
     command = "sbatch tmp.sh"
     os.system(command)
     os.remove("tmp.sh")
-    time.sleep(10)
+    time.sleep(5)
 
     lines = fixed.copy()
     lines.insert(2, f"#SBATCH --job-name=class_G3")
@@ -65,11 +65,11 @@ if __name__ == "__main__" :
     with open("tmp.sh", "w") as f:
         f.write("\n".join(lines))
     del lines
-    time.sleep(10)
+    time.sleep(5)
     command = "sbatch tmp.sh"
     os.system(command)
     os.remove("tmp.sh")
-    time.sleep(10)
+    time.sleep(5)
 
     lines = fixed.copy()
     lines.insert(2, f"#SBATCH --job-name=class_G1_full")
@@ -79,8 +79,8 @@ if __name__ == "__main__" :
     with open("tmp.sh", "w") as f:
         f.write("\n".join(lines))
     del lines
-    time.sleep(10)
+    time.sleep(5)
     command = "sbatch tmp.sh"
     os.system(command)
     os.remove("tmp.sh")
-    time.sleep(10)
+    time.sleep(5)
