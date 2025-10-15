@@ -40,9 +40,9 @@ if __name__ == "__main__" :
     command = "sbatch tmp.sh"
     os.system(command)
 
-    time.sleep(5)
+    time.sleep(10)
     os.remove("tmp.sh")
-    time.sleep(5)
+    time.sleep(10)
 
 
     # lines = fixed.copy()
