@@ -23,7 +23,7 @@ environment:
 experiment:
   experiment_name: 'class_G1'
   phase: 'train'  # 'train' or 'test'
-  batch_size: 1
+  batch_size: 4
   num_workers: 0
 
 data:
