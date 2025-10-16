@@ -29,47 +29,49 @@ fixed = [
 if __name__ == "__main__" :
 
 
-    lines = fixed.copy()
-    lines.insert(2, f"#SBATCH --job-name=class_G1")
     config_name = "wulver_G1"
-    command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
-    lines.append(command)
-    with open("tmp.sh", "w") as f:
-        f.write("\n".join(lines))
-    del lines
-    time.sleep(5)
-    command = "sbatch tmp.sh"
-    os.system(command)
-    os.remove("tmp.sh")
-    time.sleep(5)
+    job_name = "class_G1"
 
     lines = fixed.copy()
-    lines.insert(2, f"#SBATCH --job-name=class_G2")
-    config_name = "wulver_G2"
+    lines.insert(2, f"#SBATCH --job-name={job_name}")
+    
     command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
     lines.append(command)
-    with open("tmp.sh", "w") as f:
+    with open(f"{job_name}.sh", "w") as f:
         f.write("\n".join(lines))
     del lines
     time.sleep(5)
-    command = "sbatch tmp.sh"
+    command = f"sbatch {job_name}.sh"
     os.system(command)
-    os.remove("tmp.sh")
     time.sleep(5)
 
-    lines = fixed.copy()
-    lines.insert(2, f"#SBATCH --job-name=class_G3")
-    config_name = "wulver_G3"
-    command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
-    lines.append(command)
-    with open("tmp.sh", "w") as f:
-        f.write("\n".join(lines))
-    del lines
-    time.sleep(5)
-    command = "sbatch tmp.sh"
-    os.system(command)
-    os.remove("tmp.sh")
-    time.sleep(5)
+    # lines = fixed.copy()
+    # lines.insert(2, f"#SBATCH --job-name=class_G2")
+    # config_name = "wulver_G2"
+    # command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
+    # lines.append(command)
+    # with open("tmp.sh", "w") as f:
+    #     f.write("\n".join(lines))
+    # del lines
+    # time.sleep(5)
+    # command = "sbatch tmp.sh"
+    # os.system(command)
+    # os.remove("tmp.sh")
+    # time.sleep(5)
+
+    # lines = fixed.copy()
+    # lines.insert(2, f"#SBATCH --job-name=class_G3")
+    # config_name = "wulver_G3"
+    # command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
+    # lines.append(command)
+    # with open("tmp.sh", "w") as f:
+    #     f.write("\n".join(lines))
+    # del lines
+    # time.sleep(5)
+    # command = "sbatch tmp.sh"
+    # os.system(command)
+    # os.remove("tmp.sh")
+    # time.sleep(5)
 
     lines = fixed.copy()
     lines.insert(2, f"#SBATCH --job-name=class_G1_full")
