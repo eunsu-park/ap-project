@@ -28,61 +28,26 @@ fixed = [
 
 if __name__ == "__main__" :
 
+    task_list = ["G1", "G2", "G3", "G1_full"]
 
-    config_name = "wulver_G1"
-    job_name = "class_G1"
+    for task in task_list :
 
-    lines = fixed.copy()
-    lines.insert(2, f"#SBATCH --job-name={job_name}")
-    
-    command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
-    lines.append(command)
-    with open(f"{job_name}.sh", "w") as f:
-        f.write("\n".join(lines))
-    del lines
-    time.sleep(5)
-    command = f"sbatch {job_name}.sh"
-    os.system(command)
-    time.sleep(5)
+        config_name = f"wulver_{task}"
+        job_name = f"class_{task}"
+        script_path = f"./{task}.sh"
 
-    lines = fixed.copy()
-    lines.insert(2, f"#SBATCH --job-name=class_G2")
-    config_name = "wulver_G2"
-    command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
-    lines.append(command)
-    with open("tmp.sh", "w") as f:
-        f.write("\n".join(lines))
-    del lines
-    time.sleep(5)
-    command = "sbatch tmp.sh"
-    os.system(command)
-    os.remove("tmp.sh")
-    time.sleep(5)
+        lines = fixed.copy()
+        lines.insert(2, f"#SBATCH --job-name={job_name}")
 
-    lines = fixed.copy()
-    lines.insert(2, f"#SBATCH --job-name=class_G3")
-    config_name = "wulver_G3"
-    command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
-    lines.append(command)
-    with open("tmp.sh", "w") as f:
-        f.write("\n".join(lines))
-    del lines
-    time.sleep(5)
-    command = "sbatch tmp.sh"
-    os.system(command)
-    os.remove("tmp.sh")
-    time.sleep(5)
+        command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
+        lines.append(command)
 
-    lines = fixed.copy()
-    lines.insert(2, f"#SBATCH --job-name=class_G1_full")
-    config_name = "wulver_G1_full"
-    command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
-    lines.append(command)
-    with open("tmp.sh", "w") as f:
-        f.write("\n".join(lines))
-    del lines
-    time.sleep(5)
-    command = "sbatch tmp.sh"
-    os.system(command)
-    os.remove("tmp.sh")
-    time.sleep(5)
+        with open(script_path, "w") as f:
+            f.write("\n".join(lines))
+
+        time.sleep(5)
+        os.system(f"sbatch {script_path}")
+        time.sleep(5)
+        os.system(f"rm {script_path}")
+
+        del lines, config_name, job_name, script_path
