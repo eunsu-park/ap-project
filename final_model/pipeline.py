@@ -13,34 +13,45 @@ import pandas as pd
 import hydra
 
 
-def read_h5(file_path: str) -> Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-    """Read data from HDF5 file.
+class ReadH5:
+    def __init__(self, config):
     
-    Args:
-        file_path: Path to HDF5 file.
-        input_variables: List of input variable names.
-        target_variables: List of target variable names.
-        
-    Returns:
-        Tuple of (sdo_193, sdo_211, omni_inputs, omni_targets).
-        
-    Raises:
-        FileNotFoundError: If file doesn't exist.
-        KeyError: If required datasets are missing.
-    """
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Data file not found: {file_path}")
+        self.sdo_wavelengths = config.data.sdo_wavelengths
+        self.input_variables = config.data.input_variables
+        self.target_variables = config.data.target_variables
+        self.omni_variables = list(set(self.input_variables + self.target_variables))
 
-    try:
-        with h5py.File(file_path, 'r') as f:
-            sdo = f['sdo'][:]  
-            inputs = f['inputs'][:]
-            targets = f['targets'][:]
-            labels = f['labels'][()]
-    except (OSError, h5py.error.HDF5Error) as e:
-        raise OSError(f"Failed to read HDF5 file {file_path}: {e}")
+    def __call__(self, file_path):
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Data file not found: {file_path}")
+        
+        try:
+            with h5py.File(file_path, 'r') as f:
+                # Read SDO data
+                sdo_data = {}
+                for wavelength in self.sdo_wavelengths:
+                    dataset_name = f"sdo_{wavelength}"
+                    if dataset_name in f:
+                        sdo_data[wavelength] = f[dataset_name][:]
+                    else:
+                        raise KeyError(f"SDO wavelength {wavelength} not found in {file_path}")
 
-    return sdo, inputs, targets, labels
+                # Read OMNI data
+                omni_data = {}
+                for variable in self.omni_variables:
+                    dataset_name = f"omni_{variable}"
+                    if dataset_name in f:
+                        omni_data[variable] = f[dataset_name][:]
+                    else:
+                        raise KeyError(f"OMNI variable {variable} not found in {file_path}")
+
+        except (OSError, h5py.error.HDF5Error) as e:
+            raise OSError(f"Failed to read HDF5 file {file_path}: {e}")
+
+        return sdo_data, omni_data
+
+
+
 
 
 def get_statistics(stat_file_path: str, dataset_path:str,
