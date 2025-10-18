@@ -24,6 +24,7 @@ experiment:
   phase: 'train'  # 'train' or 'test'
   batch_size: 4
   num_workers: 4
+  cache_enable: ture
 
 data:
   dataset_name: 'two_twelve_to_one'
