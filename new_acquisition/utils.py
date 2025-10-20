@@ -5,6 +5,10 @@ from concurrent.futures import ProcessPoolExecutor
 
 import requests
 from bs4 import BeautifulSoup
+from urllib3.exceptions import InsecureRequestWarning
+import urllib3
+
+urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def download_single_file(source_url: str, destination: str, overwrite: bool = False, max_retries: int = 3) -> bool:
@@ -17,7 +21,7 @@ def download_single_file(source_url: str, destination: str, overwrite: bool = Fa
 
     for attempt in range(max_retries + 1):
         try:
-            response = requests.get(source_url, timeout=30)
+            response = requests.get(source_url, timeout=30, verify=False)
             response.raise_for_status()
             
             with open(destination, 'wb') as f:
@@ -37,7 +41,7 @@ def get_file_list(base_url: str, extensions: list) -> list:
     """웹 디렉토리에서 파일 리스트 가져오기"""
     
     try:
-        response = requests.get(f"{base_url}/", timeout=30)
+        response = requests.get(f"{base_url}/", timeout=30, verify=False)
         response.raise_for_status()
         
         soup = BeautifulSoup(response.text, 'html.parser')

@@ -24,7 +24,7 @@ experiment:
   phase: 'train'  # 'train' or 'test'
   batch_size: 4
   num_workers: 4
-  cache_enable: ture
+  cache_enable: true
 
 data:
   dataset_name: 'two_twelve_to_one'
@@ -32,6 +32,7 @@ data:
   sdo_wavelengths:
    - '193'
    - '211'
+  num_sdo_wavelengths: 2
   sdo_sequence_length: 20
   sdo_image_size: 64
   input_variables:
@@ -47,11 +48,12 @@ data:
     - 'DST_index'
     - 'f107_index'
     - 'R_sunspot'
+  num_input_variables: 12
   input_sequence_length: 40
   target_variables:
     - 'ap_index'
+  num_target_variables: 1
   target_sequence_length: 24
-  target_event_threshold: 48
 
 model:
   transformer_d_model: 256
