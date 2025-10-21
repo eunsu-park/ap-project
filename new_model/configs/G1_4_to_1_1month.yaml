@@ -70,8 +70,8 @@ training:
   optimizer: 'adam'  # 'adam' or 'sgd'
   learning_rate: 0.0002
   report_freq: 100
-  num_epochs: 10
-  model_save_freq: 1
+  num_epochs: 500
+  model_save_freq: 50
 
 validation:
   checkpoint_path: /Users/eunsupark/ap_project/results/local_dev/checkpoint/model_epoch500.pth
