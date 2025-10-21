@@ -101,12 +101,12 @@ def validate_and_thresholding(file_path, config, save_dir):
 
     inputs = []
     for var in input_variables:
-        inputs.append(omni_inputs[var][:input_sequence_length])
+        inputs.append(omni_inputs[var][40-input_sequence_length:40])
     inputs = np.array(inputs)  # Shape: (N, input_sequence_length)
 
     targets = []
     for var in target_variables:
-        targets.append(omni_targets[var][input_sequence_length:input_sequence_length+target_sequence_length])
+        targets.append(omni_targets[var][40:40+target_sequence_length])
     targets = np.array(targets)  # Shape: (M, target_sequence_length)
 
     max_values = np.max(targets, axis=1)

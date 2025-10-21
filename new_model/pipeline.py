@@ -154,6 +154,9 @@ class CustomDataset(Dataset):
             raise RuntimeError(f"Failed to load/compute statistics: {e}")
         print(f"Loaded statistics for {len(self.stat_dict)} variables.")
 
+        self.input_sequence_length = options.data.input_sequence_length
+        self.target_sequence_length = options.data.target_sequence_length
+
         self.memory_cache = {}
         self.cache_enabled = True  # Can be disabled for low-memory scenarios
 
@@ -168,6 +171,9 @@ class CustomDataset(Dataset):
         file_path = f"{self.dataset_path}/{file_class}/{file_name}"
 
         sdo, inputs, targets, labels = read_h5(file_path)
+        sdo = sdo[:, 20 - self.input_sequence_length//2 : 20]
+        sdo = sdo * (2./255.) - 1.
+        inputs = inputs[:, 40-self.input_sequence_length : 40]
         inputs = np.transpose(inputs, (1, 0))  # Shape: (sequence_length, num_variables)
         targets = np.transpose(targets, (1, 0))  # Shape: (num_groups, num_vectors)
         labels = np.expand_dims(labels, axis=-1)  # Shape: (num_groups, 1)
@@ -216,9 +222,14 @@ def main(config):
     dataloader = create_dataloader(config)
 
     for batch in dataloader:
-        print(batch['sdo'].shape, batch['inputs'].shape, batch['targets'].shape, batch['labels'].shape, batch['file_names'])
-        tmp = batch['inputs'].numpy()
-        print(tmp.mean(), tmp.std())
+        sdo = batch['sdo'].numpy()
+        inputs = batch['inputs'].numpy()
+        targets = batch['targets'].numpy()
+        labels = batch['labels'].numpy()
+        print(f"sdo: {sdo.shape}, {sdo.mean():.3f}, {sdo.std():.3f}")
+        print(f"inputs: {inputs.shape}, {inputs.mean():.3f}, {inputs.std():.3f}")
+        print(f"targets: {targets.shape}, {targets.mean():.3f}, {targets.std():.3f}")
+        print(f"labels: {labels.shape}, {labels.mean():.3f}, {labels.std():.3f}")
         break
 
 

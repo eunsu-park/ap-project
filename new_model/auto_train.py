@@ -28,16 +28,29 @@ fixed = [
 
 if __name__ == "__main__" :
 
-    task_list = ["G1", "G2", "G3", "G1_full"]
+    config_names = [
+        "G1_3_to_1",
+        "G1_3_to_1_1month",
+        "G1_3_to_2",
+        "G1_3_to_3",
 
-    for task in task_list :
+        "G1_4_to_1",
+        "G1_4_to_1_1month",
+        "G1_4_to_2",
+        "G1_4_to_3",
 
-        config_name = f"wulver_{task}"
-        job_name = f"class_{task}"
-        script_path = f"./{task}.sh"
+        "G1_5_to_1",
+        "G1_5_to_1_1month",
+        "G1_5_to_2",
+        "G1_5_to_3"
+        ]
+
+    for config_name in config_names:
+
+        script_path = f"./{config_name}.sh"
 
         lines = fixed.copy()
-        lines.insert(2, f"#SBATCH --job-name={job_name}")
+        lines.insert(2, f"#SBATCH --job-name={config_name}")
 
         command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
         lines.append(command)
@@ -50,4 +63,4 @@ if __name__ == "__main__" :
         time.sleep(5)
         os.system(f"rm {script_path}")
 
-        del lines, config_name, job_name, script_path
+        del lines, config_name, script_path

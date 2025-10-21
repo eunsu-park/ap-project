@@ -163,16 +163,31 @@ class CustomDataset:
 
 
 def create_dataloader(config, logger=None):
-    dataset = CustomDataset(config)
-    dataloader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=config.experiment.batch_size,
-        shuffle=(config.experiment.phase == 'train'),
-        num_workers=config.experiment.num_workers,
-        pin_memory=(config.environment.device == 'cuda'),
-        drop_last=False  # Keep all samples
-    )
-    return dataloader
+    try :
+        dataset = CustomDataset(config)
+        dataloader = torch.utils.data.DataLoader(
+            dataset,
+            batch_size=config.experiment.batch_size,
+            shuffle=(config.experiment.phase == 'train'),
+            num_workers=config.experiment.num_workers,
+            pin_memory=(config.environment.device == 'cuda'),
+            drop_last=False  # Keep all samples
+        )
+        message = f"Dataloader created with {len(dataloader)} batches."
+        if logger:
+            logger.info(message)
+        else:
+            print(message)
+            
+        return dataloader
+
+    except Exception as e:
+        error_msg = f"Failed to create dataloader: {e}"
+        if logger:
+            logger.error(error_msg)
+        else:
+            print(f"Error: {error_msg}")
+        raise RuntimeError(error_msg)
 
 
 @hydra.main(config_path="./configs", version_base=None)

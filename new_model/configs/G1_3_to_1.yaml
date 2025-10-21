@@ -1,0 +1,81 @@
+# Enhanced Multi-Modal Model Configuration
+# Configuration for transformer + ConvLSTM + CrossModalFusion architecture
+
+defaults:
+  - _self_
+  - override hydra/job_logging: none
+  - override hydra/hydra_logging: none
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .
+  job:
+    chdir: false
+
+environment:
+  seed: 250104
+  # device: 'mps'  # 'cuda', 'cpu', or 'mps'
+  # data_root: '/Users/eunsupark/ap_project/data/datasets'
+  # save_root: '/Users/eunsupark/ap_project/results'
+  device: 'cuda'
+  data_root: '/mmfs1/home/hl545/ap/data/datasets'
+  save_root: '/mmfs1/home/hl545/ap/results'
+
+experiment:
+  experiment_name: 'G1_3day_to_1day'
+  phase: 'train'  # 'train' or 'test'
+  batch_size: 4
+  num_workers: 0
+
+data:
+  dataset_name: 'G1_1day'
+  image_size: 64
+  input_variables:
+    - 'Bx_GSE'
+    - 'By_GSM'
+    - 'Bz_GSM'
+    - 'B_magnitude'
+    - 'Flow_speed'
+    - 'Proton_density'
+    - 'Temperature'
+    - 'Kp_index'
+    - 'ap_index'
+    - 'DST_index'
+    - 'f107_index'
+    - 'R_sunspot'
+  input_sequence_length: 24
+  target_variables:
+    - 'ap_index'
+  target_sequence_length: 8
+  target_event_threshold: 48
+
+model:
+  transformer_d_model: 256
+  transformer_nhead: 8
+  transformer_num_layers: 3
+  transformer_dim_feedforward: 512
+  transformer_dropout: 0.1
+
+  convlstm_input_channels: 2
+  convlstm_hidden_channels: 64
+  convlstm_kernel_size: 3
+  convlstm_num_layers: 2
+
+  fusion_num_heads: 4
+  fusion_dropout: 0.1
+
+training:
+  loss_type: 'mse'  # 'mse' or 'mae'
+  optimizer: 'adam'  # 'adam' or 'sgd'
+  learning_rate: 0.0002
+  report_freq: 100
+  num_epochs: 10
+  model_save_freq: 1
+
+validation:
+  checkpoint_path: /Users/eunsupark/ap_project/results/local_dev/checkpoint/model_epoch500.pth
+  output_dir: /Users/eunsupark/ap_project/results/local_dev/epoch_500
+
+
+# --checkpoint /home/hl545/ap/results/wulver_mm_class/checkpoint/model_epoch50.pth --output_dir /home/hl545/ap/results/wulver_mm_class/epoch_050
