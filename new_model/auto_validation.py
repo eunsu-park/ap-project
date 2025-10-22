@@ -1,6 +1,7 @@
 import os
 import time
 import yaml
+import sys
 
 
 HOME = os.path.expanduser('~')
@@ -48,6 +49,9 @@ if __name__ == "__main__" :
     for base_config_name in base_config_names :
 
         base_config = yaml.safe_load(f"./configs/{base_config_name}.yaml")
+        print(base_config)
+
+        sys.exit()
 
         save_root = base_config["environment"]["save_root"]
         experiment_name = base_config["experiment"]["experiment_name"]
