@@ -23,7 +23,7 @@ environment:
   save_root: '/mmfs1/home/hl545/ap/results'
 
 experiment:
-  experiment_name: 'G1_4day_to_1day'
+  experiment_name: 'G1_4day_to_1day_250104'
   phase: 'train'  # 'train' or 'test'
   batch_size: 4
   num_workers: 0
