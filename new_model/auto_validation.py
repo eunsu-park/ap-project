@@ -51,9 +51,6 @@ if __name__ == "__main__" :
         base_config_path = f"./configs/{base_config_name}.yaml"
         with open(base_config_path, 'r') as f:
             base_config = yaml.safe_load(f) 
-        print(base_config)
-
-        sys.exit()
 
         save_root = base_config["environment"]["save_root"]
         experiment_name = base_config["experiment"]["experiment_name"]
