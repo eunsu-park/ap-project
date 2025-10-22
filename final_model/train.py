@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from datetime import datetime
 from multiprocessing import freeze_support
@@ -39,12 +40,12 @@ def train_step(model: torch.nn.Module, data_dict: Dict[str, torch.Tensor],
     model.train()
     try:
         sdo = data_dict["sdo"].to(device)
-        input = data_dict["input"].to(device)
-        target = data_dict["target"].to(device)
+        inputs = data_dict["inputs"].to(device)
+        targets = data_dict["targets"].to(device)
 
         optimizer.zero_grad()
-        outputs = model(input, sdo)
-        loss = criterion(outputs, target)
+        outputs = model(inputs, sdo)
+        loss = criterion(outputs, targets)
         loss.backward()
         
         # Gradient clipping to prevent exploding gradients
@@ -113,11 +114,11 @@ def train(config) -> None:
         RuntimeError: If training setup or execution fails.
     """
     # Setup logging
-    logger = setup_logger(__name__, log_dir=config.log_dir)
+    logger = setup_logger(__name__, log_dir=config.experiment.log_dir)
     logger.info(f"Training configuration:\n{config}")
 
     # Set seed and device
-    set_seed(config.seed, logger=logger)
+    set_seed(config.experiment.seed, logger=logger)
     device = setup_device(config, logger=logger)
     
     # Create dataloader
@@ -138,11 +139,11 @@ def train(config) -> None:
         
     except Exception as e:
         raise RuntimeError(f"Failed to create model: {e}")
-    
+        
     # Create loss function and optimizer
     try:
         criterion = create_loss(config, logger=logger)
-        optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
+        optimizer = optim.Adam(model.parameters(), lr=config.training.learning_rate)
         
         # Optional: Learning rate scheduler
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(
@@ -156,11 +157,11 @@ def train(config) -> None:
     start_time = datetime.now()
     logger.info("=" * 50)
     logger.info("Training Started")
-    logger.info(f"Total epochs: {config.num_epochs}")
+    logger.info(f"Total epochs: {config.training.num_epochs}")
     logger.info(f"Batches per epoch: {len(dataloader)}")
     logger.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info("=" * 50)
-    
+
     # Training tracking variables
     iterations = 0
     epochs = 0
@@ -169,13 +170,13 @@ def train(config) -> None:
     training_history = []
 
     try:
-        while epochs < config.num_epochs:
+        while epochs < config.training.num_epochs:
             epoch_start_time = time.time()
             running_loss = 0.0
             batch_count = 0
             epoch_loss_sum = 0.0
             
-            logger.info(f"Starting epoch {epochs + 1}/{config.num_epochs}")
+            logger.info(f"Starting epoch {epochs + 1}/{config.training.num_epochs}")
 
             for i, data_dict in enumerate(dataloader):
                 try:
@@ -189,8 +190,8 @@ def train(config) -> None:
                     batch_count += 1
 
                     # Progress reporting
-                    if iterations % config.report_freq == 0:
-                        avg_loss = running_loss / config.report_freq
+                    if iterations % config.training.report_freq == 0:
+                        avg_loss = running_loss / config.training.report_freq
                         elapsed_time = time.time() - epoch_start_time
                         progress = (i + 1) / len(dataloader) * 100
                         
@@ -202,12 +203,12 @@ def train(config) -> None:
 
                         # Save training snapshot
                         try:
-                            plot_path = f"{config.snapshot_dir}/iteration_{iterations}_epoch_{epochs+1}"
+                            plot_path = f"{config.experiment.snapshot_dir}/iteration_{iterations}_epoch_{epochs+1}"
                             plot_title = f'Training Progress - Iteration {iterations}, Epoch {epochs + 1}'
                             save_plot(
                                 targets=train_dict['targets'][0], 
                                 outputs=train_dict['outputs'][0],
-                                target_variables=config.target_variables, 
+                                target_variables=config.data.target_variables, 
                                 stat_dict=dataloader.dataset.stat_dict,
                                 plot_path=plot_path, 
                                 plot_title=plot_title, 
@@ -250,13 +251,13 @@ def train(config) -> None:
                 # Save best model
                 if epoch_avg_loss < best_loss:
                     best_loss = epoch_avg_loss
-                    best_model_path = f"{config.checkpoint_dir}/best_model.pth"
+                    best_model_path = f"{config.experiment.checkpoint_dir}/best_model.pth"
                     save_checkpoint(model, optimizer, epochs, epoch_avg_loss, best_model_path, logger)
                     logger.info(f"New best model saved with loss: {best_loss:.6f}")
 
             # Periodic model saving
-            if epochs % config.model_save_freq == 0:
-                model_path = f"{config.checkpoint_dir}/model_epoch{epochs}.pth"
+            if epochs % config.training.model_save_freq == 0:
+                model_path = f"{config.experiment.checkpoint_dir}/model_epoch{epochs}.pth"
                 save_checkpoint(model, optimizer, epochs, epoch_avg_loss, model_path, logger)
 
     except KeyboardInterrupt:
@@ -266,7 +267,7 @@ def train(config) -> None:
         raise
 
     # Final model save
-    final_model_path = f"{config.checkpoint_dir}/model_final.pth"
+    final_model_path = f"{config.experiment.checkpoint_dir}/model_final.pth"
     final_loss = epoch_losses[-1] if epoch_losses else float('inf')
     save_checkpoint(model, optimizer, epochs, final_loss, final_model_path, logger)
     
@@ -287,7 +288,7 @@ def train(config) -> None:
     # Save training history
     try:
         import json
-        history_path = f"{config.log_dir}/training_history.json"
+        history_path = f"{config.experiment.log_dir}/training_history.json"
         with open(history_path, 'w') as f:
             json.dump(training_history, f, indent=2)
         logger.info(f"Training history saved: {history_path}")
@@ -305,7 +306,7 @@ def train(config) -> None:
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
             
-            curve_path = f"{config.log_dir}/training_curve.png"
+            curve_path = f"{config.experiment.log_dir}/training_curve.png"
             plt.savefig(curve_path, dpi=150, bbox_inches='tight')
             plt.close()
             logger.info(f"Training curve saved: {curve_path}")
@@ -316,22 +317,35 @@ def train(config) -> None:
 @hydra.main(config_path="./configs", version_base=None)
 def main(config):
     try :
-            
-        # print(config.experiment_dir)
-        # print(config.checkpoint_dir)
-        # print(config.log_dir)
-        # print(config.snapshot_dir)
-        # print(config.validation_dir)
 
-        # import sys
-        # sys.exit()
+        save_root = config.environment.save_root
+        experiment_name = config.experiment.experiment_name
+        experiment_dir = f"{save_root}/{experiment_name}"
+        chechpoint_dir = f"{experiment_dir}/checkpoint"
+        log_dir = f"{experiment_dir}/log"
+        validation_dir = f"{experiment_dir}/validation"
+        snapshot_dir = f"{experiment_dir}/snapshot"
+
+        dir_paths = [
+            experiment_dir, chechpoint_dir,
+            log_dir, validation_dir, snapshot_dir
+        ]
+        for dir_path in dir_paths:
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path, exist_ok=True)
+
+        config.experiment.experiment_dir = experiment_dir
+        config.experiment.checkpoint_dir = chechpoint_dir
+        config.experiment.log_dir = log_dir
+        config.experiment.validation_dir = validation_dir
+        config.experiment.snapshot_dir = snapshot_dir
 
         # Run training
         train(config)
         
         print("=" * 60)
         print("Training completed successfully!")
-        print(f"Results saved to: {config.save_root}/{config.experiment_name}")
+        print(f"Results saved to: {config.experiment.experiment_dir}")
         print("=" * 60)
         
     except KeyboardInterrupt:

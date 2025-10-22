@@ -14,16 +14,21 @@ hydra:
     chdir: false
 
 environment:
-  seed: 250104
   device: 'mps'  # 'cuda', 'cpu', or 'mps'
   data_root: '/Users/eunsupark/ap_project/data/datasets'
   save_root: '/Users/eunsupark/ap_project/results'
 
 experiment:
-  experiment_name: 'local_dev'
+  experiment_name: 'reg_local_dev'
+  experiment_dir: null
+  checkpoint_dir: null
+  log_dir: null
+  validation_dir: null
+  snapshot_dir: null
+  seed: 250104
   phase: 'train'  # 'train' or 'test'
   batch_size: 4
-  num_workers: 4
+  num_workers: 0
   cache_enable: true
 
 data:

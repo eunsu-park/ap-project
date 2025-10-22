@@ -98,7 +98,7 @@ def setup_device(options, logger: Optional[logging.Logger] = None) -> torch.devi
     Returns:
         Configured torch.device.
     """
-    requested_device = options.device
+    requested_device = options.environment.device
     
     # Check CUDA availability
     if requested_device == 'cuda':

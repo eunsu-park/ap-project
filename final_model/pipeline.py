@@ -152,8 +152,8 @@ class CustomDataset:
 
         data_dict = {
             "sdo": sdo_tensor,
-            "input": input_tensor,
-            "target": target_tensor,
+            "inputs": input_tensor,
+            "targets": target_tensor,
             "file_name": file_name    
         }
 
