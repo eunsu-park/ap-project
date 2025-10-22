@@ -30,17 +30,17 @@ if __name__ == "__main__" :
 
     config_names = [
         "G1_3_to_1",
-        "G1_3_to_1_1month",
+        # "G1_3_to_1_1month",
         "G1_3_to_2",
         "G1_3_to_3",
 
         "G1_4_to_1",
-        "G1_4_to_1_1month",
+        # "G1_4_to_1_1month",
         "G1_4_to_2",
         "G1_4_to_3",
 
         "G1_5_to_1",
-        "G1_5_to_1_1month",
+        # "G1_5_to_1_1month",
         "G1_5_to_2",
         "G1_5_to_3"
         ]
