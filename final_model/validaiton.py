@@ -10,8 +10,7 @@ import torch.nn as nn
 import numpy as np
 import hydra
 
-from utils import set_seed, setup_logger, setup_device, load_model, save_plot, calculate_metrics
-from config import Config
+from utils import setup_logger, setup_device, load_model, save_plot, calculate_metrics
 from pipeline import create_dataloader
 from networks import create_model
 
@@ -51,14 +50,13 @@ def validation_step(model: torch.nn.Module, data_dict: Dict[str, torch.Tensor],
         raise RuntimeError(f"Validation step failed: {e}")
 
 
-def run_validation(options: Config, checkpoint_path: str, 
-                  output_dir: Optional[str] = None) -> Dict[str, Any]:
+def validation(config) -> Dict[str, Any]:
     """Run validation on the dataset.
     
     Args:
-        options: Configuration object.
+        config: Configuration object.
         checkpoint_path: Path to model checkpoint.
-        output_dir: Directory to save validation results. If None, uses options.validation_dir.
+        output_dir: Directory to save validation results. If None, uses config.validation_dir.
         
     Returns:
         Dictionary containing validation results including average loss and metrics.
@@ -68,27 +66,30 @@ def run_validation(options: Config, checkpoint_path: str,
         RuntimeError: If validation fails completely.
     """
     # Setup logging
-    logger = setup_logger(__name__, log_dir=options.log_dir)
+    logger = setup_logger(__name__, log_dir=config.experiment.log_dir)
     logger.info("Starting validation...")
-    logger.info(f"Checkpoint: {checkpoint_path}")
+    logger.info(f"Checkpoint: {config.validation.checkpoint_path}")
 
     # Setup device
-    device = setup_device(options, logger)
+    device = setup_device(config, logger)
+
+    output_dir = config.validation.output_dir
+    checkpoint_path = config.validation.checkpoint_path
 
     # Create validation dataloader
-    validation_options = copy.deepcopy(options)
-    validation_options.phase = 'validation'
-    validation_options.batch_size = 1
+    validation_config = copy.deepcopy(config)
+    validation_config.experiment.phase = 'validation'
+    validation_config.experiment.batch_size = 1
 
     try:
-        validation_dataloader = create_dataloader(validation_options, logger=logger)
+        validation_dataloader = create_dataloader(validation_config, logger=logger)
         logger.info(f"Validation dataloader created with {len(validation_dataloader)} batches.")
     except Exception as e:
         raise RuntimeError(f"Failed to create validation dataloader: {e}")
 
     # Create and load model
     try:
-        model = create_model(options, logger=logger)
+        model = create_model(config, logger=logger)
         model = load_model(model, checkpoint_path, device, logger=logger)
     except Exception as e:
         raise RuntimeError(f"Failed to load model: {e}")
@@ -99,7 +100,7 @@ def run_validation(options: Config, checkpoint_path: str,
     # Setup output directory
     if output_dir is None:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_dir = f"{options.validation_dir}/validation_{timestamp}"
+        output_dir = f"{config.experiment.validation_dir}/validation_{timestamp}"
     
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -138,7 +139,7 @@ def run_validation(options: Config, checkpoint_path: str,
                     save_plot(
                         targets=sample_targets, 
                         outputs=sample_outputs,
-                        target_variables=options.target_variables, 
+                        target_variables=config.data.target_variables, 
                         stat_dict=validation_dataloader.dataset.stat_dict,
                         plot_path=plot_path, 
                         plot_title=plot_title, 
@@ -178,7 +179,7 @@ def run_validation(options: Config, checkpoint_path: str,
     detailed_metrics = calculate_metrics(
         all_targets[..., np.newaxis, :].transpose(0, 2, 1), 
         all_outputs[..., np.newaxis, :].transpose(0, 2, 1),
-        options.target_variables
+        config.data.target_variables
     )
     
     # Extract RMSE for backward compatibility
@@ -204,7 +205,7 @@ def run_validation(options: Config, checkpoint_path: str,
         save_plot(
             targets=mean_targets, 
             outputs=mean_outputs,
-            target_variables=options.target_variables, 
+            target_variables=config.data.target_variables, 
             stat_dict=validation_dataloader.dataset.stat_dict,
             plot_path=overall_plot_path, 
             plot_title=overall_plot_title, 
@@ -244,33 +245,15 @@ def run_validation(options: Config, checkpoint_path: str,
 
 
 @hydra.main(config_path="./configs", version_base=None)
-def main():
-    """Main function for validation script."""
-    parser = argparse.ArgumentParser(description='Run model validation')
-    parser.add_argument('--config', type=str, default='config_dev.yaml',
-                       help='Path to configuration file')
-    parser.add_argument('--checkpoint', type=str, required=True,
-                       help='Path to model checkpoint')
-    parser.add_argument('--output_dir', type=str, default=None,
-                       help='Output directory for validation results')
-    parser.add_argument('--seed', type=int, default=None,
-                       help='Random seed (overrides config)')
-    
-    args = parser.parse_args()
-
+def main(config):
     try:
-        # Load configuration
-        options = Config().from_args_and_yaml(yaml_path=args.config, args=args)
-        print(args.config, options.experiment_name)
 
-        options.validate()
-        options.make_directories()
-        
-        # Set random seed
-        set_seed(options.seed)
+        output_dir = config.validation.output_dir
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
 
         # Run validation
-        results = run_validation(options, args.checkpoint, args.output_dir)
+        results = validation(config)
         
         # Print success message with key metrics
         print("=" * 60)

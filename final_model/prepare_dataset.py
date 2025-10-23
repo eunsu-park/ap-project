@@ -182,6 +182,5 @@ def main(config):
             std = stat_dict[variable]['std']
             print(f'{variable} : {mean:.3f} +- {std:.3f}')
 
-
 if __name__ == "__main__":
     main()

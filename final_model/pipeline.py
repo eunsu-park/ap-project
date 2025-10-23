@@ -154,7 +154,7 @@ class CustomDataset:
             "sdo": sdo_tensor,
             "inputs": input_tensor,
             "targets": target_tensor,
-            "file_name": file_name    
+            "file_names": file_name    
         }
 
         self.memory_cache[file_name] = data_dict

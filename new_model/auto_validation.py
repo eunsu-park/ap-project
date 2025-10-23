@@ -31,17 +31,17 @@ if __name__ == "__main__" :
 
     base_config_names = [
         "G1_3_to_1",
-        "G1_3_to_1_1month",
+        # "G1_3_to_1_1month",
         "G1_3_to_2",
         "G1_3_to_3",
 
         "G1_4_to_1",
-        "G1_4_to_1_1month",
+        # "G1_4_to_1_1month",
         "G1_4_to_2",
         "G1_4_to_3",
 
         "G1_5_to_1",
-        "G1_5_to_1_1month",
+        # "G1_5_to_1_1month",
         "G1_5_to_2",
         "G1_5_to_3"
         ]
@@ -63,7 +63,7 @@ if __name__ == "__main__" :
             lines = fixed.copy()
             epoch = (n+1)*50
 
-            job_name = f"class_{epoch:03d}"
+            job_name = f"{experiment_name}_{epoch:03d}"
             print(f"Submitting job: {job_name}")
             lines.insert(2, f"#SBATCH --job-name={job_name}")
 

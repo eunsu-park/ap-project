@@ -317,7 +317,6 @@ def train(config) -> None:
 @hydra.main(config_path="./configs", version_base=None)
 def main(config):
     try :
-
         save_root = config.environment.save_root
         experiment_name = config.experiment.experiment_name
         experiment_dir = f"{save_root}/{experiment_name}"
