@@ -48,7 +48,7 @@ if __name__ == "__main__" :
     
     for base_config_name in base_config_names :
 
-        base_config_path = f"./configs/val_{base_config_name}.yaml"
+        base_config_path = f"./configs/{base_config_name}.yaml"
         with open(base_config_path, 'r') as f:
             base_config = yaml.safe_load(f) 
 
@@ -85,7 +85,7 @@ if __name__ == "__main__" :
                 "output_dir": output_dir
             }
 
-            config_name = f"{experiment_name}_epoch{epoch:03d}"
+            config_name = f"val_{experiment_name}_epoch{epoch:03d}"
             config_path = f"./configs/{config_name}.yaml"
             with open(config_path, 'w') as f:
                 yaml.dump(config, f)
