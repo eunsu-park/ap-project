@@ -203,7 +203,7 @@ def train(config) -> None:
 
                         # Save training snapshot
                         try:
-                            plot_path = f"{config.experiment.snapshot_dir}/iteration_{iterations}_epoch_{epochs+1}"
+                            plot_path = f"{config.experiment.snapshot_dir}/iteration_{iterations:07d}_epoch_{epochs+1:04d}"
                             plot_title = f'Training Progress - Iteration {iterations}, Epoch {epochs + 1}'
                             save_plot(
                                 targets=train_dict['targets'][0], 
@@ -251,13 +251,13 @@ def train(config) -> None:
                 # Save best model
                 if epoch_avg_loss < best_loss:
                     best_loss = epoch_avg_loss
-                    best_model_path = f"{config.experiment.checkpoint_dir}/best_model.pth"
+                    best_model_path = f"{config.experiment.checkpoint_dir}/model_best.pth"
                     save_checkpoint(model, optimizer, epochs, epoch_avg_loss, best_model_path, logger)
                     logger.info(f"New best model saved with loss: {best_loss:.6f}")
 
             # Periodic model saving
             if epochs % config.training.model_save_freq == 0:
-                model_path = f"{config.experiment.checkpoint_dir}/model_epoch{epochs}.pth"
+                model_path = f"{config.experiment.checkpoint_dir}/model_epoch_{epochs:04d}.pth"
                 save_checkpoint(model, optimizer, epochs, epoch_avg_loss, model_path, logger)
 
     except KeyboardInterrupt:

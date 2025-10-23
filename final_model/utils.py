@@ -74,7 +74,7 @@ def setup_logger(name: str, log_dir: Optional[str] = None,
         try:
             os.makedirs(log_dir, exist_ok=True)
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            log_file = os.path.join(log_dir, f'training_{timestamp}.log')
+            log_file = os.path.join(log_dir, f'{timestamp}.log')
             
             file_handler = logging.FileHandler(log_file)
             file_handler.setLevel(level)

@@ -79,9 +79,9 @@ training:
   loss_type: 'mse'  # 'mse' or 'mae'
   optimizer: 'adam'  # 'adam' or 'sgd'
   learning_rate: 0.0002
-  report_freq: 100
-  num_epochs: 100
-  model_save_freq: 10
+  report_freq: 1000
+  num_epochs: 10
+  model_save_freq: 1
 
 validation:
   checkpoint_path: /Users/eunsupark/ap_project/results/reg_local_dev/checkpoint/model_epoch10.pth
