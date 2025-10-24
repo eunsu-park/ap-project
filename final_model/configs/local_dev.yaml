@@ -84,8 +84,8 @@ training:
   model_save_freq: 1
 
 validation:
-  checkpoint_path: /Users/eunsupark/ap_project/results/reg_local_dev/checkpoint/model_epoch10.pth
-  output_dir: /Users/eunsupark/ap_project/results/reg_local_dev/validation/epoch_010
+  checkpoint_path: /Users/eunsupark/ap_project/results/reg_local_dev/checkpoint/model_epoch_0010.pth
+  output_dir: /Users/eunsupark/ap_project/results/reg_local_dev/validation/epoch_0010
 
 
 # --checkpoint /home/hl545/ap/results/wulver_mm_class/checkpoint/model_epoch50.pth --output_dir /home/hl545/ap/results/wulver_mm_class/epoch_050

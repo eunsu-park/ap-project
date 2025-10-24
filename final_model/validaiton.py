@@ -1,4 +1,5 @@
 import os
+import sys
 import copy
 import argparse
 from datetime import datetime
@@ -50,7 +51,7 @@ def validation_step(model: torch.nn.Module, data_dict: Dict[str, torch.Tensor],
         raise RuntimeError(f"Validation step failed: {e}")
 
 
-def validation(config) -> Dict[str, Any]:
+def validation(config):
     """Run validation on the dataset.
     
     Args:
@@ -156,7 +157,7 @@ def validation(config) -> Dict[str, Any]:
             # Log progress periodically
             if (i + 1) % 50 == 0:
                 logger.info(f"Processed {i + 1}/{len(validation_dataloader)} batches")
-                
+
         except Exception as e:
             logger.warning(f"Validation failed for batch {i}: {e}")
             failed_batches += 1
@@ -174,11 +175,14 @@ def validation(config) -> Dict[str, Any]:
     # Calculate per-variable metrics using improved utils function
     all_targets = np.array(all_targets)  # Shape: (n_samples, seq_len, n_vars)
     all_outputs = np.array(all_outputs)
+
+    print(all_targets.shape)
+    print(all_outputs.shape)
     
     # Calculate comprehensive metrics
     detailed_metrics = calculate_metrics(
-        all_targets[..., np.newaxis, :].transpose(0, 2, 1), 
-        all_outputs[..., np.newaxis, :].transpose(0, 2, 1),
+        all_targets[..., np.newaxis, :],#.transpose(0, 2, 1), 
+        all_outputs[..., np.newaxis, :],#.transpose(0, 2, 1),
         config.data.target_variables
     )
     
