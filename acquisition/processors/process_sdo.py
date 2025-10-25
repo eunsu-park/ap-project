@@ -105,7 +105,7 @@ def main_optimized(date_target, args):
                 data_path = f"{args.input_dir}/{wave:d}/{year:04d}/{year:04d}{month:02d}{day:02d}"
                 data_name = f"{year:04d}_{month:02d}_{day:02d}__{hour:02d}_00_*_*__SDO_AIA_AIA_{wave:d}.jp2"
                 data_list = sorted(glob(f"{data_path}/{data_name}"))
-                print(data_path, data_name, len(data_list))
+                # print(data_path, data_name, len(data_list))
                 
                 found = False
                 for file_path in data_list:
