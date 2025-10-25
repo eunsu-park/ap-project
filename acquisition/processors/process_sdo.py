@@ -337,7 +337,7 @@ def main():
                        default='/Volumes/usbshare1/data/sdo_jp2/aia',
                        help='Input directory path')
     parser.add_argument('--output-dir', type=str,
-                       default='/Users/eunsupark/ap_project/data/new_processed',
+                       default='/Users/eunsupark/ap-project/data/new_processed',
                        help='Output directory path')
     
     # Date range
