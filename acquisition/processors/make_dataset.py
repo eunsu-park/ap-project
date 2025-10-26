@@ -76,11 +76,11 @@ def main(load_dir, save_root):
 
 if __name__ == "__main__" :
 
-    list_dataset = glob("../data/processed/*")
+    list_dataset = glob("/Users/eunsupark/ap-project/data/new_processed/*")
     nb_dataset = len(list_dataset)
     print(f"총 {nb_dataset}개의 데이터셋이 있습니다.")
 
-    save_root = "../data/final"
+    save_root = "/Users/eunsupark/ap-project/data/new_final"
     
     # 출력 디렉토리 생성
     os.makedirs(save_root, exist_ok=True)
