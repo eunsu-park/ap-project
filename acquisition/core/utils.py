@@ -321,7 +321,8 @@ class DirectoryTimeExtractor:
         """패턴을 사용해 디렉토리 이름에서 datetime 추출"""
         try:
             # 디렉토리 이름에서 시간 부분 추출 ('-' 앞부분)
-            time_str = dirname.split('-')[0]
+            # time_str = dirname.split('-')[0]
+            time_str = dirname
             return datetime.strptime(time_str, pattern)
         except (ValueError, IndexError):
             return None
