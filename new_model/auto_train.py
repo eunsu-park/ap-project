@@ -63,6 +63,10 @@ if __name__ == "__main__" :
             with open(script_path, "w") as f:
                 f.write("\n".join(lines))
 
+            time.sleep(5)
+            os.system(f"sbatch {script_path}")
+            time.sleep(5)
+
             del lines, config_name, script_path
 
 
