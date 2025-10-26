@@ -16,21 +16,22 @@ hydra:
 environment:
   seed: 250104
   device: 'mps'  # 'cuda', 'cpu', or 'mps'
-  data_root: '/Users/eunsupark/ap_project/data/datasets'
-  save_root: '/Users/eunsupark/ap_project/results'
-  # stat_file_path: '/Users/eunsupark/ap_project/data/statistics.pkl'
-  # train_list_path: '/Users/eunsupark/ap_project/data/train_list.csv'
-  # validation_list_path: '/Users/eunsupark/ap_project/data/validation_list.csv'
+  data_root: '/Users/eunsupark/ap-project/data/datasets'
+  save_root: '/Users/eunsupark/ap-project/results'
 
 experiment:
-  experiment_name: 'local_dev'
+  experiment_name: 'seven_to_one'
   phase: 'train'  # 'train' or 'test'
   batch_size: 4
-  num_workers: 4
+  num_workers: 0
 
 data:
-  dataset_name: 'local_dev'
-  image_size: 64
+  dataset_name: 'two_twelve_to_one'
+  sdo_wavelengths:
+    - 193
+    - 211
+  sdo_image_size: 64
+  sdo_sequence_length: 28
   input_variables:
     - 'Bx_GSE'
     - 'By_GSM'
@@ -44,11 +45,12 @@ data:
     - 'DST_index'
     - 'f107_index'
     - 'R_sunspot'
-  input_sequence_length: 40
+  input_sequence_length: 56
+  split_index: 80
   target_variables:
     - 'ap_index'
-  target_sequence_length: 24
-  target_event_threshold: 48
+  target_sequence_length: 8
+  target_day: 1
 
 model:
   transformer_d_model: 256

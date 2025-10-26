@@ -15,21 +15,21 @@ hydra:
 
 environment:
   seed: 250104
-  # device: 'mps'  # 'cuda', 'cpu', or 'mps'
-  # data_root: '/Users/eunsupark/ap_project/data/datasets'
-  # save_root: '/Users/eunsupark/ap_project/results'
-  device: 'cuda'
-  data_root: '/mmfs1/home/hl545/ap/data/datasets'
-  save_root: '/mmfs1/home/hl545/ap/results'
+  device: 'mps'  # 'cuda', 'cpu', or 'mps'
+  data_root: '/Users/eunsupark/ap-project/data/datasets'
+  save_root: '/Users/eunsupark/ap-project/results'
+  # stat_file_path: '/Users/eunsupark/ap_project/data/statistics.pkl'
+  # train_list_path: '/Users/eunsupark/ap_project/data/train_list.csv'
+  # validation_list_path: '/Users/eunsupark/ap_project/data/validation_list.csv'
 
 experiment:
-  experiment_name: 'G1_4day_to_1day_1month'
+  experiment_name: 'class_G1'
   phase: 'train'  # 'train' or 'test'
   batch_size: 4
-  num_workers: 0
+  num_workers: 4
 
 data:
-  dataset_name: 'G1_1day_1month'
+  dataset_name: 'class_G1'
   image_size: 64
   input_variables:
     - 'Bx_GSE'
@@ -44,10 +44,10 @@ data:
     - 'DST_index'
     - 'f107_index'
     - 'R_sunspot'
-  input_sequence_length: 32
+  input_sequence_length: 40
   target_variables:
     - 'ap_index'
-  target_sequence_length: 8
+  target_sequence_length: 24
   target_event_threshold: 48
 
 model:
@@ -70,12 +70,12 @@ training:
   optimizer: 'adam'  # 'adam' or 'sgd'
   learning_rate: 0.0002
   report_freq: 100
-  num_epochs: 500
-  model_save_freq: 50
+  num_epochs: 10
+  model_save_freq: 1
 
 validation:
-  checkpoint_path: /Users/eunsupark/ap_project/results/local_dev/checkpoint/model_epoch500.pth
-  output_dir: /Users/eunsupark/ap_project/results/local_dev/epoch_500
+  checkpoint_path: /Users/eunsupark/ap_project/results/class_G1/checkpoint/model_epoch100.pth
+  output_dir: /Users/eunsupark/ap_project/results/class_G1/epoch_100
 
 
 # --checkpoint /home/hl545/ap/results/wulver_mm_class/checkpoint/model_epoch50.pth --output_dir /home/hl545/ap/results/wulver_mm_class/epoch_050

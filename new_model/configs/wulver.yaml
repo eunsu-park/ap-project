@@ -27,8 +27,12 @@ experiment:
   num_workers: 0
 
 data:
-  dataset_name: 'default'
-  image_size: 64
+  dataset_name: 'two_twelve_to_one'
+  sdo_wavelengths:
+    - 193
+    - 211
+  sdo_image_size: 64
+  sdo_sequence_length: 28
   input_variables:
     - 'Bx_GSE'
     - 'By_GSM'
@@ -42,11 +46,12 @@ data:
     - 'DST_index'
     - 'f107_index'
     - 'R_sunspot'
-  input_sequence_length: 40
+  input_sequence_length: 56
+  split_index: 80
   target_variables:
     - 'ap_index'
-  target_sequence_length: 24
-  target_event_threshold: 48
+  target_sequence_length: 8
+  target_day: 1
 
 model:
   transformer_d_model: 256
@@ -67,9 +72,9 @@ training:
   loss_type: 'mse'  # 'mse' or 'mae'
   optimizer: 'adam'  # 'adam' or 'sgd'
   learning_rate: 0.0002
-  report_freq: 500
+  report_freq: 1000
   num_epochs: 500
-  model_save_freq: 50
+  model_save_freq: 100
 
 validation:
   checkpoint_path: /home/hl545/ap/results/wulver_mm_class/checkpoint/model_epoch50.pth

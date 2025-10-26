@@ -13,38 +13,37 @@ import pandas as pd
 import hydra
 
 
-def read_h5(file_path: str) -> Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-    """Read data from HDF5 file.
-    
-    Args:
-        file_path: Path to HDF5 file.
-        input_variables: List of input variable names.
-        target_variables: List of target variable names.
-        
-    Returns:
-        Tuple of (sdo_193, sdo_211, omni_inputs, omni_targets).
-        
-    Raises:
-        FileNotFoundError: If file doesn't exist.
-        KeyError: If required datasets are missing.
-    """
+def read_h5(file_path: str, sdo_wavelengths: List[str], omni_variables: List[str]) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Data file not found: {file_path}")
 
     try:
         with h5py.File(file_path, 'r') as f:
-            sdo = f['sdo'][:]  
-            inputs = f['inputs'][:]
-            targets = f['targets'][:]
-            labels = f['labels'][()]
+            # Read SDO data
+            sdo_data = {}
+            for wavelength in sdo_wavelengths:
+                dataset_name = f"sdo_{wavelength}"
+                if dataset_name in f:
+                    sdo_data[wavelength] = f[dataset_name][:]
+                else:
+                    raise KeyError(f"SDO wavelength {wavelength} not found in {file_path}")
+                
+            omni_data = {}
+            for variable in omni_variables:
+                dataset_name = f"omni_{variable}"
+                if dataset_name in f:
+                    omni_data[variable] = f[dataset_name][:]
+                else:
+                    raise KeyError(f"OMNI variable {variable} not found in {file_path}")
+
     except (OSError, h5py.error.HDF5Error) as e:
         raise OSError(f"Failed to read HDF5 file {file_path}: {e}")
 
-    return sdo, inputs, targets, labels
+    return sdo_data, omni_data
 
 
-def get_statistics(stat_file_path: str, dataset_path:str,
-                   file_list: List[str], overwrite: bool = False) -> Dict[str, Dict[str, float]]:
+def get_statistics(stat_file_path: str, data_root: str, data_file_list: List[str], 
+                  variables: List[str], overwrite: bool = False) -> Dict[str, Dict[str, float]]:
     """Compute and cache statistics for data normalization.
     
     Args:
@@ -62,11 +61,8 @@ def get_statistics(stat_file_path: str, dataset_path:str,
         ValueError: If no valid data is found for statistics computation.
     """
     # Filter for h5 files only
-
-    data_file_list = []
-    for (file_name, file_class) in file_list :
-        data_file_list.append(f"{dataset_path}/{file_class}/{file_name}")
-
+    data_file_list = [f"{data_root}/{f}" for f in data_file_list if f.endswith('.h5')]
+    
     if not data_file_list:
         raise ValueError("No valid .h5 files found in data file list")
     
@@ -75,7 +71,9 @@ def get_statistics(stat_file_path: str, dataset_path:str,
     if os.path.exists(stat_file_path) and not overwrite:
         # Load existing statistics
         try:
-            stat_dict = pickle.load(open(stat_file_path, 'rb'))
+            loaded = pickle.load(open(stat_file_path, 'rb'))
+            for variable in variables:
+                stat_dict[variable] = loaded.get(variable, {})
         except (pickle.PickleError, KeyError) as e:
             print(f"Warning: Failed to load statistics from {stat_file_path}: {e}")
             print("Recomputing statistics...")
@@ -83,23 +81,49 @@ def get_statistics(stat_file_path: str, dataset_path:str,
     
     if not os.path.exists(stat_file_path) or overwrite:
         # Compute statistics from scratch
-        all_data = []
+        total_dict = {variable: [] for variable in variables}
+        
+        valid_files = 0
         for data_file_path in data_file_list:
-            with h5py.File(data_file_path, 'r') as f:
-                data = f['inputs'][:]
-                all_data.append(data)
+            if not os.path.exists(data_file_path):
+                print(f"Warning: File not found: {data_file_path}")
+                continue
+                
+            try:
+                with h5py.File(data_file_path, 'r') as f:
+                    for variable in variables:
+                        dataset_name = f"omni_{variable}"
+                        if dataset_name in f:
+                            data = f[dataset_name][:]
+                            # Filter out NaN and infinite values
+                            valid_data = data[np.isfinite(data)]
+                            if len(valid_data) > 0:
+                                total_dict[variable].append(valid_data)
+                        else:
+                            print(f"Warning: Variable {variable} not found in {data_file_path}")
+                valid_files += 1
+            except (OSError, KeyError) as e:
+                print(f"Warning: Failed to read {data_file_path}: {e}")
+                continue
+        
+        if valid_files == 0:
+            raise ValueError("No valid data files found for statistics computation")
         
         # Compute final statistics
-        all_data = np.concatenate(all_data, axis=1)  # Shape: (num_samples, num_variables)
-        
-        mean = np.mean(all_data, axis=1)
-        std = np.std(all_data, axis=1)
-        mean = np.expand_dims(mean, axis=0)
-        std = np.expand_dims(std, axis=0)
-        stat_dict = {
-            'mean': mean,
-            'std': std
-        }
+        for variable in variables:
+            if total_dict[variable]:
+                concatenated_data = np.concatenate(total_dict[variable], axis=0)
+                if len(concatenated_data) > 0:
+                    stat_dict[variable] = {
+                        'mean': float(np.mean(concatenated_data)),
+                        'std': float(np.std(concatenated_data))
+                    }
+                else:
+                    print(f"Warning: No valid data found for variable {variable}")
+                    stat_dict[variable] = {'mean': 0.0, 'std': 1.0}
+            else:
+                print(f"Warning: No data found for variable {variable}")
+                stat_dict[variable] = {'mean': 0.0, 'std': 1.0}
         
         # Save statistics
         try:
@@ -111,51 +135,115 @@ def get_statistics(stat_file_path: str, dataset_path:str,
     
     return stat_dict
 
+# def get_statistics(stat_file_path: str, dataset_path:str,
+#                    file_list: List[str], overwrite: bool = False) -> Dict[str, Dict[str, float]]:
+
+#     data_file_list = []
+#     for (file_name, file_class) in file_list :
+#         data_file_list.append(f"{dataset_path}/{file_class}/{file_name}")
+
+#     if not data_file_list:
+#         raise ValueError("No valid .h5 files found in data file list")
+    
+#     stat_dict = {}
+    
+#     if os.path.exists(stat_file_path) and not overwrite:
+#         # Load existing statistics
+#         try:
+#             stat_dict = pickle.load(open(stat_file_path, 'rb'))
+#         except (pickle.PickleError, KeyError) as e:
+#             print(f"Warning: Failed to load statistics from {stat_file_path}: {e}")
+#             print("Recomputing statistics...")
+#             overwrite = True
+    
+#     if not os.path.exists(stat_file_path) or overwrite:
+#         # Compute statistics from scratch
+#         all_data = []
+#         for data_file_path in data_file_list:
+#             with h5py.File(data_file_path, 'r') as f:
+#                 data = f['inputs'][:]
+#                 all_data.append(data)
+        
+#         # Compute final statistics
+#         all_data = np.concatenate(all_data, axis=1)  # Shape: (num_samples, num_variables)
+        
+#         mean = np.mean(all_data, axis=1)
+#         std = np.std(all_data, axis=1)
+#         mean = np.expand_dims(mean, axis=0)
+#         std = np.expand_dims(std, axis=0)
+#         stat_dict = {
+#             'mean': mean,
+#             'std': std
+#         }
+        
+#         # Save statistics
+#         try:
+#             os.makedirs(os.path.dirname(stat_file_path), exist_ok=True)
+#             pickle.dump(stat_dict, open(stat_file_path, 'wb'))
+#             print(f"Statistics saved to {stat_file_path}")
+#         except (OSError, pickle.PickleError) as e:
+#             print(f"Warning: Failed to save statistics to {stat_file_path}: {e}")
+    
+#     return stat_dict
+
 
 class CustomDataset(Dataset):
-    def __init__(self, options, logger=None):
-        self.data_root = options.environment.data_root
-        self.dataset_name = options.data.dataset_name
+    def __init__(self, config, logger=None):
+        self.data_root = config.environment.data_root
+        self.dataset_name = config.data.dataset_name
         self.dataset_path = f"{self.data_root}/{self.dataset_name}"
-        self.variables = self.input_variables = options.data.input_variables
 
-        self.train_list_path = f"{self.dataset_path}/train_list.csv"
-        self.validation_list_path = f"{self.dataset_path}/validation_list.csv"
-        self.stat_file_path = f"{self.dataset_path}/statistics.pkl"
+        self.train_list_path = f"{self.dataset_path}_train.csv"
+        self.validation_list_path = f"{self.dataset_path}_validation.csv"
+        self.stat_file_path = f"{self.dataset_path}_statistics.pkl"
+
+        file_name_key = "file_name"
+        class_key = f"class_day{config.data.target_day}"
 
         train_df = pd.read_csv(self.train_list_path)
+        train_file_name = train_df[file_name_key].tolist()
+        train_file_class = train_df[class_key].tolist()
+        self.train_file_list = list(zip(train_file_name, train_file_class))
+
         validation_df = pd.read_csv(self.validation_list_path)
-
-        train_file_names = train_df['filename'].tolist()
-        train_file_class = train_df['class'].tolist()
-        self.train_file_list = list(zip(train_file_names, train_file_class))
-
-        self.validation_file_names = validation_df['filename'].tolist()
-        self.validation_file_class = validation_df['class'].tolist()
-        self.validation_file_list = list(zip(self.validation_file_names, self.validation_file_class))
+        validation_file_name = validation_df[file_name_key].tolist()
+        validation_file_class = validation_df[class_key].tolist()
+        self.validation_file_list = list(zip(validation_file_name, validation_file_class))
 
         print(f"Training samples: {len(self.train_file_list)}, Validation samples: {len(self.validation_file_list)}")
 
-        if options.experiment.phase == 'train':
+        if config.experiment.phase == 'train':
             self.list_data = self.train_file_list
-        elif options.experiment.phase == 'validation':
+        elif config.experiment.phase == 'validation':
             self.list_data = self.validation_file_list
         else:
-            raise ValueError(f"Unknown phase: {options.experiment.phase}. Must be 'train' or 'validation'.")
+            raise ValueError(f"Unknown phase: {config.experiment.phase}. Must be 'train' or 'validation'.")
         
         self.nb_data = len(self.list_data)
 
+        self.sdo_wavelengths = config.data.sdo_wavelengths
+        self.sdo_sequence_length = config.data.sdo_sequence_length
+        self.sdo_image_size = config.data.sdo_image_size
+
+        self.input_variables = config.data.input_variables
+        self.input_sequence_length = config.data.input_sequence_length
+
+        self.target_variables = config.data.target_variables
+        self.target_sequence_length = config.data.target_sequence_length
+        
+        self.split_index = config.data.split_index
+        self.omni_variables = list(set(self.input_variables + self.target_variables))
+
         try:
             self.stat_dict = get_statistics(
-                self.stat_file_path, self.dataset_path, 
-                self.train_file_list
+                stat_file_path = self.stat_file_path,
+                data_root = f"{self.data_root}/original",
+                data_file_list = train_file_name,
+                variables = self.omni_variables,
             )
         except Exception as e:
             raise RuntimeError(f"Failed to load/compute statistics: {e}")
         print(f"Loaded statistics for {len(self.stat_dict)} variables.")
-
-        self.input_sequence_length = options.data.input_sequence_length
-        self.target_sequence_length = options.data.target_sequence_length
 
         self.memory_cache = {}
         self.cache_enabled = True  # Can be disabled for low-memory scenarios
@@ -168,39 +256,60 @@ class CustomDataset(Dataset):
         if self.cache_enabled and file_name in self.memory_cache:
             return self.memory_cache[file_name]
         
-        file_path = f"{self.dataset_path}/{file_class}/{file_name}"
+        file_path = f"{self.data_root}/original/{file_name}"
 
-        sdo, inputs, targets, labels = read_h5(file_path)
-        sdo = sdo[:, 20 - self.input_sequence_length//2 : 20]
-        sdo = sdo * (2./255.) - 1.
-        inputs = inputs[:, 40-self.input_sequence_length : 40]
-        inputs = np.transpose(inputs, (1, 0))  # Shape: (sequence_length, num_variables)
-        targets = np.transpose(targets, (1, 0))  # Shape: (num_groups, num_vectors)
-        labels = np.expand_dims(labels, axis=-1)  # Shape: (num_groups, 1)
+        sdo_data, omni_data = read_h5(file_path, self.sdo_wavelengths, self.omni_variables)
+        sdo_array = []
+        for wavelength in self.sdo_wavelengths :
+            data = sdo_data[wavelength]
+            data = (data * (2./255.)) - 1.
+            sdo_array.append(data)
+        sdo_array = np.concatenate(sdo_array, 1)
+        sdo_array = sdo_array[-self.sdo_sequence_length:]
+        sdo_array = np.transpose(sdo_array, (1, 0, 2, 3))
 
-        inputs = (inputs - self.stat_dict['mean']) / self.stat_dict['std']
-        
-        sdo_tensor = torch.tensor(sdo, dtype=torch.float32)
-        inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
-        targets_tensor = torch.tensor(targets, dtype=torch.float32)
-        labels_tensor = torch.tensor(labels, dtype=torch.float32)
+        input_array = []
+        for variable in self.input_variables :
+            data = omni_data[variable][:, None]
+            mean = self.stat_dict[variable]['mean']
+            std = self.stat_dict[variable]['std']
+            data = (data - mean) / std
+            input_array.append(data)
+        input_array = np.concatenate(input_array, 1)
+        input_array = input_array[:self.split_index]
+        input_array = input_array[-self.input_sequence_length:]
 
-        if self.cache_enabled:
-            self.memory_cache[file_name] = {
+        target_array = []
+        for variable in self.target_variables :
+            data = omni_data[variable][:, None]
+            mean = self.stat_dict[variable]['mean']
+            std = self.stat_dict[variable]['std']
+            data = (data - mean) / std
+            target_array.append(data)
+        target_array = np.concatenate(target_array, 1)
+        target_array = target_array[self.split_index:]
+        target_array = target_array[:self.target_sequence_length]
+
+        label_array = np.zeros((1, 1))
+        label_array[0, 0] = file_class
+
+        sdo_tensor = torch.tensor(sdo_array, dtype=torch.float32)
+        input_tensor = torch.tensor(input_array, dtype=torch.float32)
+        target_tensor = torch.tensor(target_array, dtype=torch.float32)
+        label_tensor = torch.tensor(label_array, dtype=torch.float32)
+
+        data_dict = {
                 "sdo": sdo_tensor,
-                "inputs": inputs_tensor,
-                "targets": targets_tensor,
-                "labels": labels_tensor,
+                "inputs": input_tensor,
+                "targets": target_tensor,
+                "labels": label_tensor,
                 "file_names": os.path.basename(file_path)
-            }
-        
-        return {
-            "sdo": sdo_tensor,
-            "inputs": inputs_tensor,
-            "targets": targets_tensor,
-            "labels": labels_tensor,
-            "file_names": os.path.basename(file_path)
         }
+        
+        if self.cache_enabled:
+            self.memory_cache[file_name] = data_dict
+        
+        return data_dict
 
 
 def create_dataloader(config, logger=None):
@@ -221,16 +330,19 @@ def main(config):
 
     dataloader = create_dataloader(config)
 
-    for batch in dataloader:
-        sdo = batch['sdo'].numpy()
-        inputs = batch['inputs'].numpy()
-        targets = batch['targets'].numpy()
-        labels = batch['labels'].numpy()
-        print(f"sdo: {sdo.shape}, {sdo.mean():.3f}, {sdo.std():.3f}")
-        print(f"inputs: {inputs.shape}, {inputs.mean():.3f}, {inputs.std():.3f}")
-        print(f"targets: {targets.shape}, {targets.mean():.3f}, {targets.std():.3f}")
-        print(f"labels: {labels.shape}, {labels.mean():.3f}, {labels.std():.3f}")
-        break
+    for _ in range(3):
+        t0 = time.time()
+        for batch in dataloader:
+            sdo = batch['sdo'].numpy()
+            inputs = batch['inputs'].numpy()
+            targets = batch['targets'].numpy()
+            labels = batch['labels'].numpy()
+            # print(f"sdo: {sdo.shape}, {sdo.mean():.3f}, {sdo.std():.3f}")
+            # print(f"inputs: {inputs.shape}, {inputs.mean():.3f}, {inputs.std():.3f}")
+            # print(f"targets: {targets.shape}, {targets.mean():.3f}, {targets.std():.3f}")
+            # print(f"labels: {labels.shape}, {labels.mean():.3f}, {labels.std():.3f}")
+            # break
+        print(time.time() - t0)
 
 
 if __name__ == "__main__" :

@@ -672,8 +672,8 @@ def main(config):
         config.model.convlstm_input_channels,
         # config.model.convlstm_input_image_frames,
         20,
-        config.data.image_size,
-        config.data.image_size
+        config.data.sdo_image_size,
+        config.data.sdo_image_size
     )
     
     inputs_shape = (

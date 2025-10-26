@@ -19,7 +19,7 @@ def read_h5(file_path: str, input_variables: List[str], target_variables: List[s
             # Read input variables
             omni_inputs = {}
             for variable in input_variables:
-                dataset_name = f"omni_{variable}"
+                dataset_name = f"{variable}"
                 if dataset_name in f:
                     omni_inputs[variable] = f[dataset_name][:]
                 else:
@@ -28,7 +28,7 @@ def read_h5(file_path: str, input_variables: List[str], target_variables: List[s
             # Read target variables
             omni_targets = {}
             for variable in target_variables:
-                dataset_name = f"omni_{variable}"
+                dataset_name = f"{variable}"
                 if dataset_name in f:
                     omni_targets[variable] = f[dataset_name][:]
                 else:
@@ -39,40 +39,6 @@ def read_h5(file_path: str, input_variables: List[str], target_variables: List[s
     
     return sdo_193, sdo_211, omni_inputs, omni_targets
 
-
-def validate_data(sdo_193: np.ndarray, sdo_211: np.ndarray, omni_inputs: Dict[str, np.ndarray], omni_targets: Dict[str, np.ndarray]) -> bool:
-    # Check for NaN values in the data
-    if np.isnan(sdo_193).any() or np.isnan(sdo_211).any():
-        return False
-    if sdo_193.shape != (20, 1, 64, 64) :
-        return False
-    if sdo_211.shape != (20, 1, 64, 64) :
-        return False
-    for var, data in omni_inputs.items():
-        if np.isnan(data).any():
-            return False
-        if data.shape != (65,) :
-            return False
-    for var, data in omni_targets.items():
-        if np.isnan(data).any():
-            return False
-        if data.shape != (65,) :
-            return False
-    return True
-
-
-def validate_and_copy(file_path, input_variables, target_variables, save_dir):
-    sdo_193, sdo_211, omni_inputs, omni_targets = read_h5(
-        file_path, input_variables, target_variables
-    )
-    if validate_data(sdo_193, sdo_211, omni_inputs, omni_targets) is True:
-        print(f"{file_path} : Data validation passed: No NaN values found and shapes are correct.")
-        os.system(f"cp {file_path} {save_dir}/")
-        return True
-    else:
-        print(f"{file_path} : Data validation failed: NaN values found or incorrect shapes.")
-        return False
-    
 
 def validate_and_thresholding(file_path, config, save_dir):
     
@@ -136,6 +102,8 @@ def main(config):
     save_dir = f"{data_root}/{dataset_name}"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
+
+    
 
     files = glob(f"{data_path}/*.h5")
     num_files = len(files)

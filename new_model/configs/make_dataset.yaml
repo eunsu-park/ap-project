@@ -22,6 +22,9 @@ environment:
   # train_list_path: '/Users/eunsupark/ap_project/data/train_list.csv'
   # validation_list_path: '/Users/eunsupark/ap_project/data/validation_list.csv'
 
+data:
+  
+
 experiment:
   experiment_name: 'make_dataset'
   phase: 'train'  # 'train' or 'test'
