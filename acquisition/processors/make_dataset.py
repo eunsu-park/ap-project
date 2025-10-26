@@ -48,11 +48,11 @@ def main(load_dir, save_root):
         print(f"경고: 193 또는 211 파장 이미지가 없습니다: {load_dir}")
         return
         
-    if not len(list_193) == 20 :
+    if not len(list_193) == 40 :
         print(f"경고: 193 파장 이미지 개수가 20개가 아닙니다: {len(list_193)}")
         return
 
-    if not len(list_211) == 20 :
+    if not len(list_211) == 40 :
         print(f"경고: 211 파장 이미지 개수가 20개가 아닙니다: {len(list_211)}")
         return
 
