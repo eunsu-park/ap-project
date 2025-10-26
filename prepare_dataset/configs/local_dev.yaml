@@ -1,0 +1,47 @@
+# Enhanced Multi-Modal Model Configuration
+# Configuration for transformer + ConvLSTM + CrossModalFusion architecture
+
+defaults:
+  - _self_
+  - override hydra/job_logging: none
+  - override hydra/hydra_logging: none
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .
+  job:
+    chdir: false
+
+environment:
+  data_root: '/Users/eunsupark/ap-project/data/datasets'
+
+data:
+  dataset_name: 'two_twelve_to_one'
+  image_size: 64
+  sdo_wavelengths:
+   - '193'
+   - '211'
+  num_sdo_wavelengths: 2
+  sdo_sequence_length: 40
+  sdo_image_size: 64
+  split_index: 80
+  input_variables:
+    - 'Bx_GSE'
+    - 'By_GSM'
+    - 'Bz_GSM'
+    - 'B_magnitude'
+    - 'Flow_speed'
+    - 'Proton_density'
+    - 'Temperature'
+    - 'Kp_index'
+    - 'ap_index'
+    - 'DST_index'
+    - 'f107_index'
+    - 'R_sunspot'
+  num_input_variables: 12
+  input_sequence_length: 80
+  target_variables:
+    - 'ap_index'
+  num_target_variables: 1
+  target_sequence_length: 40
