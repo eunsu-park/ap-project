@@ -28,8 +28,8 @@ fixed = [
 
 if __name__ == "__main__" :
 
-    IOs = ((5, 1), (5, 2), (7, 2), (7, 3))
-
+    input_days = (7, 6, 5, 4, 3, 2, 1)
+    output_days = (4, 3, 2, 1)
 
     experiment_names =[]
 
@@ -37,44 +37,41 @@ if __name__ == "__main__" :
     with open(base_config_path, 'r') as f:
         base_config = yaml.safe_load(f) 
 
-    for input_day, output_day in IOs :
+    for input_day in input_days :
+        for output_day in output_days :
+            experiment_name = f"days{input_day}_to_day{output_day}"
+            config_name = experiment_name
+            config = base_config.copy()
+            config["experiment"]["experiment_name"] = experiment_name
+            config["data"]["sdo_sequence_length"] = 4 * input_day
+            config["data"]["input_sequence_length"] = 8 * input_day
+            config["data"]["target_sequence_length"] = 8 * output_day
+            config["data"]["target_day"] = output_day
+            config_path = f"./configs/{config_name}.yaml"
+            with open(config_path, 'w') as f:
+                yaml.dump(config, f)
+                print(f"Saved config to: {config_path}")
 
-        experiment_name = f"days{input_day}_to_day{output_day}"
-        config_name = experiment_name
-        config = base_config.copy()
-        config["experiment"]["experiment_name"] = experiment_name
-        config["data"]["sdo_sequence_length"] = 4 * input_day
-        config["data"]["input_sequence_length"] = 8 * input_day
-        config["data"]["target_sequence_length"] = 8 * output_day
-        config["data"]["target_day"] = output_day
-        config_path = f"./configs/{config_name}.yaml"
-        with open(config_path, 'w') as f:
-            yaml.dump(config, f)
-            print(f"Saved config to: {config_path}")
+            lines = fixed.copy()
+            lines.insert(2, f"#SBATCH --job-name=ap-train-{config_name}")
 
-        lines = fixed.copy()
-        lines.insert(2, f"#SBATCH --job-name=ap-train-{config_name}")
+            command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
+            lines.append(command)
 
-        command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
-        lines.append(command)
+            script_path = f"./{config_name}.sh"
 
-        script_path = f"./{config_name}.sh"
+            with open(script_path, "w") as f:
+                f.write("\n".join(lines))
 
-        with open(script_path, "w") as f:
-            f.write("\n".join(lines))
+            time.sleep(5)
+            os.system(f"sbatch {script_path}")
+            time.sleep(5)
 
-        time.sleep(5)
-        os.system(f"sbatch {script_path}")
-        time.sleep(5)
-
-        del lines, config_name, script_path
-
-
+            del lines, config_name, script_path
 
 
 
-    # input_days = (7, 6, 5, 4, 3, 2, 1)
-    # output_days = (4, 3, 2, 1)
+    # IOs = ((5, 1), (5, 2), (7, 2), (7, 3))
 
     # experiment_names =[]
 
@@ -82,58 +79,34 @@ if __name__ == "__main__" :
     # with open(base_config_path, 'r') as f:
     #     base_config = yaml.safe_load(f) 
 
-    # for input_day in input_days :
-    #     for output_day in output_days :
-    #         experiment_name = f"days{input_day}_to_day{output_day}"
-    #         config_name = experiment_name
-    #         config = base_config.copy()
-    #         config["experiment"]["experiment_name"] = experiment_name
-    #         config["data"]["sdo_sequence_length"] = 4 * input_day
-    #         config["data"]["input_sequence_length"] = 8 * input_day
-    #         config["data"]["target_sequence_length"] = 8 * output_day
-    #         config["data"]["target_day"] = output_day
-    #         config_path = f"./configs/{config_name}.yaml"
-    #         with open(config_path, 'w') as f:
-    #             yaml.dump(config, f)
-    #             print(f"Saved config to: {config_path}")
+    # for input_day, output_day in IOs :
 
-    #         lines = fixed.copy()
-    #         lines.insert(2, f"#SBATCH --job-name=ap-train-{config_name}")
-
-    #         command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
-    #         lines.append(command)
-
-    #         script_path = f"./{config_name}.sh"
-
-    #         with open(script_path, "w") as f:
-    #             f.write("\n".join(lines))
-
-    #         time.sleep(5)
-    #         os.system(f"sbatch {script_path}")
-    #         time.sleep(5)
-
-    #         del lines, config_name, script_path
-
-
-
-
-
-    # for config_name in config_names:
-
-    #     script_path = f"./{config_name}.sh"
+    #     experiment_name = f"days{input_day}_to_day{output_day}"
+    #     config_name = experiment_name
+    #     config = base_config.copy()
+    #     config["experiment"]["experiment_name"] = experiment_name
+    #     config["data"]["sdo_sequence_length"] = 4 * input_day
+    #     config["data"]["input_sequence_length"] = 8 * input_day
+    #     config["data"]["target_sequence_length"] = 8 * output_day
+    #     config["data"]["target_day"] = output_day
+    #     config_path = f"./configs/{config_name}.yaml"
+    #     with open(config_path, 'w') as f:
+    #         yaml.dump(config, f)
+    #         print(f"Saved config to: {config_path}")
 
     #     lines = fixed.copy()
-    #     lines.insert(2, f"#SBATCH --job-name={config_name}")
+    #     lines.insert(2, f"#SBATCH --job-name=ap-train-{config_name}")
 
     #     command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
     #     lines.append(command)
 
+    #     script_path = f"./{config_name}.sh"
+
     #     with open(script_path, "w") as f:
     #         f.write("\n".join(lines))
 
-    #     # time.sleep(5)
+    #     time.sleep(5)
     #     os.system(f"sbatch {script_path}")
     #     time.sleep(5)
-    #     os.system(f"rm {script_path}")
 
     #     del lines, config_name, script_path
