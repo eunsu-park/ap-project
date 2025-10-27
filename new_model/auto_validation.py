@@ -60,16 +60,16 @@ if __name__ == "__main__" :
                 config["data"]["target_day"] = output_day
 
                 checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
-                # if not os.path.exists(checkpoint_path):
-                #     print(f"Checkpoint {checkpoint_path} does not exist, skipping...")
-                #     continue
-                # else :
-                #     print(f"Found checkpoint: {checkpoint_path}")
+                if not os.path.exists(checkpoint_path):
+                    print(f"Checkpoint {checkpoint_path} does not exist, skipping...")
+                    continue
+                else :
+                    print(f"Found checkpoint: {checkpoint_path}")
 
                 output_dir = f"{output_root}/epoch_{epoch:03d}"
-                # if not os.path.exists(output_dir):
-                #     os.makedirs(output_dir)
-                #     print(f"Created output directory: {output_dir}")
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
+                    print(f"Created output directory: {output_dir}")
 
                 config["validation"] = {
                     "checkpoint_path": checkpoint_path,
@@ -92,9 +92,9 @@ if __name__ == "__main__" :
                 with open(script_path, "w") as f:
                     f.write("\n".join(lines))
 
-                # time.sleep(5)
-                # os.system(f"sbatch {script_path}")
-                # time.sleep(5)
+                time.sleep(10)
+                os.system(f"sbatch {script_path}")
+                time.sleep(10)
 
                 del lines, config_name, script_path
 
