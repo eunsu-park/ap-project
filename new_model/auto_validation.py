@@ -100,6 +100,8 @@ if __name__ == "__main__" :
                 # os.system(f"sbatch {script_path}")
                 # time.sleep(10)
 
+                print("Here?")
+
                 del lines, config_name, script_path
 
 
