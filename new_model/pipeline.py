@@ -187,6 +187,37 @@ def get_statistics(stat_file_path: str, data_root: str, data_file_list: List[str
 #     return stat_dict
 
 
+def undersample(train_file_list, num_subsample, subsample_index):
+    negative_pairs = []
+    positive_pairs = []
+
+    for pair in train_file_list:
+        file_name, file_class = pair
+        if file_class == 0 :
+            negative_pairs.append(pair)
+        else :
+            positive_pairs.append(pair)
+
+    random.shuffle(negative_pairs)
+
+    n = len(negative_pairs)
+    base_size = n // num_subsample
+    remainder = n % num_subsample
+
+    sublists = []
+    start = 0
+
+    for i in range(num_subsample):
+        size = base_size + (1 if i < remainder else 0)
+        sublists.append(negative_pairs[start:start + size])
+        start += size
+
+    sub_negative_pairs = sublists[subsample_index]
+    final_pairs = positive_pairs + sub_negative_pairs
+    
+    return final_pairs
+
+
 class CustomDataset(Dataset):
     def __init__(self, config, logger=None):
         self.data_root = config.environment.data_root
@@ -200,6 +231,8 @@ class CustomDataset(Dataset):
         file_name_key = "file_name"
         class_key = f"class_day{config.data.target_day}"
 
+        # enable_undersampleing
+
         train_df = pd.read_csv(self.train_list_path)
         train_file_name = train_df[file_name_key].tolist()
         train_file_class = train_df[class_key].tolist()
@@ -211,6 +244,10 @@ class CustomDataset(Dataset):
         self.validation_file_list = list(zip(validation_file_name, validation_file_class))
 
         print(f"Training samples: {len(self.train_file_list)}, Validation samples: {len(self.validation_file_list)}")
+
+        if config.experiment.enable_undersampling is True :
+            self.train_file_list = undersample(self.train_file_list, config.experiment.num_subsample, config.experiment.subsample_index)
+            print(f"After undersamplig, Training samples: {len(self.train_file_list)}, Validation samples: {len(self.validation_file_list)}")
 
         if config.experiment.phase == 'train':
             self.list_data = self.train_file_list
@@ -246,14 +283,14 @@ class CustomDataset(Dataset):
         print(f"Loaded statistics for {len(self.stat_dict)} variables.")
 
         self.memory_cache = {}
-        self.cache_enabled = True  # Can be disabled for low-memory scenarios
+        self.enable_memory_cache = config.experiment.enable_memory_cache #True  # Can be disabled for low-memory scenarios
 
     def __len__(self):
         return self.nb_data
     
     def __getitem__(self, idx):
         file_name, file_class = self.list_data[idx]
-        if self.cache_enabled and file_name in self.memory_cache:
+        if self.enable_memory_cache and file_name in self.memory_cache:
             return self.memory_cache[file_name]
         
         file_path = f"{self.data_root}/original/{file_name}"
@@ -306,7 +343,7 @@ class CustomDataset(Dataset):
                 "file_names": os.path.basename(file_path)
         }
         
-        if self.cache_enabled:
+        if self.enable_memory_cache:
             self.memory_cache[file_name] = data_dict
         
         return data_dict

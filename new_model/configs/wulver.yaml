@@ -25,6 +25,10 @@ experiment:
   phase: 'train'  # 'train' or 'test'
   batch_size: 4
   num_workers: 0
+  enable_memory_cache: true
+  enable_undersampling: false
+  num_subsample: 10
+  subsample_index: 0
 
 data:
   dataset_name: 'two_twelve_to_one'
@@ -73,7 +77,7 @@ training:
   optimizer: 'adam'  # 'adam' or 'sgd'
   learning_rate: 0.0002
   report_freq: 1000
-  num_epochs: 500
+  num_epochs: 1000
   model_save_freq: 100
 
 validation:

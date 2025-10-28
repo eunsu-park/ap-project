@@ -17,7 +17,7 @@ fixed = [
     "#SBATCH --mem-per-cpu=4000M # Maximum allowable mempry per CPU 4G",
     "#SBATCH --qos=standard",
     "#SBATCH --account=wangj # Replace PI_ucid which the NJIT UCID of PI",
-    "#SBATCH --time=23:59:59  # D-HH:MM:SS",
+    "#SBATCH --time=71:59:59  # D-HH:MM:SS",
     " ",
     "# Purge any module loaded by default",
     "module purge > /dev/null 2>&1",
@@ -71,17 +71,89 @@ if __name__ == "__main__" :
 
 
 
-    IOs = ((5, 2), (7, 2))
+    # IOs = ((5, 2), (7, 2))
 
-    experiment_names =[]
+    # experiment_names =[]
+
+    # base_config_path = "./configs/wulver.yaml"
+    # with open(base_config_path, 'r') as f:
+    #     base_config = yaml.safe_load(f) 
+
+    # for input_day, output_day in IOs :
+
+    #     experiment_name = f"days{input_day}_to_day{output_day}"
+    #     config_name = experiment_name
+    #     config = base_config.copy()
+    #     config["experiment"]["experiment_name"] = experiment_name
+    #     config["data"]["sdo_sequence_length"] = 4 * input_day
+    #     config["data"]["input_sequence_length"] = 8 * input_day
+    #     config["data"]["target_sequence_length"] = 8 * output_day
+    #     config["data"]["target_day"] = output_day
+    #     config_path = f"./configs/{config_name}.yaml"
+    #     with open(config_path, 'w') as f:
+    #         yaml.dump(config, f)
+    #         print(f"Saved config to: {config_path}")
+
+    #     lines = fixed.copy()
+    #     lines.insert(2, f"#SBATCH --job-name=ap-train-{config_name}")
+
+    #     command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
+    #     lines.append(command)
+
+    #     script_path = f"./{config_name}.sh"
+
+    #     with open(script_path, "w") as f:
+    #         f.write("\n".join(lines))
+
+    #     os.system(f"sbatch {script_path}")
+
+    #     del lines, config_name, script_path
+
 
     base_config_path = "./configs/wulver.yaml"
     with open(base_config_path, 'r') as f:
         base_config = yaml.safe_load(f) 
 
-    for input_day, output_day in IOs :
+    input_day = 7
+    output_day = 1
 
-        experiment_name = f"days{input_day}_to_day{output_day}"
+    experiment_name = f"days{input_day}_to_day{output_day}"
+    config_name = experiment_name
+    config = base_config.copy()
+    config["experiment"]["experiment_name"] = experiment_name
+    config["data"]["sdo_sequence_length"] = 4 * input_day
+    config["data"]["input_sequence_length"] = 8 * input_day
+    config["data"]["target_sequence_length"] = 8 * output_day
+    config["data"]["target_day"] = output_day
+    config["experiment"]["enable_undersampling"] = False
+    config["training"]["report_freq"] = 1000
+    config_path = f"./configs/{config_name}.yaml"
+    with open(config_path, 'w') as f:
+        yaml.dump(config, f)
+        print(f"Saved config to: {config_path}")
+
+    lines = fixed.copy()
+    lines.insert(2, f"#SBATCH --job-name=ap-train-{config_name}")
+
+    command = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
+    lines.append(command)
+
+    script_path = f"./{config_name}.sh"
+
+    with open(script_path, "w") as f:
+        f.write("\n".join(lines))
+
+    os.system(f"sbatch {script_path}")
+    del lines, config_name, script_path
+    time.sleep(60)
+
+    for n in range(10):
+
+        input_day = 7
+        output_day = 1
+        subsample_index = n
+
+        experiment_name = f"days{input_day}_to_day{output_day}_sub_{subsample_index}"
         config_name = experiment_name
         config = base_config.copy()
         config["experiment"]["experiment_name"] = experiment_name
@@ -89,6 +161,9 @@ if __name__ == "__main__" :
         config["data"]["input_sequence_length"] = 8 * input_day
         config["data"]["target_sequence_length"] = 8 * output_day
         config["data"]["target_day"] = output_day
+        config["experiment"]["enable_undersampling"] = True
+        config["experiment"]["subsample_index"] = subsample_index
+        config["training"]["report_freq"] = 100
         config_path = f"./configs/{config_name}.yaml"
         with open(config_path, 'w') as f:
             yaml.dump(config, f)
@@ -106,5 +181,5 @@ if __name__ == "__main__" :
             f.write("\n".join(lines))
 
         os.system(f"sbatch {script_path}")
-
         del lines, config_name, script_path
+        time.sleep(60)

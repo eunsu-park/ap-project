@@ -24,6 +24,10 @@ experiment:
   phase: 'train'  # 'train' or 'test'
   batch_size: 4
   num_workers: 0
+  enable_memory_cache: ture
+  enable_undersampling: true
+  num_subsample: 10
+  subsample_index: 0
 
 data:
   dataset_name: 'two_twelve_to_one'
