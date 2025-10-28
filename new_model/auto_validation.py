@@ -70,6 +70,10 @@ if __name__ == "__main__" :
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
                     print(f"Created output directory: {output_dir}")
+                else :
+                    print(f"Already created: {output_dir}")
+                    continue
+
 
                 config["validation"] = {
                     "checkpoint_path": checkpoint_path,
@@ -92,9 +96,9 @@ if __name__ == "__main__" :
                 with open(script_path, "w") as f:
                     f.write("\n".join(lines))
 
-                time.sleep(10)
-                os.system(f"sbatch {script_path}")
-                time.sleep(10)
+                # time.sleep(10)
+                # os.system(f"sbatch {script_path}")
+                # time.sleep(10)
 
                 del lines, config_name, script_path
 
