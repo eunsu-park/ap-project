@@ -97,10 +97,10 @@ if __name__ == "__main__" :
                     f.write("\n".join(lines))
 
                 # time.sleep(10)
-                # os.system(f"sbatch {script_path}")
+                os.system(f"sbatch {script_path}")
                 # time.sleep(10)
 
-                print("Here?")
+                # print("Here?")
 
                 del lines, config_name, script_path
 
