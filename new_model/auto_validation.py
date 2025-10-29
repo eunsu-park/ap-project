@@ -95,7 +95,7 @@ if __name__ == "__main__" :
 
             os.system(f"sbatch {script_path}")
             del lines, config_name, script_path
-            time.sleep(60)
+            time.sleep(10)
 
             for subsample_index in range(10):
 
@@ -156,7 +156,7 @@ if __name__ == "__main__" :
 
                 os.system(f"sbatch {script_path}")
                 del lines, config_name, script_path
-                time.sleep(60)
+                time.sleep(10)
 
 
 
