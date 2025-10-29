@@ -9,8 +9,8 @@ HOME = os.path.expanduser('~')
 fixed = [
     "#!/bin/bash -l",
     "",
-    f"#SBATCH --output={HOME}/TEMP/%x.%j.out # %x.%j expands to slurm JobName.JobID",
-    f"#SBATCH --error={HOME}/TEMP/%x.%j.err # prints the error message",
+    f"#SBATCH --output={HOME}/TEMP_VAL/%x.%j.out # %x.%j expands to slurm JobName.JobID",
+    f"#SBATCH --error={HOME}/TEMP_VAL/%x.%j.err # prints the error message",
     "#SBATCH --partition=gpu",
     "#SBATCH --nodes=1",
     "#SBATCH --ntasks-per-node=1",
@@ -93,9 +93,9 @@ if __name__ == "__main__" :
             with open(script_path, "w") as f:
                 f.write("\n".join(lines))
 
-            # os.system(f"sbatch {script_path}")
+            os.system(f"sbatch {script_path}")
             del lines, config_name, script_path
-            # time.sleep(60)
+            time.sleep(60)
 
             for subsample_index in range(10):
 
@@ -154,9 +154,9 @@ if __name__ == "__main__" :
                 with open(script_path, "w") as f:
                     f.write("\n".join(lines))
 
-                # os.system(f"sbatch {script_path}")
+                os.system(f"sbatch {script_path}")
                 del lines, config_name, script_path
-                # time.sleep(60)
+                time.sleep(60)
 
 
 
