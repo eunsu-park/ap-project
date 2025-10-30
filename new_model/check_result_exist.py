@@ -7,6 +7,8 @@ import hydra
 def main(config):
     save_root = config.environment.save_root
 
+    not_trained = 0
+
     result_list = sorted(glob(f"{save_root}/days*"))
     num_result = len(result_list)
     print(num_result)
@@ -21,6 +23,7 @@ def main(config):
                 no_dir_list.append(epoch)
         if len(no_dir_list) != 0 :
             print(os.path.basename(result_dir), no_dir_list)
+            not_trained += 1
 
 
     result_list = sorted(glob(f"{save_root}/weighted_days*"))
@@ -37,7 +40,9 @@ def main(config):
                 no_dir_list.append(epoch)
         if len(no_dir_list) != 0 :
             print(os.path.basename(result_dir), no_dir_list)
+            not_trained += 1
 
+    print(f"{not_trained} tasks have not yet completed training")
 
 
 if __name__ == "__main__" :
