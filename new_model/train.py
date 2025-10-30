@@ -180,9 +180,6 @@ def main(config):
             criterion = nn.BCEWithLogitsLoss()
             logger.info("Loss function: BCEWithLogitsLoss (for binary classification)")
 
-        sys.exit()
-
-
         logger.info("Model outputs logits - sigmoid will be applied during loss computation")
         
         optimizer = optim.Adam(model.parameters(), lr=config.training.learning_rate)
