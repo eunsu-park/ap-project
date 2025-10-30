@@ -13,10 +13,14 @@ def main(config):
     
     for result_dir in result_list :
         output_dir = f"{result_dir}/output"
-        for epoch in range(100, 1001, 100):
+        no_dir_list = []
+        for n in range(10):
+            epoch = (n+1) * 100
             epoch_dir = f"{output_dir}/epoch_{epoch}"
             if not os.path.exists(epoch_dir):
-                print(epoch_dir)
+                no_dir_list.append(epoch)
+        if len(no_dir_list) != 0 :
+            print(os.path.basename(result_dir), no_dir_list)
             
 
 if __name__ == "__main__" :
