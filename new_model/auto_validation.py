@@ -27,6 +27,128 @@ fixed = [
 ]
 
 
+def original(base_config, input_day, output_day, epoch):
+
+    experiment_name = f"days{input_day}_to_day{output_day}"
+    save_root = base_config["environment"]["save_root"]
+    experiment_dir = f"{save_root}/{experiment_name}"
+    checkpoint_dir = f"{experiment_dir}/checkpoint"
+    output_root = f"{experiment_dir}/output"
+
+    config_name = f"{experiment_name}_epoch_{epoch:04d}"
+
+    config = base_config.copy()
+    config["experiment"]["experiment_name"] = experiment_name
+    config["data"]["sdo_sequence_length"] = 4 * input_day
+    config["data"]["input_sequence_length"] = 8 * input_day
+    config["data"]["target_sequence_length"] = 8 * output_day
+    config["data"]["target_day"] = output_day
+    config["experiment"]["enable_undersampling"] = False
+    config["training"]["report_freq"] = 1000
+
+    checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
+    if not os.path.exists(checkpoint_path):
+        print(f"Checkpoint {checkpoint_path} does not exist, skipping...")
+        return
+    else :
+        print(f"Found checkpoint: {checkpoint_path}")
+
+    output_dir = f"{output_root}/epoch_{epoch:03d}"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print(f"Created output directory: {output_dir}")
+    else :
+        print(f"Already created: {output_dir}")
+        return
+
+
+    config["validation"] = {
+        "checkpoint_path": checkpoint_path,
+        "output_dir": output_dir
+    }
+
+    config_path = f"./configs/{config_name}.yaml"
+    with open(config_path, 'w') as f:
+        yaml.dump(config, f)
+    print(f"Saved config to: {config_path}")
+
+    lines = fixed.copy()
+    lines.insert(2, f"#SBATCH --job-name=ap-val-{config_name}")
+
+    command = f"/home/hl545/miniconda3/envs/ap/bin/python validation.py --config-name {config_name}"
+    lines.append(command)
+
+    script_path = f"./{config_name}.sh"
+
+    with open(script_path, "w") as f:
+        f.write("\n".join(lines))
+
+    os.system(f"sbatch {script_path}")
+    del lines, config, config_name, script_path
+    
+
+def subsample(base_config, input_day, output_day, epoch, subsample_index):
+
+    experiment_name = f"days{input_day}_to_day{output_day}_sub_{subsample_index}"
+    save_root = base_config["environment"]["save_root"]
+    experiment_dir = f"{save_root}/{experiment_name}"
+    checkpoint_dir = f"{experiment_dir}/checkpoint"
+    output_root = f"{experiment_dir}/output"
+
+    config_name = f"{experiment_name}_epoch_{epoch:04d}"
+
+    config = base_config.copy()
+    config["experiment"]["experiment_name"] = experiment_name
+
+    config["data"]["sdo_sequence_length"] = 4 * input_day
+    config["data"]["input_sequence_length"] = 8 * input_day
+    config["data"]["target_sequence_length"] = 8 * output_day
+    config["data"]["target_day"] = output_day
+    config["experiment"]["enable_undersampling"] = True
+    config["experiment"]["subsample_index"] = subsample_index
+    config["training"]["report_freq"] = 100
+
+    checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
+    if not os.path.exists(checkpoint_path):
+        print(f"Checkpoint {checkpoint_path} does not exist, skipping...")
+        return
+    else :
+        print(f"Found checkpoint: {checkpoint_path}")
+
+    output_dir = f"{output_root}/epoch_{epoch:03d}"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print(f"Created output directory: {output_dir}")
+    else :
+        print(f"Already created: {output_dir}")
+        return
+
+    config["validation"] = {
+        "checkpoint_path": checkpoint_path,
+        "output_dir": output_dir
+    }
+
+    config_path = f"./configs/{config_name}.yaml"
+    with open(config_path, 'w') as f:
+        yaml.dump(config, f)
+    print(f"Saved config to: {config_path}")
+
+    lines = fixed.copy()
+    lines.insert(2, f"#SBATCH --job-name=ap-val-{config_name}")
+
+    command = f"/home/hl545/miniconda3/envs/ap/bin/python validation.py --config-name {config_name}"
+    lines.append(command)
+
+    script_path = f"./{config_name}.sh"
+
+    with open(script_path, "w") as f:
+        f.write("\n".join(lines))
+
+    os.system(f"sbatch {script_path}")
+    del lines, config, config_name, script_path
+    time.sleep(10)
+
+
 if __name__ == "__main__" :
 
     input_days = (1, 2, 3, 4, 5, 6, 7)
@@ -39,122 +161,129 @@ if __name__ == "__main__" :
     for input_day in input_days :
         for epoch in range(100, 1001, 100) :
 
-            experiment_name = f"days{input_day}_to_day{output_day}"
-            save_root = base_config["environment"]["save_root"]
-            experiment_dir = f"{save_root}/{experiment_name}"
-            checkpoint_dir = f"{experiment_dir}/checkpoint"
-            output_root = f"{experiment_dir}/output"
+            original(base_config, input_day, output_day, epoch)
+            time.sleep(10)    
 
-            config_name = f"{experiment_name}_epoch_{epoch:04d}"
+            # experiment_name = f"days{input_day}_to_day{output_day}"
+            # save_root = base_config["environment"]["save_root"]
+            # experiment_dir = f"{save_root}/{experiment_name}"
+            # checkpoint_dir = f"{experiment_dir}/checkpoint"
+            # output_root = f"{experiment_dir}/output"
 
-            config = base_config.copy()
-            config["experiment"]["experiment_name"] = experiment_name
-            config["data"]["sdo_sequence_length"] = 4 * input_day
-            config["data"]["input_sequence_length"] = 8 * input_day
-            config["data"]["target_sequence_length"] = 8 * output_day
-            config["data"]["target_day"] = output_day
-            config["experiment"]["enable_undersampling"] = False
-            config["training"]["report_freq"] = 1000
+            # config_name = f"{experiment_name}_epoch_{epoch:04d}"
 
-            checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
-            if not os.path.exists(checkpoint_path):
-                print(f"Checkpoint {checkpoint_path} does not exist, skipping...")
-                continue
-            else :
-                print(f"Found checkpoint: {checkpoint_path}")
+            # config = base_config.copy()
+            # config["experiment"]["experiment_name"] = experiment_name
+            # config["data"]["sdo_sequence_length"] = 4 * input_day
+            # config["data"]["input_sequence_length"] = 8 * input_day
+            # config["data"]["target_sequence_length"] = 8 * output_day
+            # config["data"]["target_day"] = output_day
+            # config["experiment"]["enable_undersampling"] = False
+            # config["training"]["report_freq"] = 1000
 
-            output_dir = f"{output_root}/epoch_{epoch:03d}"
-            if not os.path.exists(output_dir):
-                os.makedirs(output_dir)
-                print(f"Created output directory: {output_dir}")
-            else :
-                print(f"Already created: {output_dir}")
-                continue
+            # checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
+            # if not os.path.exists(checkpoint_path):
+            #     print(f"Checkpoint {checkpoint_path} does not exist, skipping...")
+            #     continue
+            # else :
+            #     print(f"Found checkpoint: {checkpoint_path}")
+
+            # output_dir = f"{output_root}/epoch_{epoch:03d}"
+            # if not os.path.exists(output_dir):
+            #     os.makedirs(output_dir)
+            #     print(f"Created output directory: {output_dir}")
+            # else :
+            #     print(f"Already created: {output_dir}")
+            #     continue
 
 
-            config["validation"] = {
-                "checkpoint_path": checkpoint_path,
-                "output_dir": output_dir
-            }
+            # config["validation"] = {
+            #     "checkpoint_path": checkpoint_path,
+            #     "output_dir": output_dir
+            # }
 
-            config_path = f"./configs/{config_name}.yaml"
-            with open(config_path, 'w') as f:
-                yaml.dump(config, f)
-            print(f"Saved config to: {config_path}")
+            # config_path = f"./configs/{config_name}.yaml"
+            # with open(config_path, 'w') as f:
+            #     yaml.dump(config, f)
+            # print(f"Saved config to: {config_path}")
 
-            lines = fixed.copy()
-            lines.insert(2, f"#SBATCH --job-name=ap-val-{config_name}")
+            # lines = fixed.copy()
+            # lines.insert(2, f"#SBATCH --job-name=ap-val-{config_name}")
 
-            command = f"/home/hl545/miniconda3/envs/ap/bin/python validation.py --config-name {config_name}"
-            lines.append(command)
+            # command = f"/home/hl545/miniconda3/envs/ap/bin/python validation.py --config-name {config_name}"
+            # lines.append(command)
 
-            script_path = f"./{config_name}.sh"
+            # script_path = f"./{config_name}.sh"
 
-            with open(script_path, "w") as f:
-                f.write("\n".join(lines))
+            # with open(script_path, "w") as f:
+            #     f.write("\n".join(lines))
 
-            os.system(f"sbatch {script_path}")
-            del lines, config, config_name, script_path
-            time.sleep(10)
+            # os.system(f"sbatch {script_path}")
+            # del lines, config, config_name, script_path
+            # time.sleep(10)
 
             for subsample_index in range(10):
 
-                experiment_name = f"days{input_day}_to_day{output_day}_sub_{subsample_index}"
-                save_root = base_config["environment"]["save_root"]
-                experiment_dir = f"{save_root}/{experiment_name}"
-                checkpoint_dir = f"{experiment_dir}/checkpoint"
-                output_root = f"{experiment_dir}/output"
-
-                config_name = f"{experiment_name}_epoch_{epoch:04d}"
-
-                config = base_config.copy()
-                config["experiment"]["experiment_name"] = experiment_name
-
-                config["data"]["sdo_sequence_length"] = 4 * input_day
-                config["data"]["input_sequence_length"] = 8 * input_day
-                config["data"]["target_sequence_length"] = 8 * output_day
-                config["data"]["target_day"] = output_day
-                config["experiment"]["enable_undersampling"] = True
-                config["experiment"]["subsample_index"] = subsample_index
-                config["training"]["report_freq"] = 100
-
-                checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
-                if not os.path.exists(checkpoint_path):
-                    print(f"Checkpoint {checkpoint_path} does not exist, skipping...")
-                    continue
-                else :
-                    print(f"Found checkpoint: {checkpoint_path}")
-
-                output_dir = f"{output_root}/epoch_{epoch:03d}"
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir)
-                    print(f"Created output directory: {output_dir}")
-                else :
-                    print(f"Already created: {output_dir}")
-                    continue
-
-
-                config["validation"] = {
-                    "checkpoint_path": checkpoint_path,
-                    "output_dir": output_dir
-                }
-
-                config_path = f"./configs/{config_name}.yaml"
-                with open(config_path, 'w') as f:
-                    yaml.dump(config, f)
-                print(f"Saved config to: {config_path}")
-
-                lines = fixed.copy()
-                lines.insert(2, f"#SBATCH --job-name=ap-val-{config_name}")
-
-                command = f"/home/hl545/miniconda3/envs/ap/bin/python validation.py --config-name {config_name}"
-                lines.append(command)
-
-                script_path = f"./{config_name}.sh"
-
-                with open(script_path, "w") as f:
-                    f.write("\n".join(lines))
-
-                os.system(f"sbatch {script_path}")
-                del lines, config, config_name, script_path
+                subsample(base_config, input_day, output_day, epoch, subsample_index)
                 time.sleep(10)
+
+
+                # experiment_name = f"days{input_day}_to_day{output_day}_sub_{subsample_index}"
+                # save_root = base_config["environment"]["save_root"]
+                # experiment_dir = f"{save_root}/{experiment_name}"
+                # checkpoint_dir = f"{experiment_dir}/checkpoint"
+                # output_root = f"{experiment_dir}/output"
+
+                # config_name = f"{experiment_name}_epoch_{epoch:04d}"
+
+                # config = base_config.copy()
+                # config["experiment"]["experiment_name"] = experiment_name
+
+                # config["data"]["sdo_sequence_length"] = 4 * input_day
+                # config["data"]["input_sequence_length"] = 8 * input_day
+                # config["data"]["target_sequence_length"] = 8 * output_day
+                # config["data"]["target_day"] = output_day
+                # config["experiment"]["enable_undersampling"] = True
+                # config["experiment"]["subsample_index"] = subsample_index
+                # config["training"]["report_freq"] = 100
+
+                # checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
+                # if not os.path.exists(checkpoint_path):
+                #     print(f"Checkpoint {checkpoint_path} does not exist, skipping...")
+                #     continue
+                # else :
+                #     print(f"Found checkpoint: {checkpoint_path}")
+
+                # output_dir = f"{output_root}/epoch_{epoch:03d}"
+                # if not os.path.exists(output_dir):
+                #     os.makedirs(output_dir)
+                #     print(f"Created output directory: {output_dir}")
+                # else :
+                #     print(f"Already created: {output_dir}")
+                #     continue
+
+
+                # config["validation"] = {
+                #     "checkpoint_path": checkpoint_path,
+                #     "output_dir": output_dir
+                # }
+
+                # config_path = f"./configs/{config_name}.yaml"
+                # with open(config_path, 'w') as f:
+                #     yaml.dump(config, f)
+                # print(f"Saved config to: {config_path}")
+
+                # lines = fixed.copy()
+                # lines.insert(2, f"#SBATCH --job-name=ap-val-{config_name}")
+
+                # command = f"/home/hl545/miniconda3/envs/ap/bin/python validation.py --config-name {config_name}"
+                # lines.append(command)
+
+                # script_path = f"./{config_name}.sh"
+
+                # with open(script_path, "w") as f:
+                #     f.write("\n".join(lines))
+
+                # os.system(f"sbatch {script_path}")
+                # del lines, config, config_name, script_path
+                # time.sleep(10)
