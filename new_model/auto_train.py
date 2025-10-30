@@ -68,7 +68,7 @@ if __name__ == "__main__" :
 
         for subsample_index in range(10):
 
-            experiment_name = f"days{input_day}_to_day{output_day}_sub_{subsample_index}"
+            experiment_name = f"weighted_days{input_day}_to_day{output_day}_sub_{subsample_index}"
             config_name = experiment_name
             config = base_config.copy()
             config["experiment"]["experiment_name"] = experiment_name
