@@ -85,6 +85,7 @@ def original(base_config, input_day, output_day, epoch):
 
     os.system(f"sbatch {script_path}")
     del lines, config, config_name, script_path
+    time.sleep(10)    
     
 
 def subsample(base_config, input_day, output_day, epoch, subsample_index):
@@ -162,7 +163,7 @@ if __name__ == "__main__" :
         for epoch in range(100, 1001, 100) :
 
             original(base_config, input_day, output_day, epoch)
-            time.sleep(10)    
+            
 
             # experiment_name = f"days{input_day}_to_day{output_day}"
             # save_root = base_config["environment"]["save_root"]
@@ -225,7 +226,7 @@ if __name__ == "__main__" :
             for subsample_index in range(10):
 
                 subsample(base_config, input_day, output_day, epoch, subsample_index)
-                time.sleep(10)
+                
 
 
                 # experiment_name = f"days{input_day}_to_day{output_day}_sub_{subsample_index}"
