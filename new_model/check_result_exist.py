@@ -14,7 +14,7 @@ def main(config):
     for result_dir in result_list :
         output_dir = f"{result_dir}/output"
         for epoch in range(100, 1001, 100):
-            epoch_dir = f"{output_dir}/epoch_{epoch:04d}"
+            epoch_dir = f"{output_dir}/epoch_{epoch}"
             if not os.path.exists(epoch_dir):
                 print(epoch_dir)
             
