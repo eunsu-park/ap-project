@@ -218,6 +218,21 @@ def undersample(train_file_list, num_subsample, subsample_index):
     return final_pairs
 
 
+def get_pos_weight(train_file_list):
+    negative_pairs = []
+    positive_pairs = []
+
+    for pair in train_file_list:
+        _, file_class = pair
+        if file_class == 0 :
+            negative_pairs.append(pair)
+        else :
+            positive_pairs.append(pair)
+
+    pos_weight = len(negative_pairs) / len(positive_pairs)
+    return pos_weight
+
+
 class CustomDataset(Dataset):
     def __init__(self, config, logger=None):
         self.data_root = config.environment.data_root
@@ -237,6 +252,8 @@ class CustomDataset(Dataset):
         train_file_name = train_df[file_name_key].tolist()
         train_file_class = train_df[class_key].tolist()
         self.train_file_list = list(zip(train_file_name, train_file_class))
+
+        self.pos_weight = get_pos_weight(self.train_file_list)
 
         validation_df = pd.read_csv(self.validation_list_path)
         validation_file_name = validation_df[file_name_key].tolist()
@@ -380,6 +397,8 @@ def main(config):
             # print(f"labels: {labels.shape}, {labels.mean():.3f}, {labels.std():.3f}")
             # break
         print(time.time() - t0)
+
+    print(f"pos_weight: {dataloader.dataset.pos_weight}")
 
 
 if __name__ == "__main__" :

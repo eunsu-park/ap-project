@@ -35,7 +35,7 @@ if __name__ == "__main__" :
     input_days = (1, 2, 3, 4, 5, 6, 7)
     output_day = 1
     for input_day in input_days :
-        experiment_name = f"days{input_day}_to_day{output_day}"
+        experiment_name = f"weighted_days{input_day}_to_day{output_day}"
         config_name = experiment_name
         config = base_config.copy()
         config["experiment"]["experiment_name"] = experiment_name
@@ -43,6 +43,7 @@ if __name__ == "__main__" :
         config["data"]["input_sequence_length"] = 8 * input_day
         config["data"]["target_sequence_length"] = 8 * output_day
         config["data"]["target_day"] = output_day
+        config["experiment"]["apply_pos_weight"] = True
         config["experiment"]["enable_undersampling"] = False
         config["training"]["report_freq"] = 1000
         config_path = f"./configs/{config_name}.yaml"
@@ -75,6 +76,7 @@ if __name__ == "__main__" :
             config["data"]["input_sequence_length"] = 8 * input_day
             config["data"]["target_sequence_length"] = 8 * output_day
             config["data"]["target_day"] = output_day
+            config["experiment"]["apply_pos_weight"] = True
             config["experiment"]["enable_undersampling"] = True
             config["experiment"]["subsample_index"] = subsample_index
             config["training"]["report_freq"] = 100

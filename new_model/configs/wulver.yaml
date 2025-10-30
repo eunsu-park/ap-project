@@ -29,6 +29,7 @@ experiment:
   enable_undersampling: false
   num_subsample: 10
   subsample_index: 0
+  apply_pos_weight: false
 
 data:
   dataset_name: 'two_twelve_to_one'

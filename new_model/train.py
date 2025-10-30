@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import argparse
 from datetime import datetime
@@ -171,8 +172,17 @@ def main(config):
         
         # New: Binary Cross Entropy with Logits Loss for multi-label classification
         # This loss combines sigmoid activation and BCE loss for numerical stability
-        criterion = nn.BCEWithLogitsLoss()
-        logger.info("Loss function: BCEWithLogitsLoss (for binary classification)")
+        if config.experiment.apply_pos_weight is True :
+            pos_weight = torch.tensor(dataloader.dataset.pos_weight)
+            criterion = nn.BCEWithLogitsLoss(pos_weight = pos_weight)
+            logger.info(f"Loss function: BCEWithLogitsLoss(pos_weight={pos_weight}) (for binary classification)")
+        else :
+            criterion = nn.BCEWithLogitsLoss()
+            logger.info("Loss function: BCEWithLogitsLoss (for binary classification)")
+
+        sys.exit()
+
+
         logger.info("Model outputs logits - sigmoid will be applied during loss computation")
         
         optimizer = optim.Adam(model.parameters(), lr=config.training.learning_rate)
