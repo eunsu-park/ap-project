@@ -503,6 +503,7 @@ def main(config) -> Dict[str, Any]:
             # NEW: Store file-level results for CSV export
             targets = validation_dict['targets'][0]  # Remove batch dimension
             predictions = validation_dict['predictions'][0]
+            probabilities = validation_dict['probabilities']
             
             # Get file_name
             file_name = f"batch_{i}"
@@ -518,7 +519,8 @@ def main(config) -> Dict[str, Any]:
             all_file_results.append({
                 'file_name': file_name,
                 'targets': targets,
-                'predictions': predictions
+                'predictions': predictions,
+                'probabilities': probabilities
             })
             
             successful_samples += validation_dict['targets'].shape[0]
