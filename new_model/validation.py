@@ -260,7 +260,7 @@ def save_results_to_csv(all_file_results: list,
     """
     try:
         with open(output_path, 'w', newline='') as csvfile:
-            fieldnames = ['file_name', 'target', 'output']
+            fieldnames = ['file_name', 'target', 'output', 'output_perc']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             
             writer.writeheader()
