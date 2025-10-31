@@ -49,7 +49,7 @@ for apply_weighted in weighted :
                 else :
                     experiment_name = f"days{input_day}_to_day{output_day}_sub_{subset}"
 
-                dir_path = f"{result_root}/{experiment_name}/epoch_{epoch}"
+                dir_path = f"{result_root}/{experiment_name}/output/epoch_{epoch}"
                 file_path = f"{dir_path}/{file_name}"
 
                 print(file_path, os.path.exists(file_path))
