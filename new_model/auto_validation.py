@@ -317,4 +317,5 @@ if __name__ == "__main__" :
                 
 
 
-    original(base_config, input_day=4, output_day=1, epoch=100, overwrite=True)
+    # original(base_config, input_day=4, output_day=1, epoch=100, overwrite=True)
+    weighted_subsample(base_config, input_day=5, output_day=1, epoch=100, subsample_index=1)
