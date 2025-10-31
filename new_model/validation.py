@@ -285,8 +285,7 @@ def save_results_to_csv(all_file_results: list,
                         full_identifier = f"{file_name}_group{group_idx}_{var_name}"
                         
                         writer.writerow({
-                            # 'file_name': full_identifier,
-                            'file_name' : file_name,
+                            'file_name': full_identifier,
                             'target': target_val,
                             'output': pred_val,
                             'output_perc' : pred_perc
