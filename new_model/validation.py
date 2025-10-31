@@ -251,7 +251,7 @@ def save_results_to_csv(all_file_results: list,
                        target_variables: list,
                        logger=None):
     """Save all validation results to CSV file.
-    
+
     Args:
         all_file_results: List of dictionaries with file_name, targets, predictions
         output_path: Path to save the CSV file
@@ -260,7 +260,7 @@ def save_results_to_csv(all_file_results: list,
     """
     try:
         with open(output_path, 'w', newline='') as csvfile:
-            fieldnames = ['file_name', 'target', 'output', 'output_perc']
+            fieldnames = ['file_name', 'target', 'output', 'output_prob']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             
             writer.writeheader()
@@ -270,6 +270,7 @@ def save_results_to_csv(all_file_results: list,
                 file_name = result['file_name']
                 targets = result['targets']  # Shape: (n_groups, n_variables)
                 predictions = result['predictions']  # Shape: (n_groups, n_variables)
+                probabilities = result['probabilities']
                 
                 n_groups, n_variables = targets.shape
                 
@@ -278,8 +279,8 @@ def save_results_to_csv(all_file_results: list,
                     # For each group
                     for group_idx in range(n_groups):
                         target_val = int(targets[group_idx, var_idx])
-                        pred_perc = predictions[group_idx, var_idx]
-                        pred_val = int(pred_perc)
+                        pred_val = int(predictions[group_idx, var_idx])
+                        pred_prob = probabilities[group_idx, var_idx]
                         
                         # Create a descriptive identifier
                         full_identifier = f"{file_name}_group{group_idx}_{var_name}"
@@ -288,7 +289,7 @@ def save_results_to_csv(all_file_results: list,
                             'file_name': full_identifier,
                             'target': target_val,
                             'output': pred_val,
-                            'output_perc' : pred_perc
+                            'output_prob' : pred_prob
                         })
         
         if logger:
