@@ -297,25 +297,26 @@ def subsample(base_config, input_day, output_day, epoch, subsample_index, overwr
 
 if __name__ == "__main__" :
 
-    # input_days = (1, 2, 3, 4, 5, 6, 7)
-    # output_day = 1
-
     base_config_path = "./configs/wulver.yaml"
     with open(base_config_path, 'r') as f:
         base_config = yaml.safe_load(f) 
 
-    # for input_day in input_days :
-    #     for epoch in range(100, 1001, 100) :
 
-    #         original(base_config, input_day, output_day, epoch)
-    #         weighted_original(base_config, input_day, output_day, epoch)
+    input_days = (1, 2, 3, 4, 5, 6, 7)
+    output_day = 1
+
+    for input_day in input_days :
+        for epoch in range(100, 1001, 100) :
+
+            original(base_config, input_day, output_day, epoch)
+            weighted_original(base_config, input_day, output_day, epoch)
             
-    #         for subsample_index in range(10):
+            for subsample_index in range(10):
 
-    #             subsample(base_config, input_day, output_day, epoch, subsample_index)
-    #             weighted_subsample(base_config, input_day, output_day, epoch, subsample_index)
+                subsample(base_config, input_day, output_day, epoch, subsample_index)
+                weighted_subsample(base_config, input_day, output_day, epoch, subsample_index)
                 
 
-
+    ### Single run
     # original(base_config, input_day=4, output_day=1, epoch=100, overwrite=True)
-    weighted_subsample(base_config, input_day=5, output_day=1, epoch=100, subsample_index=1, overwrite=True)
+    # weighted_subsample(base_config, input_day=5, output_day=1, epoch=100, subsample_index=1, overwrite=True)
