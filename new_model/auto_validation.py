@@ -64,7 +64,7 @@ def original(base_config, input_day, output_day, epoch, overwrite=False):
             print(f"Created output directory: {output_dir}")
         else :
             print(f"Already created: {output_dir}")
-        return
+            return
 
 
     config["validation"] = {
@@ -132,7 +132,7 @@ def weighted_original(base_config, input_day, output_day, epoch, overwrite=False
             print(f"Created output directory: {output_dir}")
         else :
             print(f"Already created: {output_dir}")
-        return
+            return
 
     config["validation"] = {
         "checkpoint_path": checkpoint_path,
@@ -200,7 +200,7 @@ def weighted_subsample(base_config, input_day, output_day, epoch, subsample_inde
             print(f"Created output directory: {output_dir}")
         else :
             print(f"Already created: {output_dir}")
-        return
+            return
 
     config["validation"] = {
         "checkpoint_path": checkpoint_path,
@@ -267,7 +267,7 @@ def subsample(base_config, input_day, output_day, epoch, subsample_index, overwr
             print(f"Created output directory: {output_dir}")
         else :
             print(f"Already created: {output_dir}")
-        return
+            return
 
     config["validation"] = {
         "checkpoint_path": checkpoint_path,
