@@ -317,4 +317,4 @@ if __name__ == "__main__" :
                 
 
 
-    original(base_config, input_day=4, output_day=1, epoch=100)
+    original(base_config, input_day=4, output_day=1, epoch=100, overwrite=True)
