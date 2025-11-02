@@ -47,7 +47,7 @@ def main():
                 # f"%Y_%m_%d__%H_%M_%S_%f__SDO_{instrument_upper}_{instrument_upper}_{wavelength}.jp2"
 
                 filedate = datetime.datetime.strptime(filename, f"%Y_%m_%d__%H_%M_%S_%f__SDO_AIA_AIA_{wave}.jp2")
-                if filedate.hour in (0, 59) :
+                if filedate.hour in (0, 59, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21) :
                     destination = f"{save_dir}/{filename}"
                     download_tasks.append((source, destination))
 
