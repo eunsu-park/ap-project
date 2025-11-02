@@ -42,8 +42,14 @@ def main():
             download_tasks = []
             for filename in file_list:
                 source = f"{base_url}/{filename}"
-                destination = f"{save_dir}/{filename}"
-                download_tasks.append((source, destination))
+
+                ## Filterting
+                # f"%Y_%m_%d__%H_%M_%S_%f__SDO_{instrument_upper}_{instrument_upper}_{wavelength}.jp2"
+
+                filedate = datetime.datetime.strptime(filename, f"%Y_%m_%d__%H_%M_%S_%f__SDO_AIA_AIA_{wave}.jp2")
+                if filedate.month in (0, 59) :
+                    destination = f"{save_dir}/{filename}"
+                    download_tasks.append((source, destination))
 
             result = download_parallel(download_tasks, overwrite=args.overwrite,
                                        max_retries=args.max_retries, parallel=args.parallel)
