@@ -69,6 +69,10 @@ def main():
                 download_tasks = []
                 for filename in file_list:
                     source = f"{base_url}/{filename}"
+                ## Filterting
+                # f"%Y_%m_%d__%H_%M_%S_%f__SDO_{instrument_upper}_{instrument_upper}_{wavelength}.jp2"
+                filedate = datetime.datetime.strptime(filename, f"%Y_%m_%d__%H_%M_%S_%f__SDO_HMI_HMI_{wave}.jp2")
+                if filedate.hour in (2,3, 5,6, 8,9, 11,12, 14,15, 17,18, 20,21, 23,0) :
                     destination = f"{save_dir}/{filename}"
                     download_tasks.append((source, destination))
 
