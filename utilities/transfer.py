@@ -36,6 +36,21 @@ class FolderMove:
         self.moved_files = 0
         self.failed_files: List[Tuple[str, str]] = []
         
+    def cleanup_parent_dirs(self, file_path: Path):
+        """파일이 이동된 후 상위 디렉토리가 비었으면 즉시 삭제"""
+        parent = file_path.parent
+        
+        # 원본 폴더 자체는 삭제하지 않음
+        while parent != self.source and parent > self.source:
+            try:
+                # 빈 디렉토리만 삭제 (파일이나 하위 폴더가 있으면 예외 발생)
+                parent.rmdir()
+                logger.debug(f"빈 디렉토리 삭제: {parent}")
+                parent = parent.parent
+            except OSError:
+                # 디렉토리가 비어있지 않으면 상위로 올라가지 않고 중단
+                break
+    
     def process_files_lazy(self) -> bool:
         """파일을 찾으면서 즉시 처리 (lazy evaluation)"""
         logger.info("파일 이동 시작 (파일 탐색과 동시 처리)...")
@@ -60,6 +75,9 @@ class FolderMove:
             self.moved_files += 1
             
             if success:
+                # 파일 이동 성공 시 즉시 상위 디렉토리 정리
+                self.cleanup_parent_dirs(src_file)
+                
                 # 진행률 출력 (100개마다)
                 if self.moved_files % 100 == 0:
                     elapsed = time.time() - start_time
@@ -121,8 +139,8 @@ class FolderMove:
             return False, str(src_file), str(e)
     
     def cleanup_empty_dirs(self):
-        """빈 디렉토리 정리 (하위부터 상위로)"""
-        logger.info("빈 디렉토리 정리 중...")
+        """최종 정리: 남아있는 빈 디렉토리 삭제"""
+        logger.info("최종 빈 디렉토리 정리 중...")
         removed_count = 0
         
         # 하위 디렉토리부터 처리 (역순 정렬)
@@ -132,11 +150,23 @@ class FolderMove:
                     # 빈 디렉토리만 삭제
                     dirpath.rmdir()
                     removed_count += 1
+                    logger.debug(f"최종 정리: {dirpath}")
                 except OSError:
                     # 디렉토리가 비어있지 않으면 무시
                     pass
         
-        logger.info(f"빈 디렉토리 {removed_count}개 삭제 완료")
+        # 원본 폴더 자체도 비었으면 삭제
+        try:
+            self.source.rmdir()
+            removed_count += 1
+            logger.info(f"원본 폴더 삭제 완료: {self.source}")
+        except OSError:
+            logger.info(f"원본 폴더에 파일이 남아있어 삭제하지 않음: {self.source}")
+        
+        if removed_count > 0:
+            logger.info(f"최종 정리: 빈 디렉토리 {removed_count}개 삭제 완료")
+        else:
+            logger.info(f"최종 정리: 삭제할 빈 디렉토리 없음 (실시간으로 모두 정리됨)")
     
     def verify_transfer(self) -> bool:
         """이동 검증 (원본 폴더 비어있는지, 목적지 파일 존재 확인)"""
@@ -179,11 +209,15 @@ def main():
         # 파일 이동 (lazy evaluation - 찾으면서 바로 처리)
         success = transfer.process_files_lazy()
         
-        # 검증
+        # 검증 및 최종 정리
         if success:
             if transfer.verify_transfer():
-                # 빈 디렉토리 정리
+                # 최종 빈 디렉토리 정리 (실시간으로 못 지운 것들)
                 transfer.cleanup_empty_dirs()
+        else:
+            # 실패가 있어도 빈 디렉토리는 정리
+            logger.info("일부 파일 이동 실패, 빈 디렉토리 정리 시작...")
+            transfer.cleanup_empty_dirs()
         
         # 실패한 파일 목록 저장
         if transfer.failed_files:
