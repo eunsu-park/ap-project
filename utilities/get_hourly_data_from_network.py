@@ -3,6 +3,7 @@ import time
 import datetime
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import Pool, freeze_support
 
 import pandas as pd
 import requests
@@ -165,10 +166,10 @@ def main(date_target):
         "hmi_magnetogram" : [os.path.basename(hmi_magnetogram) if hmi_magnetogram is not None else None]
     })
 
-    if os.path.exists(CSV_FILE_NAME) :
-        df.to_csv(CSV_FILE_NAME, mode='a', header=False, index=False, encoding='utf-8', date_format='%Y-%m-%d %H:%M:%S')
-    else :
-        df.to_csv(CSV_FILE_NAME, index=False, encoding='utf-8', date_format='%Y-%m-%d %H:%M:%S')
+    # if os.path.exists(CSV_FILE_NAME) :
+    #     df.to_csv(CSV_FILE_NAME, mode='a', header=False, index=False, encoding='utf-8', date_format='%Y-%m-%d %H:%M:%S')
+    # else :
+    #     df.to_csv(CSV_FILE_NAME, index=False, encoding='utf-8', date_format='%Y-%m-%d %H:%M:%S')
 
     if aia_193 is not None :
         source_url = aia_193
@@ -183,21 +184,31 @@ def main(date_target):
         destination = f"{HMI_MAGNETOGRAM_DIR}/{os.path.basename(hmi_magnetogram)}"
         download_single_file(source_url=source_url, destination=destination)
 
+    return df
+
 
 
 if __name__ == "__main__" :
+
+    freeze_support()
 
     date_target = datetime.datetime(year=2010, month=9, day=1, hour=0)
     # date_end = datetime.datetime(year=2011, month=1, day=1, hour=0)
     date_end = datetime.datetime(year=2025, month=1, day=1, hour=0)
 
-    while date_target < date_end :
-        main(date_target)
+    date_list = []
 
+    while date_target < date_end :
+        date_list.append(date_target)
+        # main(date_target)
         date_target += datetime.timedelta(hours=3)
 
+    pool = Pool(8)
+    df_list = pool.map(date_list)
+    pool.close()
 
-        
+    df = pd.concat(df_list, ignore_index=True)
+    df.to_csv(CSV_FILE_NAME, index=False, encoding='utf-8', date_format='%Y-%m-%d %H:%M:%S')
 
 
     # date_before = date - datetime.timedelta(days=1)
