@@ -64,9 +64,9 @@ def parse_omni_line_lowres(line, format_parts):
 
 def apply_fill_values_lowres(df):
     """
-    Fill values를 NaN으로 변환
+    Fill values를 NaN으로 변환 (OMNI2.text 공식 문서 기준)
     """
-    # 각 컬럼별 fill value 정의
+    # 각 컬럼별 fill value 정의 (0-based index)
     fill_values = {
         3: [9999],  # Bartels rotation number
         4: [99],  # IMF spacecraft ID
@@ -113,15 +113,13 @@ def apply_fill_values_lowres(df):
         45: [99999.99],  # Proton flux >10 Mev
         46: [99999.99],  # Proton flux >30 Mev
         47: [99999.99],  # Proton flux >60 Mev
-        48: [0],  # Flag (0은 fill이 아니라 실제 값일 수 있음, 주의)
-        49: [],  # ap-index (fill value 명시 안됨)
-        50: [],  # f10.7_index (fill value 명시 안됨)
-        51: [],  # PC(N) index (fill value 명시 안됨)
-        52: [],  # AL-index (fill value 명시 안됨)
-        53: [],  # AU-index (fill value 명시 안됨)
+        48: [],  # Flag (0은 fill이 아니라 실제 값)
+        49: [999],  # ap-index
+        50: [999.9],  # f10.7_index
+        51: [999.9],  # PC(N) index
+        52: [99999],  # AL-index
+        53: [99999],  # AU-index
         54: [99.9],  # Magnetosonic mach number
-        55: [0.999999],  # Solar Lyman Alpha Irradiance
-        56: [9.9999]  # Proton QI
     }
     
     # Fill values를 NaN으로 교체
@@ -152,18 +150,18 @@ def create_datetime_lowres(row):
 
 def download_omni_lowres(url, output_csv, save_dat=True):
     """
-    OMNI2 extended .dat 파일을 다운로드하여 CSV로 변환
+    OMNI2 .dat 파일을 다운로드하여 CSV로 변환 (공식 omni2.text 포맷 기준)
     
     Parameters:
     -----------
     url : str
-        OMNI2 extended .dat 파일 URL
+        OMNI2 .dat 파일 URL
     output_csv : str
         출력 CSV 파일 경로
     save_dat : bool
         원본 .dat 파일을 저장할지 여부 (기본값: True)
     """
-    # 컬럼명 정의 (57개)
+    # 컬럼명 정의 (55개) - OMNI2.text 공식 문서 기준
     column_names = [
         'Year', 'Decimal_Day', 'Hour',
         'Bartels_Rotation_Number',
@@ -188,9 +186,7 @@ def download_omni_lowres(url, output_csv, save_dat=True):
         'Flag',
         'ap_Index_nT', 'f10_7_Index_sfu', 'PC_N_Index',
         'AL_Index_nT', 'AU_Index_nT',
-        'Magnetosonic_Mach_Number',
-        'Solar_Lyman_Alpha_Irradiance_W_m2',
-        'Proton_QI'
+        'Magnetosonic_Mach_Number'
     ]
     
     print(f"다운로드 중: {url}")
@@ -213,8 +209,9 @@ def download_omni_lowres(url, output_csv, save_dat=True):
     
     print("데이터 파싱 중...")
     
-    # Fortran 포맷 파싱
-    format_string = "(2I4,I3,I5,2I3,2I4,14F6.1,F9.0,F6.1,F6.0,2F6.1,F6.3,F6.2,F9.0,F6.1,F6.0,2F6.1,F6.3,2F7.2,F6.1,I3,I4,I6,I5,F10.2,5F9.2,I3,I4,2F6.1,2I6,F5.1,F9.6,F7.3)"
+    # Fortran 포맷 파싱 (OMNI2.text 문서의 공식 포맷)
+    # (2I4,I3,I5,2I3,2I4,14F6.1,F9.0,F6.1,F6.0,2F6.1,F6.3,F6.2,F9.0,F6.1,F6.0,2F6.1,F6.3,2F7.2,F6.1,I3,I4,I6,I5,F10.2,5F9.2,I3,I4,F6.1,F6.1,2I6,F5.1)
+    format_string = "(2I4,I3,I5,2I3,2I4,14F6.1,F9.0,F6.1,F6.0,2F6.1,F6.3,F6.2,F9.0,F6.1,F6.0,2F6.1,F6.3,2F7.2,F6.1,I3,I4,I6,I5,F10.2,5F9.2,I3,I4,F6.1,F6.1,2I6,F5.1)"
     format_parts = parse_fortran_format_lowres(format_string)
     
     # 각 라인 파싱
@@ -236,14 +233,12 @@ def download_omni_lowres(url, output_csv, save_dat=True):
     df = pd.DataFrame(data_rows, columns=column_names)
     
     # 시간 관련 컬럼은 Int64 (Nullable Integer)로 변환
-    # 이 컬럼들은 명백히 정수이며, 거의 항상 존재하지만 혹시 모를 결측치를 안전하게 처리
     time_columns = ['Year', 'Decimal_Day', 'Hour']
     for col in time_columns:
         if col in df.columns:
             df[col] = df[col].astype('Int64')
     
     # 다른 정수형 컬럼은 float으로 변환하여 NaN을 안전하게 처리
-    # (이 컬럼들은 fill value가 의미있는 결측치이므로 float 유지)
     other_integer_columns = [
         'Bartels_Rotation_Number',
         'IMF_SC_ID', 'SW_Plasma_SC_ID',
@@ -273,7 +268,7 @@ def download_omni_lowres(url, output_csv, save_dat=True):
     # CSV 저장
     print(f"CSV 파일 저장 중: {output_csv}")
     try:
-        df.to_csv(output_csv, index=False)
+        df.to_csv(output_csv, index=False, encoding='utf-8', date_format='%Y-%m-%d %H:%M:%S')
         print(f"성공적으로 저장됨: {output_csv}")
         print(f"데이터 shape: {df.shape}")
         return True
@@ -281,9 +276,22 @@ def download_omni_lowres(url, output_csv, save_dat=True):
         print(f"CSV 저장 에러: {e}")
         return False
 
-# 사용 예시
+
 if __name__ == "__main__":
+    file_list = []
+    total_file = f"/Users/eunsupark/Data/omni/lowres/omni_lowres_total.csv"
+
     for year in range(2010, 2025):
-        url = f"https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/extended/omni2_{year}.dat"
-        output_file = f"/Users/eunsupark/ap_project/data/omni/lowres/omni_lowres_{year}.csv"
+        url = f"https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_{year}.dat"
+        output_file = f"/Users/eunsupark/Data/omni/lowres/omni_lowres_{year}.csv"
+        file_list.append(output_file)
         download_omni_lowres(url, output_file)
+        print(f"{year}년 완료\n")
+
+    df_list = []
+    for file_path in file_list :
+        df = pd.read_csv(file_path)
+        df_list.append(df)
+
+    combined_df = pd.concat(df_list, ignore_index=True)
+    combined_df.to_csv(total_file, index=False, encoding='utf-8', date_format='%Y-%m-%d %H:%M:%S')

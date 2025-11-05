@@ -1,3 +1,4 @@
+import os
 import argparse
 import datetime
 
@@ -32,6 +33,7 @@ def main():
         for wave in args.wavelengths:
             base_url = f"https://gs671-suske.ndc.nasa.gov/jp2/AIA/{current_date:%Y/%m/%d}/{wave}"
             save_dir = f"{args.destination_root}/sdo_jp2/aia/{wave}/{current_date:%Y}/{current_date:%Y%m%d}"
+            save_dir_tmp = f"/Volumes/EUNSU-T9/sdo_jp2/aia/{wave}/{current_date:%Y}/{current_date:%Y%m%d}"
 
             print(f"Fetching file list from {base_url}")
             file_list = get_file_list(base_url, args.extensions)
@@ -47,7 +49,11 @@ def main():
                 filedate = datetime.datetime.strptime(filename, f"%Y_%m_%d__%H_%M_%S_%f__SDO_AIA_AIA_{wave}.jp2")
                 if filedate.hour in (2,3, 5,6, 8,9, 11,12, 14,15, 17,18, 20,21, 23,0) :
                     destination = f"{save_dir}/{filename}"
-                    download_tasks.append((source, destination))
+                    # download_tasks.append((source, destination))
+                    if not os.path.exists(destination):
+                        destination_tmp = f"{save_dir_tmp}/{filename}"
+                        download_tasks.append((source, destination_tmp))
+                        # download_tasks.append((source, destination))
 
             result = download_parallel(download_tasks, overwrite=args.overwrite,
                                        max_retries=args.max_retries, parallel=args.parallel)

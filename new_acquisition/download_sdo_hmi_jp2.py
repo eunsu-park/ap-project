@@ -1,3 +1,4 @@
+import os
 import argparse
 import datetime
 
@@ -28,59 +29,38 @@ def main():
     start_date, end_date = parse_date_range(args)
     print(f"Downloading from {start_date} to {end_date}")
 
-    if args.reverse:
-        current_date = end_date
-        while current_date >= start_date:
-            for wave in args.wavelengths:
-                base_url = f"https://gs671-suske.ndc.nasa.gov/jp2/HMI/{current_date:%Y/%m/%d}/{wave}"
-                save_dir = f"{args.destination_root}/sdo_jp2/hmi/{wave}/{current_date:%Y}/{current_date:%Y%m%d}"
+    current_date = start_date
+    while current_date <= end_date:
+        for wave in args.wavelengths:
+            base_url = f"https://gs671-suske.ndc.nasa.gov/jp2/HMI/{current_date:%Y/%m/%d}/{wave}"
+            save_dir = f"{args.destination_root}/sdo_jp2/hmi/{wave}/{current_date:%Y}/{current_date:%Y%m%d}"
+            save_dir_tmp = f"/Volumes/EUNSU-T9/sdo_jp2/hmi/{wave}/{current_date:%Y}/{current_date:%Y%m%d}"
 
-                print(f"Fetching file list from {base_url}")
-                file_list = get_file_list(base_url, args.extensions)
-                if not file_list:
-                    print(f"No files found at {base_url}")
-                    continue
+            print(f"Fetching file list from {base_url}")
+            file_list = get_file_list(base_url, args.extensions)
+            if not file_list:
+                print(f"No files found at {base_url}")
+                continue
 
-                download_tasks = []
-                for filename in file_list:
-                    source = f"{base_url}/{filename}"
+            download_tasks = []
+            for filename in file_list:
+                source = f"{base_url}/{filename}"
+                ## Filterting
+                # f"%Y_%m_%d__%H_%M_%S_%f__SDO_{instrument_upper}_{instrument_upper}_{wavelength}.jp2"
+                filedate = datetime.datetime.strptime(filename, f"%Y_%m_%d__%H_%M_%S_%f__SDO_HMI_HMI_{wave}.jp2")
+                if filedate.hour in (2,3, 5,6, 8,9, 11,12, 14,15, 17,18, 20,21, 23,0) :
                     destination = f"{save_dir}/{filename}"
-                    download_tasks.append((source, destination))
+                    # download_tasks.append((source, destination))
+                    if not os.path.exists(destination):
+                        destination_tmp = f"{save_dir_tmp}/{filename}"
+                        download_tasks.append((source, destination_tmp))
+                        # download_tasks.append((source, destination))
 
-                result = download_parallel(download_tasks, overwrite=args.overwrite,
-                                        max_retries=args.max_retries, parallel=args.parallel)
-                print(f"Downloaded: {result['downloaded']}, Failed: {result['failed']}")
+            result = download_parallel(download_tasks, overwrite=args.overwrite,
+                                    max_retries=args.max_retries, parallel=args.parallel)
+            print(f"Downloaded: {result['downloaded']}, Failed: {result['failed']}")
 
-            current_date -= datetime.timedelta(days=1)
-    
-    else :
-        current_date = start_date
-        while current_date <= end_date:
-            for wave in args.wavelengths:
-                base_url = f"https://gs671-suske.ndc.nasa.gov/jp2/HMI/{current_date:%Y/%m/%d}/{wave}"
-                save_dir = f"{args.destination_root}/sdo_jp2/hmi/{wave}/{current_date:%Y}/{current_date:%Y%m%d}"
-
-                print(f"Fetching file list from {base_url}")
-                file_list = get_file_list(base_url, args.extensions)
-                if not file_list:
-                    print(f"No files found at {base_url}")
-                    continue
-
-                download_tasks = []
-                for filename in file_list:
-                    source = f"{base_url}/{filename}"
-                    ## Filterting
-                    # f"%Y_%m_%d__%H_%M_%S_%f__SDO_{instrument_upper}_{instrument_upper}_{wavelength}.jp2"
-                    filedate = datetime.datetime.strptime(filename, f"%Y_%m_%d__%H_%M_%S_%f__SDO_HMI_HMI_{wave}.jp2")
-                    if filedate.hour in (2,3, 5,6, 8,9, 11,12, 14,15, 17,18, 20,21, 23,0) :
-                        destination = f"{save_dir}/{filename}"
-                        download_tasks.append((source, destination))
-
-                result = download_parallel(download_tasks, overwrite=args.overwrite,
-                                        max_retries=args.max_retries, parallel=args.parallel)
-                print(f"Downloaded: {result['downloaded']}, Failed: {result['failed']}")
-
-            current_date += datetime.timedelta(days=1)
+        current_date += datetime.timedelta(days=1)
 
 
 if __name__ == "__main__" :

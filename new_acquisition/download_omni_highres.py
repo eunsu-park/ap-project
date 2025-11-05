@@ -8,7 +8,6 @@ def parse_fortran_format_highres(format_string):
     """
     Fortran 포맷 문자열을 파싱하여 각 필드의 위치와 길이를 반환
     """
-    # 포맷: (2I4,4I3,3I4,2I7,F6.2,I7, 8F8.2,4F8.1,F7.2,F9.0,F6.2,2F7.2,F6.1,6F8.2,7I6,F7.3, F5.1)
     format_parts = []
     
     # 간단한 파싱: nXw.d 형식 (n=반복횟수, X=타입, w=너비, d=소수점)
@@ -65,19 +64,23 @@ def parse_omni_line_highres(line, format_parts):
 
 def apply_fill_values_highres(df):
     """
-    Fill values를 NaN으로 변환
+    Fill values를 NaN으로 변환 (HRO 공식 문서 기준)
+    
+    공식 문서에는 명시적인 fill value가 없으나, 일반적으로 사용되는 값들:
+    - Integer fields: 999, 9999, 99999, 999999, 9999999
+    - Float fields: 99.99, 999.9, 9999.99, etc.
     """
-    # 각 컬럼별 fill value 정의 (여러 개의 fill value가 있는 경우 리스트로 정의)
+    # 각 컬럼별 fill value 정의 (0-based index)
     fill_values = {
         4: [99],  # IMF Spacecraft ID
         5: [99],  # SW Plasma Spacecraft ID
         6: [999],  # Points in IMF averages
         7: [999],  # Points in Plasma averages
         8: [999],  # Percent interp
-        9: [999999],  # Timeshift, sec
-        10: [999999],  # RMS Timeshift
+        9: [999999, 9999999],  # Timeshift, sec
+        10: [999999, 9999999],  # RMS Timeshift
         11: [99.99],  # RMS Phase front normal
-        12: [999999, 9999999, 9999],  # Time between observations (세 가지 fill value)
+        12: [999999, 9999999, 9999],  # Time between observations
         13: [9999.99],  # B magnitude
         14: [9999.99],  # Bx GSE
         15: [9999.99],  # By GSE
@@ -86,10 +89,10 @@ def apply_fill_values_highres(df):
         18: [9999.99],  # Bz GSM
         19: [9999.99],  # RMS SD B scalar
         20: [9999.99],  # RMS SD B vector
-        21: [99999.9],  # Flow speed
-        22: [99999.9],  # Vx GSE
-        23: [99999.9],  # Vy GSE
-        24: [99999.9],  # Vz GSE
+        21: [99999.9, 99999.99],  # Flow speed
+        22: [99999.9, 99999.99],  # Vx GSE
+        23: [99999.9, 99999.99],  # Vy GSE
+        24: [99999.9, 99999.99],  # Vz GSE
         25: [999.99],  # Proton density
         26: [9999999., 9999999.0],  # Temperature
         27: [99.99],  # Flow pressure
@@ -102,24 +105,24 @@ def apply_fill_values_highres(df):
         34: [9999.99],  # BSN X GSE
         35: [9999.99],  # BSN Y GSE
         36: [9999.99],  # BSN Z GSE
-        37: [99999],  # AE index
-        38: [99999],  # AL index
-        39: [99999],  # AU index
-        40: [99999],  # SYM/D index
-        41: [99999],  # SYM/H index
-        42: [99999],  # ASY/D index
-        43: [99999],  # ASY/H index
-        44: [9.999],  # Na/Np Ratio
-        45: [99.9]  # Magnetosonic mach number
+        37: [99999, 999999],  # AE index
+        38: [99999, 999999],  # AL index
+        39: [99999, 999999],  # AU index
+        40: [99999, 999999],  # SYM/D index
+        41: [99999, 999999],  # SYM/H index
+        42: [99999, 999999],  # ASY/D index
+        43: [99999, 999999],  # ASY/H index
+        44: [999.99],  # PC(N) index
+        45: [99.9],  # Magnetosonic mach number
+        # 5-min 데이터의 경우 추가 필드
+        46: [99999.99],  # Proton flux >10 MeV (optional for 5-min)
+        47: [99999.99],  # Proton flux >30 MeV (optional for 5-min)
+        48: [99999.99],  # Proton flux >60 MeV (optional for 5-min)
     }
     
     # Fill values를 NaN으로 교체
     for col_idx, fill_val_list in fill_values.items():
         if col_idx < len(df.columns):
-            # 리스트가 아닌 경우 리스트로 변환
-            if not isinstance(fill_val_list, list):
-                fill_val_list = [fill_val_list]
-            
             # 각 fill value를 NaN으로 교체
             for fill_val in fill_val_list:
                 df.iloc[:, col_idx] = df.iloc[:, col_idx].replace(fill_val, np.nan)
@@ -144,9 +147,9 @@ def create_datetime_highres(row):
         # 시간 데이터가 유효하지 않으면 NaT 반환
         return pd.NaT
 
-def download_omni_highres(url, output_csv, save_asc=True):
+def download_omni_highres(url, output_csv, save_asc=True, is_5min=False):
     """
-    OMNI .asc 파일을 다운로드하여 CSV로 변환
+    OMNI .asc 파일을 다운로드하여 CSV로 변환 (HRO 공식 문서 기준)
     
     Parameters:
     -----------
@@ -156,8 +159,10 @@ def download_omni_highres(url, output_csv, save_asc=True):
         출력 CSV 파일 경로
     save_asc : bool
         원본 .asc 파일을 저장할지 여부 (기본값: True)
+    is_5min : bool
+        5분 데이터 여부 (5분 데이터는 GOES flux 3개 추가)
     """
-    # 컬럼명 정의
+    # 컬럼명 정의 (HRO format 기준 - 48개 기본 + 5분 데이터의 경우 3개 추가)
     column_names = [
         'Year', 'Day', 'Hour', 'Minute',
         'IMF_SC_ID', 'SW_Plasma_SC_ID',
@@ -176,8 +181,16 @@ def download_omni_highres(url, output_csv, save_asc=True):
         'BSN_X_GSE_Re', 'BSN_Y_GSE_Re', 'BSN_Z_GSE_Re',
         'AE_Index_nT', 'AL_Index_nT', 'AU_Index_nT',
         'SYM_D_nT', 'SYM_H_nT', 'ASY_D_nT', 'ASY_H_nT',
-        'Na_Np_Ratio', 'Magnetosonic_Mach_Number'
+        'PC_N_Index', 'Magnetosonic_Mach_Number'
     ]
+    
+    # 5분 데이터의 경우 GOES flux 추가
+    if is_5min:
+        column_names.extend([
+            'Proton_Flux_gt10MeV',
+            'Proton_Flux_gt30MeV',
+            'Proton_Flux_gt60MeV'
+        ])
     
     print(f"다운로드 중: {url}")
     data_text = download_from_url(url)
@@ -199,8 +212,14 @@ def download_omni_highres(url, output_csv, save_asc=True):
     
     print("데이터 파싱 중...")
     
-    # Fortran 포맷 파싱
-    format_string = "(2I4,4I3,3I4,2I7,F6.2,I7, 8F8.2,4F8.1,F7.2,F9.0,F6.2,2F7.2,F6.1,6F8.2,7I6,F7.3, F5.1)"
+    # Fortran 포맷 파싱 (HRO 공식 문서)
+    # 1-min: (2I4,4I3,3I4,2I7,F6.2,I7, 8F8.2,4F8.1,F7.2,F9.0,F6.2,2F7.2,F6.1,6F8.2,7I6,F7.2, F5.1)
+    # 5-min: 위 포맷 + 3F9.2 (GOES flux)
+    if is_5min:
+        format_string = "(2I4,4I3,3I4,2I7,F6.2,I7, 8F8.2,4F8.1,F7.2,F9.0,F6.2,2F7.2,F6.1,6F8.2,7I6,F7.2, F5.1,3F9.2)"
+    else:
+        format_string = "(2I4,4I3,3I4,2I7,F6.2,I7, 8F8.2,4F8.1,F7.2,F9.0,F6.2,2F7.2,F6.1,6F8.2,7I6,F7.2, F5.1)"
+    
     format_parts = parse_fortran_format_highres(format_string)
     
     # 각 라인 파싱
@@ -222,14 +241,12 @@ def download_omni_highres(url, output_csv, save_asc=True):
     df = pd.DataFrame(data_rows, columns=column_names)
     
     # 시간 관련 컬럼은 Int64 (Nullable Integer)로 변환
-    # 이 컬럼들은 명백히 정수이며, 거의 항상 존재하지만 혹시 모를 결측치를 안전하게 처리
     time_columns = ['Year', 'Day', 'Hour', 'Minute']
     for col in time_columns:
         if col in df.columns:
             df[col] = df[col].astype('Int64')
     
     # 다른 정수형 컬럼은 float으로 변환하여 NaN을 안전하게 처리
-    # (이 컬럼들은 fill value가 의미있는 결측치이므로 float 유지)
     other_integer_columns = [
         'IMF_SC_ID', 'SW_Plasma_SC_ID',
         'IMF_Avg_Points', 'Plasma_Avg_Points', 'Percent_Interp',
@@ -257,7 +274,7 @@ def download_omni_highres(url, output_csv, save_asc=True):
     # CSV 저장
     print(f"CSV 파일 저장 중: {output_csv}")
     try:
-        df.to_csv(output_csv, index=False)
+        df.to_csv(output_csv, index=False, encoding='utf-8', date_format='%Y-%m-%d %H:%M:%S')
         print(f"성공적으로 저장됨: {output_csv}")
         print(f"데이터 shape: {df.shape}")
         return True
@@ -265,9 +282,29 @@ def download_omni_highres(url, output_csv, save_asc=True):
         print(f"CSV 저장 에러: {e}")
         return False
 
-# 사용 예시
+
 if __name__ == "__main__":
+    file_list = []
+    total_file = f"/Users/eunsupark/Data/omni/highres/omni_highres_total.csv"
+
     for year in range(2010, 2025):
-        url = f"https://spdf.gsfc.nasa.gov/pub/data/omni/high_res_omni/modified/omni_min{year}.asc"
-        output_file = f"/Users/eunsupark/ap_project/data/omni/highres/omni_highres_{year}.csv"
-        download_omni_highres(url, output_file)
+        url = f"https://spdf.gsfc.nasa.gov/pub/data/omni/high_res_omni/omni_min{year}.asc"
+        output_file = f"/Users/eunsupark/Data/omni/highres/omni_{year}.csv"
+        file_list.append(output_file)
+        download_omni_highres(url, output_file, is_5min=False)
+        print(f"{year}년 완료\n")
+    
+    df_list = []
+    for file_path in file_list :
+        df = pd.read_csv(file_path)
+        df_list.append(df)
+
+    combined_df = pd.concat(df_list, ignore_index=True)
+    combined_df.to_csv(total_file, index=False, encoding='utf-8', date_format='%Y-%m-%d %H:%M:%S')
+
+    # 5분 데이터 다운로드 예시 (GOES flux 포함)
+    # for year in range(2010, 2025):
+    #     url = f"https://spdf.gsfc.nasa.gov/pub/data/omni/high_res_omni/omni_5min{year}.asc"
+    #     output_file = f"omni_5min_{year}.csv"
+    #     download_omni_highres(url, output_file, is_5min=True)
+    #     print(f"{year}년 완료\n")
