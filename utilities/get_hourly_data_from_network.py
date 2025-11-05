@@ -187,9 +187,14 @@ def main(date_target):
 
 if __name__ == "__main__" :
 
-    date_target = datetime.datetime(year=2011, month=1, day=1, hour=0)
-    main(date_target)
+    date_target = datetime.datetime(year=2010, month=9, day=1, hour=0)
+    # date_end = datetime.datetime(year=2011, month=1, day=1, hour=0)
+    date_end = datetime.datetime(year=2025, month=1, day=1, hour=0)
 
+    while date_target < date_end :
+        main(date_target)
+
+        date_target += datetime.timedelta(hours=3)
 
 
         
