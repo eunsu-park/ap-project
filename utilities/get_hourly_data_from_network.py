@@ -14,11 +14,11 @@ urllib3.disable_warnings(InsecureRequestWarning)
 
 EXTENSIONS = ["jp2"]
 MAX_TIMEDELTA = 3600
-CSV_FILE_NAME = "ap_data_list.csv"
+CSV_FILE_NAME = "/Users/eunsupark/Data/ap_data_list.csv"
 
-AIA_193_DIR = "ap-data/sdo_jp2/aia/193"
-AIA_211_DIR = "ap-data/sdo_jp2/aia/211"
-HMI_MAGNETOGRAM_DIR = "ap-data/sdo_jp2/hmi/magnetogram"
+AIA_193_DIR = "/Users/eunsupark/Data/ap-data/sdo_jp2/aia/193"
+AIA_211_DIR = "/Users/eunsupark/Data/ap-data/sdo_jp2/aia/211"
+HMI_MAGNETOGRAM_DIR = "/Users/eunsupark/Data/ap-data/sdo_jp2/hmi/magnetogram"
 
 BASE_URL = "https://gs671-suske.ndc.nasa.gov/jp2"
 
