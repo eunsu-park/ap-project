@@ -204,7 +204,7 @@ if __name__ == "__main__" :
         date_target += datetime.timedelta(hours=3)
 
     pool = Pool(8)
-    df_list = pool.map(date_list)
+    df_list = pool.map(main, date_list)
     pool.close()
 
     df = pd.concat(df_list, ignore_index=True)
