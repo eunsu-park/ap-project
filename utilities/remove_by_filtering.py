@@ -2,8 +2,8 @@ import os
 from glob import glob
 import datetime
 
-LOAD_ROOT = "./sdo_jp2"
-HOUR_FILTER = (2,3, 5,6, 8,9, 11,12, 14,15, 17,18, 20,21, 23,0)
+LOAD_ROOT = "/Volumes/usbshare1/data/sdo_jp2"
+HOUR_FILTER = (2,3, 5,6, 8,9, 11,12, 14,15, 17,18, 20,21, 59,0)
 
 
 def hour_filter(file_path, instrument, wavelength):
