@@ -55,7 +55,7 @@ def validate_sdo(sdo_data:Dict[str, np.ndarray],
 def validate_omni(omni_data: Dict[str, np.ndarray],
                   input_sequence_length:int,
                   target_sequence_length:int) -> bool:
-    omni_shape = (input_sequence_length + target_sequence_length + 1, )
+    omni_shape = (input_sequence_length + target_sequence_length, )
     for var, data in omni_data.items():
         if np.isnan(data).any():
             return False
