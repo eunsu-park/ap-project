@@ -20,13 +20,13 @@ environment:
   save_root: '/Users/eunsupark/ap-project/results'
 
 experiment:
-  experiment_name: 'one_to_one'
+  experiment_name: 'local_test'
   phase: 'train'  # 'train' or 'test'
-  batch_size: 4
+  batch_size: 1
   num_workers: 0
   enable_memory_cache: ture
   enable_undersampling: true
-  num_subsample: 10
+  num_subsample: 12
   subsample_index: 0
   apply_pos_weight: false
 
@@ -78,7 +78,7 @@ model:
   transformer_dim_feedforward: 512
   transformer_dropout: 0.1
 
-  convlstm_input_channels: 2
+  convlstm_input_channels: 3
   convlstm_hidden_channels: 64
   convlstm_kernel_size: 3
   convlstm_num_layers: 2

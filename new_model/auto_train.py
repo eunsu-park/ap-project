@@ -13,7 +13,7 @@ fixed = [
     "#SBATCH --partition=gpu",
     "#SBATCH --nodes=1",
     "#SBATCH --ntasks-per-node=1",
-    "#SBATCH --gres=gpu:1",
+    "#SBATCH --gres=gpu:a100_10g:1",
     "#SBATCH --mem-per-cpu=4000M # Maximum allowable mempry per CPU 4G",
     "#SBATCH --qos=standard",
     "#SBATCH --account=wangj # Replace PI_ucid which the NJIT UCID of PI",
@@ -35,7 +35,7 @@ if __name__ == "__main__" :
     input_days = (1, 2, 3, 4, 5, 6, 7)
     output_day = 1
     for input_day in input_days :
-        experiment_name = f"weighted_days{input_day}_to_day{output_day}"
+        experiment_name = f"days{input_day}_to_day{output_day}"
         config_name = experiment_name
         config = base_config.copy()
         config["experiment"]["experiment_name"] = experiment_name
@@ -43,7 +43,7 @@ if __name__ == "__main__" :
         config["data"]["input_sequence_length"] = 8 * input_day
         config["data"]["target_sequence_length"] = 8 * output_day
         config["data"]["target_day"] = output_day
-        config["experiment"]["apply_pos_weight"] = True
+        config["experiment"]["apply_pos_weight"] = False
         config["experiment"]["enable_undersampling"] = False
         config["training"]["report_freq"] = 1000
         config_path = f"./configs/{config_name}.yaml"
@@ -66,9 +66,9 @@ if __name__ == "__main__" :
         del lines, config, config_name, script_path
         time.sleep(30)
 
-        for subsample_index in range(10):
+        for subsample_index in range(12):
 
-            experiment_name = f"weighted_days{input_day}_to_day{output_day}_sub_{subsample_index}"
+            experiment_name = f"days{input_day}_to_day{output_day}_sub_{subsample_index}"
             config_name = experiment_name
             config = base_config.copy()
             config["experiment"]["experiment_name"] = experiment_name
@@ -76,7 +76,7 @@ if __name__ == "__main__" :
             config["data"]["input_sequence_length"] = 8 * input_day
             config["data"]["target_sequence_length"] = 8 * output_day
             config["data"]["target_day"] = output_day
-            config["experiment"]["apply_pos_weight"] = True
+            config["experiment"]["apply_pos_weight"] = False
             config["experiment"]["enable_undersampling"] = True
             config["experiment"]["subsample_index"] = subsample_index
             config["training"]["report_freq"] = 100
