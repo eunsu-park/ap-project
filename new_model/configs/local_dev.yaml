@@ -25,7 +25,7 @@ experiment:
   batch_size: 1
   num_workers: 0
   enable_memory_cache: ture
-  enable_undersampling: true
+  enable_undersampling: false
   num_subsample: 12
   subsample_index: 0
   apply_pos_weight: false
