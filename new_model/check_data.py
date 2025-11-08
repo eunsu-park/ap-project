@@ -39,12 +39,8 @@ def read_h5(file_path: str, sdo_wavelengths: List[str], omni_variables: List[str
                 else:
                     raise KeyError(f"OMNI variable {variable} not found in {file_path}")
 
-    except KeyError:
-        # KeyError는 그대로 전파
-        raise
-    except (OSError, h5py.h5py._errors.HDF5Error) as e:
-        # HDF5 관련 에러는 OSError로 래핑
-        raise OSError(f"Failed to read HDF5 file {file_path}: {e}")
+    except Exception as e :
+        print(f"{file_path} : {e}")
 
     return sdo_data, omni_data
 
@@ -69,10 +65,7 @@ def main(config):
 
     for file_name in train_file_name :
         file_path = f"{data_root}/original/{file_name}"
-        try :
-            sdo_data, omni_data = read_h5(file_path, sdo_wavelengths, omni_variables)
-        except Exception as e :
-            print(f"{file_name} : {e}")
+        sdo_data, omni_data = read_h5(file_path, sdo_wavelengths, omni_variables)
 
 
 if __name__ == "__main__" :
