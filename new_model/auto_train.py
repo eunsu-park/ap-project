@@ -17,7 +17,7 @@ fixed = [
     "#SBATCH --mem-per-cpu=4000M # Maximum allowable mempry per CPU 4G",
     "#SBATCH --qos=standard",
     "#SBATCH --account=wangj # Replace PI_ucid which the NJIT UCID of PI",
-    "#SBATCH --time=71:59:59  # D-HH:MM:SS",
+    "#SBATCH --time=23:59:59  # D-HH:MM:SS",
     " ",
     "# Purge any module loaded by default",
     "module purge > /dev/null 2>&1",
@@ -32,7 +32,7 @@ if __name__ == "__main__" :
     with open(base_config_path, 'r') as f:
         base_config = yaml.safe_load(f) 
 
-    input_days = (1, 2, 3, 4, 5, 6, 7)
+    input_days = (4, 5, 6, 7)
     output_day = 1
     for input_day in input_days :
         experiment_name = f"days{input_day}_to_day{output_day}"
