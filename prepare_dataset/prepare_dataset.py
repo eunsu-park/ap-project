@@ -46,8 +46,10 @@ def validate_sdo(sdo_data:Dict[str, np.ndarray],
     sdo_shape = (sdo_sequence_length, 1, sdo_image_size, sdo_image_size)
     for var, data in sdo_data.items():
         if np.isnan(data).any() :
+            print("Error 1")
             return False
         if data.shape != sdo_shape:
+            print("Error 2")
             return False
     return True
 
@@ -58,8 +60,10 @@ def validate_omni(omni_data: Dict[str, np.ndarray],
     omni_shape = (input_sequence_length + target_sequence_length, )
     for var, data in omni_data.items():
         if np.isnan(data).any():
+            print("Error 3")
             return False
         if data.shape != omni_shape :
+            print("Error 4")
             return False
     return True
 
@@ -82,7 +86,7 @@ class ValidateData:
         self.split_index = config.data.split_index
 
         self.sdo_shape = (self.sdo_sequence_length, 1, self.sdo_image_size, self.sdo_image_size)
-        self.omni_shape = (self.input_sequence_length + self.target_sequence_length + 1, )
+        self.omni_shape = (self.input_sequence_length + self.target_sequence_length,)
 
 
     def read_h5(self, file_path):
@@ -132,7 +136,7 @@ class ValidateData:
         return True
     
     def parse_class(self, omni_data):
-        ap_index = omni_data["ap_index"]
+        ap_index = omni_data["ap_Index_nT"]
         targets = ap_index[self.split_index:self.split_index+self.target_sequence_length]
         ap_max = []
         ap_class = []
@@ -199,7 +203,7 @@ def main(config):
             day3_class.append(ap_class[2])
             day4_class.append(ap_class[3])
             day5_class.append(ap_class[4])
-            print(file_path, ap_max, ap_class)
+            # print(file_path, ap_max, ap_class)
             n += 1
         # if n == 10 :
         #     break
@@ -216,9 +220,19 @@ def main(config):
                        'class_day4': day4_class,
                        'class_day5': day5_class
                        })
+    
+    num_day1 = sum(day1_class)
+    num_day2 = sum(day2_class)
+    num_day3 = sum(day3_class)
+    num_day4 = sum(day4_class)
+    num_day5 = sum(day5_class)
+
+    df = df.sort_values(by='file_name', ascending=True)
     df.to_csv(f"{save_path}.csv", index=False, encoding='utf-8')
 
     print(f"Number of valid files: {len(file_name)}")
+
+    print(f"day1: {num_day1} day2: {num_day2} day3: {num_day3} day4: {num_day4} day5: {num_day5}")
 
 if __name__ == "__main__":
     main()

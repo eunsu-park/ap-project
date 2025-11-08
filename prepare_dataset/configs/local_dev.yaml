@@ -14,10 +14,10 @@ hydra:
     chdir: false
 
 environment:
-  data_root: '/Users/eunsupark/ap-project/data/datasets'
+  data_root: '/Users/eunsupark/Data/datasets'
 
 data:
-  dataset_name: 'two_twelve_to_one'
+  dataset_name: 'three_twelve_to_one'
   image_size: 64
   sdo_wavelengths:
    - '193'
