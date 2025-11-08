@@ -62,9 +62,9 @@ if __name__ == "__main__" :
         with open(script_path, "w") as f:
             f.write("\n".join(lines))
 
-        os.system(f"sbatch {script_path}")
-        del lines, config, config_name, script_path
-        time.sleep(30)
+        # os.system(f"sbatch {script_path}")
+        # del lines, config, config_name, script_path
+        # time.sleep(30)
 
         for subsample_index in range(12):
 
@@ -96,6 +96,6 @@ if __name__ == "__main__" :
             with open(script_path, "w") as f:
                 f.write("\n".join(lines))
 
-            os.system(f"sbatch {script_path}")
-            del lines, config, config_name, script_path
-            time.sleep(30)
+            # os.system(f"sbatch {script_path}")
+            # del lines, config, config_name, script_path
+            # time.sleep(30)
