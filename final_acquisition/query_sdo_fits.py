@@ -46,9 +46,9 @@ def query_aia(date_target, wavelengths=[193, 211]):
 if __name__ == "__main__" :
 
     date_target = datetime.datetime(
-        year = 2011,
-        month = 9,
-        day = 28
+        year = 2012,
+        month = 4,
+        day = 4
     )
     # date_target = datetime.datetime(
     #     year = 2010,
