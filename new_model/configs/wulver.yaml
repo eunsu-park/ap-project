@@ -67,7 +67,7 @@ data:
   input_sequence_length: 56
   split_index: 80
   target_variables:
-    - 'ap_index'
+    - 'ap_Index_nT' #
   target_sequence_length: 8
   target_day: 1
 
