@@ -8,67 +8,6 @@ import pandas as pd
 import datetime
 import pickle
 
-
-def read_h5(file_path: str, sdo_wavelengths: List[str], omni_variables: List[str]) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Data file not found: {file_path}")
-    
-    try:
-        with h5py.File(file_path, 'r') as f:
-            # Read SDO data
-            sdo_data = {}
-            for wavelength in sdo_wavelengths:
-                dataset_name = f"sdo_{wavelength}"
-                if dataset_name in f:
-                    sdo_data[wavelength] = f[dataset_name][:]
-                else:
-                    raise KeyError(f"SDO wavelength {wavelength} not found in {file_path}")
-
-            # Read OMNI data
-            omni_data = {}
-            for variable in omni_variables:
-                dataset_name = f"omni_{variable}"
-                if dataset_name in f:
-                    omni_data[variable] = f[dataset_name][:]
-                else:
-                    raise KeyError(f"OMNI variable {variable} not found in {file_path}")
-
-    except (OSError, h5py.error.HDF5Error) as e:
-        raise OSError(f"Failed to read HDF5 file {file_path}: {e}")
-
-    return sdo_data, omni_data
-
-
-def validate_sdo(sdo_data:Dict[str, np.ndarray],
-                 sdo_image_size:int,
-                 sdo_sequence_length:int) -> bool:
-    # Check for NaN values in the data
-    sdo_shape = (sdo_sequence_length, 1, sdo_image_size, sdo_image_size)
-    for var, data in sdo_data.items():
-        if np.isnan(data).any() :
-            print("Error 1")
-            return False
-        if data.shape != sdo_shape:
-            print("Error 2")
-            return False
-    return True
-
-
-def validate_omni(omni_data: Dict[str, np.ndarray],
-                  input_sequence_length:int,
-                  target_sequence_length:int) -> bool:
-    omni_shape = (input_sequence_length + target_sequence_length, )
-    for var, data in omni_data.items():
-        if np.isnan(data).any():
-            print("Error 3")
-            return False
-        if data.shape != omni_shape :
-            print("Error 4")
-            return False
-    return True
-
-
-
 class ValidateData:
     def __init__(self, config):
 
@@ -91,9 +30,11 @@ class ValidateData:
 
     def read_h5(self, file_path):
 
+        sdo_data = {}
+        omni_data = {}
+
         with h5py.File(file_path, 'r') as f:
             # Read SDO data
-            sdo_data = {}
             for wavelength in self.sdo_wavelengths:
                 dataset_name = f"sdo_{wavelength}"
                 if dataset_name in f:
@@ -102,7 +43,6 @@ class ValidateData:
                     raise KeyError(f"SDO wavelength {wavelength} not found in {file_path}")
 
             # Read OMNI data
-            omni_data = {}
             for variable in self.omni_variables:
                 dataset_name = f"omni_{variable}"
                 if dataset_name in f:
