@@ -1,5 +1,6 @@
 import os
 import time
+import random
 import datetime
 from glob import glob
 from pathlib import Path
@@ -12,6 +13,9 @@ import urllib3
 import pandas as pd
 
 urllib3.disable_warnings(InsecureRequestWarning)
+
+
+CSV_DIR = "/Users/eunsupark/JSOC"
 
 
 def download_single_file(source_url: str, destination: str, overwrite: bool = False, max_retries: int = 3) -> bool:
@@ -53,10 +57,11 @@ def main():
 
     while True :
 
-        csv_file_list = glob("*.csv")
+        csv_file_list = glob(f"{CSV_DIR}/*.csv")
         print(len(csv_file_list))
         if len(csv_file_list) == 0 :
-            time.sleep(30)
+            print("There is no CSV file. waiting...")
+            time.sleep(60)
         
         else :
             df_list = []
@@ -64,55 +69,15 @@ def main():
                 df = pd.read_csv(file_path)
                 df_list.append(df)
             df = pd.concat(df_list)
-            url_list = df['url']
+            url_list = df['url'].tolist()
+            random.shuffle(url_list)
 
             with ProcessPoolExecutor(max_workers=4) as executor:
                 future_to_date = {executor.submit(run, source_url): source_url for source_url in url_list}
-
-
-
-            import sys
-            sys.exit()
+        
+            print("All Files are downloaded")
+            time.sleep(60)
             
-
-
-
-def hmi_45s(date_target):
-    client = drms.Client(email="eunsupark@kasi.re.kr")
-    date_str = (date_target - datetime.timedelta(seconds=45)).strftime("%Y.%m.%d_%H:%M:%S")
-    query_str = f"hmi.m_45s[{date_str}/7d@1h]"
-    print(query_str)
-    export_request = client.export(query_str, method='url', protocol='fits')
-    export_request.wait()
-
-    source_and_destination_list = []
-    for source in export_request.urls.url:
-        filename = os.path.basename(source)
-        destination = f"/Users/eunsupark/Data/sdo/fits/hmi/{filename}"
-        source_and_destination_list.append((source, destination))
-
-    with ProcessPoolExecutor(max_workers=4) as executor:
-        future_to_date = {executor.submit(run, source_and_destination): source_and_destination for source_and_destination in source_and_destination_list}
-
-
-def aia(date_target, wavelengths=[193, 211]):
-    client = drms.Client(email="eunsupark@kasi.re.kr")
-    date_str = date_target.strftime("%Y.%m.%d_%H:%M:%S")
-    wl_str = ', '.join(map(str, wavelengths))
-    query_str = f"aia.lev1_euv_12s[{date_str}/7d@1h][{wl_str}]"
-    print(query_str)
-    export_request = client.export(query_str, method='url', protocol='fits')
-    export_request.wait()
-
-    source_and_destination_list = []
-    for source in export_request.urls.url:
-        filename = os.path.basename(source)
-        destination = f"/Users/eunsupark/Data/sdo/fits/aia/{filename}"
-        source_and_destination_list.append((source, destination))
-
-    with ProcessPoolExecutor(max_workers=4) as executor:
-        future_to_date = {executor.submit(run, source_and_destination): source_and_destination for source_and_destination in source_and_destination_list}
-
 
 if __name__ == "__main__" :
 
