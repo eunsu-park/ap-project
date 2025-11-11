@@ -60,7 +60,13 @@ def run(source_url):
     if os.path.exists(f"{DATA_ROOT}/downloaded/{file_name}") :
         return
 
-    if os.path.exists(f"{DATA_ROOT}/invalid/{file_name}") :
+    if os.path.exists(f"{DATA_ROOT}/invalid_file/{file_name}") :
+        return
+
+    if os.path.exists(f"{DATA_ROOT}/invalid_header/{file_name}") :
+        return
+
+    if os.path.exists(f"{DATA_ROOT}/non_zero_quality/{file_name}") :
         return
 
     if "spike" in file_name : # do not download spike file
@@ -72,28 +78,25 @@ def run(source_url):
 
 def main():
 
-    while True :
+    csv_file_list = glob(f"{CSV_DIR}/*.csv")
+    print(len(csv_file_list))
+    if len(csv_file_list) == 0 :
+        print("There is no CSV file. waiting...")
+    
+    else :
+        df_list = []
+        for file_path in csv_file_list :
+            df = pd.read_csv(file_path)
+            df_list.append(df)
+        df = pd.concat(df_list)
+        url_list = df['url'].tolist()
+        random.shuffle(url_list)
+        print(f"{len(url_list)} files in url_list")
 
-        csv_file_list = glob(f"{CSV_DIR}/*.csv")
-        print(len(csv_file_list))
-        if len(csv_file_list) == 0 :
-            print("There is no CSV file. waiting...")
-            time.sleep(60)
-        
-        else :
-            df_list = []
-            for file_path in csv_file_list :
-                df = pd.read_csv(file_path)
-                df_list.append(df)
-            df = pd.concat(df_list)
-            url_list = df['url'].tolist()
-            random.shuffle(url_list)
-
-            with ProcessPoolExecutor(max_workers=8) as executor:
-                future_to_date = {executor.submit(run, source_url): source_url for source_url in url_list}
-        
-            print("All Files are downloaded")
-            time.sleep(60)
+        with ProcessPoolExecutor(max_workers=8) as executor:
+            future_to_date = {executor.submit(run, source_url): source_url for source_url in url_list}
+    
+        print("All Files are downloaded")
             
 
 if __name__ == "__main__" :

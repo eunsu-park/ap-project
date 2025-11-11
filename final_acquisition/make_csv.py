@@ -48,6 +48,7 @@ def parse_file(file_path):
         required_keys = ["T_REC", "QUALITY", "TELESCOP"]
         for key in required_keys:
             if key not in meta:
+                os.system(f"mv {file_path} {DATA_ROOT}/invalid_header/")
                 return None, f"Missing metadata: {key}"
         
         # 메타데이터 추출
@@ -64,27 +65,32 @@ def parse_file(file_path):
             minute = int(t_rec[14:16])
             second = int(t_rec[17:19])               
             date = datetime.datetime(year=year, month=month, day=day, hour=hour, minute=minute, second=second)
-            if datetime.minute >= 30 :
+            if date.minute >= 30 :
                 date = date.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
             else :
                 date = date.replace(minute=0, second=0, microsecond=0)
         except (ValueError, IndexError) as e:
+            os.system(f"mv {file_path} {DATA_ROOT}/invalid_header/")
             return None, f"Invalid T_REC format: {t_rec}"
         
         # wavelength 추출
         if instrument == "aia":
             if "WAVELNTH" not in meta:
+                os.system(f"mv {file_path} {DATA_ROOT}/invalid_header/")
                 return None, "Missing WAVELNTH for AIA"
             wavelength = meta["WAVELNTH"]
         elif instrument == "hmi":
             if "CONTENT" not in meta:
+                os.system(f"mv {file_path} {DATA_ROOT}/invalid_header/")
                 return None, "Missing CONTENT for HMI"
             wavelength = meta["CONTENT"].lower()
         else:
+            os.system(f"mv {file_path} {DATA_ROOT}/invalid_header/")
             return None, f"Unknown instrument: {instrument}"
         
         # quality가 0인 것만 처리
         if quality != 0:
+            os.system(f"mv {file_path} {DATA_ROOT}/non_zero_quality/")
             return None, f"skipped_quality"
         
         data_dict = {
@@ -99,6 +105,7 @@ def parse_file(file_path):
         return data_dict, "success"
         
     except Exception as e:
+        os.system(f"mv {file_path} {DATA_ROOT}/invalid/")
         return None, f"error: {str(e)}"
 
 
@@ -140,7 +147,8 @@ def update_csv_batch(csv_path, data_list):
                 if key in df.columns:
                     current_value = df.loc[mask, key].iloc[0]
                     # NaN 또는 값이 다른 경우 업데이트
-                    if pd.isna(current_value) or current_value != new_value:
+                    # if pd.isna(current_value) or current_value != new_value:
+                    if pd.isna(current_value) :
                         df.loc[mask, key] = new_value
                         changed = True
                 else:
@@ -169,6 +177,32 @@ def update_csv_batch(csv_path, data_list):
         raise
 
 
+def check_num() :
+    num_exp = 5236 * 24 * 3
+    aia_expected = 5236 * 24 * 2
+    hmi_expected = 5236 * 24
+    num_aia = len(glob(os.path.join(DATA_ROOT, "aia", "*.fits")))
+    num_hmi = len(glob(os.path.join(DATA_ROOT, "hmi", "*.fits")))
+    num_downloaded = len(glob(os.path.join(DATA_ROOT, "downloaded", "*.fits")))
+    num_non_zero_quality = len(glob(os.path.join(DATA_ROOT, "non_zero_quality", "*.fits")))
+    num_invalid_header = len(glob(os.path.join(DATA_ROOT, "invalid_header", "*.fits")))
+    num_spike = len(glob(os.path.join(DATA_ROOT, "aia_spike", "*.fits")))
+    num_invalid_file = len(glob(os.path.join(DATA_ROOT, "invalid_file", "*.fits")))
+    num_total = num_aia + num_hmi + num_downloaded + num_non_zero_quality + num_invalid_header + num_invalid_file
+    percentage = 100.*(float(num_aia + num_hmi)/float(num_exp))
+
+    print(f"classified aia                : {num_aia:6d}")
+    print(f"classified hmi                : {num_hmi:6d}")
+    print(f"not classified                : {num_downloaded:6d}")
+    print(f"aia_spike                     : {num_spike:6d}")
+    print(f"invalid quality               : {num_non_zero_quality:6d}")
+    print(f"invalid_header                : {num_invalid_header:6d}")
+    print(f"invalid file.                 : {num_invalid_file:6d}")
+    print(f"total downloaded              : {num_total:6d}")
+    print(f"total expected                : {num_exp:6d}")
+    print(f"progress rate                 : {percentage:.2f}%")
+
+
 if __name__ == "__main__":
     
     logging.info("=== Starting FITS to CSV processing ===")
@@ -181,25 +215,7 @@ if __name__ == "__main__":
     else:
         logging.info(f"Using existing CSV: {CSV_PATH}")
 
-    num_exp = 5236 * 24 * 3
-    aia_expected = 5236 * 24 * 2
-    hmi_expected = 5236 * 24
-    num_aia = len(glob(os.path.join(DATA_ROOT, "aia", "*.fits")))
-    num_hmi = len(glob(os.path.join(DATA_ROOT, "hmi", "*.fits")))
-    num_downloaded = len(glob(os.path.join(DATA_ROOT, "downloaded", "*.fits")))
-    # num_spike = len(glob(os.path.join(DATA_ROOT, "aia_spike", "*.fits")))
-    num_invalid = len(glob(os.path.join(DATA_ROOT, "invalid", "*.fits")))
-    num_total = num_aia + num_hmi + num_downloaded + num_invalid
-    percentage = 100.*(float(num_total)/float(num_exp))
-
-    print(f"classified aia                : {num_aia:6d}")
-    print(f"classified hmi                : {num_hmi:6d}")
-    print(f"not classified                : {num_downloaded:6d}")
-    # print(f"aia_spike                     : {num_spike:6d}")
-    print(f"classified as invalid quality : {num_invalid:6d}")
-    print(f"total downloaded              : {num_total:6d}")
-    print(f"total expected                : {num_exp:6d}")
-    print(f"progress rate                 : {percentage:.2f}%")
+    check_num()
 
     # import sys
     # sys.exit()
@@ -210,9 +226,7 @@ if __name__ == "__main__":
     
     # 파일 리스트 수집
     file_list = []
-    file_list += glob(os.path.join(DATA_ROOT, "downloaded", "*.magnetogram.fits"))
-    file_list += glob(os.path.join(DATA_ROOT, "downloaded", "*.193.image_lev1.fits"))
-    file_list += glob(os.path.join(DATA_ROOT, "downloaded", "*.211.image_lev1.fits"))
+    file_list += glob(os.path.join(DATA_ROOT, "downloaded", "*.fits"))
 
     import random
     random.shuffle(file_list)
@@ -282,10 +296,7 @@ if __name__ == "__main__":
     
     logging.info("=== Processing completed ===")
 
-    for file_path in file_list :
-        if os.path.exists(file_path) :
-            os.system(f"mv {file_path} {DATA_ROOT}/invalid/")
-
+    check_num()
 
 # import os
 # import datetime
