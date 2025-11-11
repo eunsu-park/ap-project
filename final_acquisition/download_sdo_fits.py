@@ -16,6 +16,7 @@ urllib3.disable_warnings(InsecureRequestWarning)
 
 
 CSV_DIR = "/Users/eunsupark/JSOC"
+DATA_ROOT = "/Users/eunsupark/Data/sdo/fits"
 
 
 def download_single_file(source_url: str, destination: str, overwrite: bool = False, max_retries: int = 3) -> bool:
@@ -46,10 +47,26 @@ def download_single_file(source_url: str, destination: str, overwrite: bool = Fa
 
 def run(source_url):
     file_name = os.path.basename(source_url)
-    if 'hmi' in source_url :
-        destination = f"/Users/eunsupark/Data/sdo/fits/hmi/{file_name}"
-    elif 'aia' in source_url :
-        destination = f"/Users/eunsupark/Data/sdo/fits/aia/{file_name}"
+
+    if os.path.exists(f"{DATA_ROOT}/aia/{file_name}") :
+        return
+
+    if os.path.exists(f"{DATA_ROOT}/hmi/{file_name}") :
+        return
+    
+    if os.path.exists(f"{DATA_ROOT}/aia_spike/{file_name}") :
+        return
+    
+    if os.path.exists(f"{DATA_ROOT}/downloaded/{file_name}") :
+        return
+
+    if os.path.exists(f"{DATA_ROOT}/invalid/{file_name}") :
+        return
+
+    if "spike" in file_name : # do not download spike file
+        return
+
+    destination = f"{DATA_ROOT}/downloaded/{file_name}"
     download_single_file(source_url=source_url, destination=destination)
 
 
@@ -72,7 +89,7 @@ def main():
             url_list = df['url'].tolist()
             random.shuffle(url_list)
 
-            with ProcessPoolExecutor(max_workers=4) as executor:
+            with ProcessPoolExecutor(max_workers=8) as executor:
                 future_to_date = {executor.submit(run, source_url): source_url for source_url in url_list}
         
             print("All Files are downloaded")

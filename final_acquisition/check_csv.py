@@ -24,6 +24,10 @@ while date < date_end :
     aia_csv = f"{CSV_DIR}/{date:%Y%m%d}_aia.csv"
     hmi_csv = f"{CSV_DIR}/{date:%Y%m%d}_hmi.csv"
 
-    print(date, os.path.exists(aia_csv), os.path.exists(hmi_csv))
+    if os.path.exists(aia_csv) is False :
+        print(f"{date} : missing aia")
+    
+    if os.path.exists(hmi_csv) is False :
+        print(f"{date} : missing hmi")
 
     date += datetime.timedelta(days=7)
