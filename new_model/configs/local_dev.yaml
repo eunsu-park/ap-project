@@ -28,6 +28,8 @@ experiment:
   enable_undersampling: false
   num_subsample: 12
   subsample_index: 0
+  enable_oversampling: false
+  num_oversample: 5
   apply_pos_weight: false
 
 data:

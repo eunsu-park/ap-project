@@ -275,6 +275,9 @@ class CustomDataset(Dataset):
         self.train_list_path = f"{self.dataset_path}_train.csv"
         self.validation_list_path = f"{self.dataset_path}_validation.csv"
         self.stat_file_path = f"{self.dataset_path}_statistics.pkl"
+        self.enable_oversampling = config.experiment.enable_oversampling
+        if self.enable_oversampling is True :
+            self.num_oversample = config.experiment.num_oversample
 
         file_name_key = "file_name"
         class_key = f"class_day{config.data.target_day}"
@@ -284,6 +287,29 @@ class CustomDataset(Dataset):
         train_df = pd.read_csv(self.train_list_path)
         train_file_name = train_df[file_name_key].tolist()
         train_file_class = train_df[class_key].tolist()
+
+        if self.enable_oversampling is True :
+
+            over_train_file_name = []
+            over_train_file_class = []
+
+            for n in range(len(train_file_name)) :
+                file_name = train_file_name[n]
+                file_class = train_file_class[n]
+
+                if file_class == 1 :
+                    for m in range(self.num_oversample) :
+                        tmp = os.path.splitext(file_name)
+                        new_file_name = f"{tmp[0]}_{m}{tmp[1]}"
+                        over_train_file_name.append(new_file_name)
+                        over_train_file_class.append(file_class)
+
+                else :
+                    over_train_file_name.append(file_name)
+                    over_train_file_class.append(file_class)
+
+                over_frain_file_list = list(zip(over_train_file_name, over_train_file_class))
+
         self.train_file_list = list(zip(train_file_name, train_file_class))
 
         self.pos_weight = get_pos_weight(self.train_file_list)
@@ -335,6 +361,12 @@ class CustomDataset(Dataset):
         self.memory_cache = {}
         self.enable_memory_cache = config.experiment.enable_memory_cache #True  # Can be disabled for low-memory scenarios
 
+        if config.experiment.over_undersampling is True :
+            self.train_file_list = over_frain_file_list
+            self.nb_data = len(self.train_file_list)
+            print(f"After oversamplig, Training samples: {len(self.train_file_list)}, Validation samples: {len(self.validation_file_list)}")
+
+
     def __len__(self):
         return self.nb_data
     
@@ -343,8 +375,11 @@ class CustomDataset(Dataset):
         if self.enable_memory_cache and file_name in self.memory_cache:
             return self.memory_cache[file_name]
         
-        file_path = f"{self.data_root}/original/{file_name}"
-
+        if self.enable_oversampling is True :
+            file_path = f"{self.data_root}/oversampling/{file_name}"
+        else :
+            file_path = f"{self.data_root}/original/{file_name}"
+            
         sdo_data, omni_data = read_h5(file_path, self.sdo_wavelengths, self.omni_variables)
         sdo_array = []
         for wavelength in self.sdo_wavelengths :

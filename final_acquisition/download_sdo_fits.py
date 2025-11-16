@@ -53,10 +53,7 @@ def run(source_url):
 
     if os.path.exists(f"{DATA_ROOT}/hmi/{file_name}") :
         return
-    
-    if os.path.exists(f"{DATA_ROOT}/aia_spike/{file_name}") :
-        return
-    
+        
     if os.path.exists(f"{DATA_ROOT}/downloaded/{file_name}") :
         return
 

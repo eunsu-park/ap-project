@@ -25,10 +25,12 @@ experiment:
   phase: 'train'  # 'train' or 'test'
   batch_size: 1
   num_workers: 0
-  enable_memory_cache: true
+  enable_memory_cache: ture
   enable_undersampling: false
   num_subsample: 12
   subsample_index: 0
+  enable_oversampling: false
+  num_oversample: 5
   apply_pos_weight: false
 
 data:
@@ -91,7 +93,7 @@ training:
   optimizer: 'adam'  # 'adam' or 'sgd'
   learning_rate: 0.0002
   report_freq: 1000
-  num_epochs: 300
+  num_epochs: 500
   model_save_freq: 100
 
 validation:
