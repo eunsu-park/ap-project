@@ -1,6 +1,4 @@
 
-rm ./days*.sh
-rm ./days*.sh
+rm ./over_days*.sh
 
-rm ./configs/days*.yaml
-rm ./configs/days*.sh
+rm ./configs/over_days*.yaml
