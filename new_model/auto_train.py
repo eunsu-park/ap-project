@@ -12,7 +12,7 @@ fixed = [
     f"#SBATCH --error={HOME}/TEMP/%x.%j.err # prints the error message",
     "#SBATCH --partition=gpu",
     "#SBATCH --nodes=1",
-    "#SBATCH --ntasks-per-node=1",
+    "#SBATCH --ntasks-per-node=8",
     # "#SBATCH --gres=gpu:1",
     "#SBATCH --gres=gpu:a100_10g:1",
     "#SBATCH --mem-per-cpu=4000M # Maximum allowable mempry per CPU 4G",
@@ -47,6 +47,7 @@ if __name__ == "__main__" :
         config["experiment"]["apply_pos_weight"] = False
         config["experiment"]["enable_undersampling"] = False
         config["experiment"]["enable_oversampling"] = True
+        config["experiment"]["batch_size"] = 4
         config["training"]["report_freq"] = 1000
         config_path = f"./configs/{config_name}.yaml"
         with open(config_path, 'w') as f:
