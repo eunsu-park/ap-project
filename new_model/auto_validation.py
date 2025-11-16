@@ -13,9 +13,10 @@ fixed = [
     f"#SBATCH --error={HOME}/TEMP_VAL/%x.%j.err # prints the error message",
     "#SBATCH --partition=gpu",
     "#SBATCH --nodes=1",
-    "#SBATCH --ntasks-per-node=1",
-    "#SBATCH --gres=gpu:1",
-    "#SBATCH --mem-per-cpu=4000M # Maximum allowable mempry per CPU 4G",
+    "#SBATCH --ntasks-per-node=4",
+    # "#SBATCH --gres=gpu:1",
+    "#SBATCH --gres=gpu:a100_10g:1",
+    "#SBATCH --mem-per-cpu=8000M # Maximum allowable mempry per CPU 4G",
     "#SBATCH --qos=standard",
     "#SBATCH --account=wangj # Replace PI_ucid which the NJIT UCID of PI",
     "#SBATCH --time=00:59:59  # D-HH:MM:SS",
@@ -29,7 +30,7 @@ fixed = [
 
 def original(base_config, input_day, output_day, epoch, overwrite=False):
 
-    experiment_name = f"days{input_day}_to_day{output_day}"
+    experiment_name = f"over_days{input_day}_to_day{output_day}"
     save_root = base_config["environment"]["save_root"]
     experiment_dir = f"{save_root}/{experiment_name}"
     checkpoint_dir = f"{experiment_dir}/checkpoint"
