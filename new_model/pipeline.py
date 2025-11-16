@@ -403,7 +403,7 @@ class CustomDataset(Dataset):
 
         if self.enable_oversampling is True :
             factors = (0.8, 0.9, 1.0, 1.1, 1.2)
-            input_shape = input_array.shape()
+            input_shape = input_array.shape
             for i in range(input_shape[0]):
                 for j in range(input_shape[1]) :
                     value = input_array[i, j]
