@@ -45,8 +45,8 @@ def original(base_config, input_day, output_day, epoch, overwrite=False):
     config["data"]["target_day"] = output_day
     config["experiment"]["apply_pos_weight"] = False
     config["experiment"]["enable_undersampling"] = False
+    config["experiment"]["enable_oversampling"] = True
     config["training"]["report_freq"] = 1000
-
     checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
     if not os.path.exists(checkpoint_path):
         print(f"Checkpoint {checkpoint_path} does not exist, skipping...")
@@ -173,13 +173,13 @@ if __name__ == "__main__" :
     output_day = 1
 
     for input_day in input_days :
-        for epoch in range(100, 301, 100) :
+        for epoch in range(100, 501, 100) :
 
             original(base_config, input_day, output_day, epoch)
             
-            for subsample_index in range(12):
+            # for subsample_index in range(12):
 
-                subsample(base_config, input_day, output_day, epoch, subsample_index)                
+            #     subsample(base_config, input_day, output_day, epoch, subsample_index)                
 
     ### Single run
     # original(base_config, input_day=4, output_day=1, epoch=100, overwrite=True)
