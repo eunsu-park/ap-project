@@ -251,6 +251,30 @@ def undersample(train_file_list, num_subsample, subsample_index):
     return final_pairs
 
 
+def oversample(train_file_list, num_oversample):
+
+    train_file_name = []
+    train_file_class = []
+
+    for pair in train_file_list :
+        file_name, file_class = pair
+
+        if file_class == 1 :
+            for m in range(num_oversample) :
+                tmp = os.path.splitext(file_name)
+                new_file_name = f"{tmp[0]}_{m}{tmp[1]}"
+                train_file_name.append(new_file_name)
+                train_file_class.append(file_class)
+
+        else :
+            train_file_name.append(file_name)
+            train_file_class.append(file_class)
+
+    return list(zip(train_file_name, train_file_class))
+
+
+
+
 def get_pos_weight(train_file_list):
     negative_pairs = []
     positive_pairs = []
@@ -276,8 +300,6 @@ class CustomDataset(Dataset):
         self.validation_list_path = f"{self.dataset_path}_validation.csv"
         self.stat_file_path = f"{self.dataset_path}_statistics.pkl"
         self.enable_oversampling = config.experiment.enable_oversampling
-        if self.enable_oversampling is True :
-            self.num_oversample = config.experiment.num_oversample
 
         file_name_key = "file_name"
         class_key = f"class_day{config.data.target_day}"
@@ -287,28 +309,6 @@ class CustomDataset(Dataset):
         train_df = pd.read_csv(self.train_list_path)
         train_file_name = train_df[file_name_key].tolist()
         train_file_class = train_df[class_key].tolist()
-
-        if self.enable_oversampling is True :
-
-            over_train_file_name = []
-            over_train_file_class = []
-
-            for n in range(len(train_file_name)) :
-                file_name = train_file_name[n]
-                file_class = train_file_class[n]
-
-                if file_class == 1 :
-                    for m in range(self.num_oversample) :
-                        tmp = os.path.splitext(file_name)
-                        new_file_name = f"{tmp[0]}_{m}{tmp[1]}"
-                        over_train_file_name.append(new_file_name)
-                        over_train_file_class.append(file_class)
-
-                else :
-                    over_train_file_name.append(file_name)
-                    over_train_file_class.append(file_class)
-
-                over_frain_file_list = list(zip(over_train_file_name, over_train_file_class))
 
         self.train_file_list = list(zip(train_file_name, train_file_class))
 
@@ -320,19 +320,6 @@ class CustomDataset(Dataset):
         self.validation_file_list = list(zip(validation_file_name, validation_file_class))
 
         print(f"Training samples: {len(self.train_file_list)}, Validation samples: {len(self.validation_file_list)}")
-
-        if config.experiment.enable_undersampling is True :
-            self.train_file_list = undersample(self.train_file_list, config.experiment.num_subsample, config.experiment.subsample_index)
-            print(f"After undersamplig, Training samples: {len(self.train_file_list)}, Validation samples: {len(self.validation_file_list)}")
-
-        if config.experiment.phase == 'train':
-            self.list_data = self.train_file_list
-        elif config.experiment.phase == 'validation':
-            self.list_data = self.validation_file_list
-        else:
-            raise ValueError(f"Unknown phase: {config.experiment.phase}. Must be 'train' or 'validation'.")
-        
-        self.nb_data = len(self.list_data)
 
         self.sdo_wavelengths = config.data.sdo_wavelengths
         self.sdo_sequence_length = config.data.sdo_sequence_length
@@ -358,13 +345,25 @@ class CustomDataset(Dataset):
             raise RuntimeError(f"Failed to load/compute statistics: {e}")
         print(f"Loaded statistics for {len(self.stat_dict)} variables.")
 
+        if config.experiment.enable_undersampling is True :
+            self.train_file_list = undersample(self.train_file_list, config.experiment.num_subsample, config.experiment.subsample_index)
+            print(f"After undersamplig, Training samples: {len(self.train_file_list)}, Validation samples: {len(self.validation_file_list)}")
+
+        if config.experiment.enable_oversampling is True :
+            self.train_file_list = oversample(self.train_file_list, config.experiment.num_oversample)
+            print(f"After oversamplig, Training samples: {len(self.train_file_list)}, Validation samples: {len(self.validation_file_list)}")
+
+        if config.experiment.phase == 'train':
+            self.list_data = self.train_file_list
+        elif config.experiment.phase == 'validation':
+            self.list_data = self.validation_file_list
+        else:
+            raise ValueError(f"Unknown phase: {config.experiment.phase}. Must be 'train' or 'validation'.")
+        
+        self.nb_data = len(self.list_data)
+
         self.memory_cache = {}
         self.enable_memory_cache = config.experiment.enable_memory_cache #True  # Can be disabled for low-memory scenarios
-
-        if self.enable_oversampling is True :
-            self.train_file_list = over_frain_file_list
-            self.nb_data = len(self.train_file_list)
-            print(f"After oversamplig, Training samples: {len(self.train_file_list)}, Validation samples: {len(self.validation_file_list)}")
 
 
     def __len__(self):
