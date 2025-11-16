@@ -148,7 +148,7 @@ def main(config):
     
     # Create dataloader
     try:
-        dataloader = create_dataloader(config, logger=logger)
+        dataloader = create_dataloader(config, device, logger=logger)
     except Exception as e:
         raise RuntimeError(f"Failed to create dataloader: {e}")
     

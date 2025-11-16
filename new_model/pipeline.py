@@ -291,7 +291,8 @@ def get_pos_weight(train_file_list):
 
 
 class CustomDataset(Dataset):
-    def __init__(self, config, logger=None):
+    def __init__(self, config, device, logger=None):
+        self.device = device
         self.data_root = config.environment.data_root
         self.dataset_name = config.data.dataset_name
         self.dataset_path = f"{self.data_root}/{self.dataset_name}"
@@ -423,10 +424,10 @@ class CustomDataset(Dataset):
         label_array = np.zeros((1, 1))
         label_array[0, 0] = file_class
 
-        sdo_tensor = torch.tensor(sdo_array, dtype=torch.float32)
-        input_tensor = torch.tensor(input_array, dtype=torch.float32)
-        target_tensor = torch.tensor(target_array, dtype=torch.float32)
-        label_tensor = torch.tensor(label_array, dtype=torch.float32)
+        sdo_tensor = torch.tensor(sdo_array, dtype=torch.float32).to(self.device)
+        input_tensor = torch.tensor(input_array, dtype=torch.float32).to(self.device)
+        target_tensor = torch.tensor(target_array, dtype=torch.float32).to(self.device)
+        label_tensor = torch.tensor(label_array, dtype=torch.float32).to(self.device)
 
         data_dict = {
                 "sdo": sdo_tensor,
@@ -442,8 +443,8 @@ class CustomDataset(Dataset):
         return data_dict
 
 
-def create_dataloader(config, logger=None):
-    dataset = CustomDataset(config)
+def create_dataloader(config, device, logger=None):
+    dataset = CustomDataset(config, device)
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=config.experiment.batch_size,
@@ -456,9 +457,9 @@ def create_dataloader(config, logger=None):
 
 
 @hydra.main(config_path="./configs", version_base=None)
-def main(config):
+def main(config, device):
 
-    dataloader = create_dataloader(config)
+    dataloader = create_dataloader(config, device)
 
     for _ in range(3):
         t0 = time.time()
