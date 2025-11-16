@@ -291,8 +291,7 @@ def get_pos_weight(train_file_list):
 
 
 class CustomDataset(Dataset):
-    def __init__(self, config, device, logger=None):
-        self.device = device
+    def __init__(self, config, logger=None):
         self.data_root = config.environment.data_root
         self.dataset_name = config.data.dataset_name
         self.dataset_path = f"{self.data_root}/{self.dataset_name}"
@@ -424,10 +423,10 @@ class CustomDataset(Dataset):
         label_array = np.zeros((1, 1))
         label_array[0, 0] = file_class
 
-        sdo_tensor = torch.tensor(sdo_array, dtype=torch.float32).to(self.device)
-        input_tensor = torch.tensor(input_array, dtype=torch.float32).to(self.device)
-        target_tensor = torch.tensor(target_array, dtype=torch.float32).to(self.device)
-        label_tensor = torch.tensor(label_array, dtype=torch.float32).to(self.device)
+        sdo_tensor = torch.tensor(sdo_array, dtype=torch.float32)
+        input_tensor = torch.tensor(input_array, dtype=torch.float32)
+        target_tensor = torch.tensor(target_array, dtype=torch.float32)
+        label_tensor = torch.tensor(label_array, dtype=torch.float32)
 
         data_dict = {
                 "sdo": sdo_tensor,
@@ -443,23 +442,24 @@ class CustomDataset(Dataset):
         return data_dict
 
 
-def create_dataloader(config, device, logger=None):
-    dataset = CustomDataset(config, device)
+def create_dataloader(config, logger=None):
+    dataset = CustomDataset(config)
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=config.experiment.batch_size,
         shuffle=(config.experiment.phase == 'train'),
         num_workers=config.experiment.num_workers,
-        pin_memory=(config.environment.device == 'cuda'),
+        # pin_memory=(config.environment.device == 'cuda'),
+        pin_memory=False
         drop_last=False  # Keep all samples
     )
     return dataloader
 
 
 @hydra.main(config_path="./configs", version_base=None)
-def main(config, device):
+def main(config):
 
-    dataloader = create_dataloader(config, device)
+    dataloader = create_dataloader(config)
 
     for _ in range(3):
         t0 = time.time()
