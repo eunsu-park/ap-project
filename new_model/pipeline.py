@@ -450,7 +450,7 @@ def create_dataloader(config, logger=None):
         shuffle=(config.experiment.phase == 'train'),
         num_workers=config.experiment.num_workers,
         # pin_memory=(config.environment.device == 'cuda'),
-        pin_memory=False
+        pin_memory=False,
         drop_last=False  # Keep all samples
     )
     return dataloader
