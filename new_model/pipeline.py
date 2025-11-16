@@ -361,7 +361,7 @@ class CustomDataset(Dataset):
         self.memory_cache = {}
         self.enable_memory_cache = config.experiment.enable_memory_cache #True  # Can be disabled for low-memory scenarios
 
-        if config.experiment.over_undersampling is True :
+        if self.enable_oversampling is True :
             self.train_file_list = over_frain_file_list
             self.nb_data = len(self.train_file_list)
             print(f"After oversamplig, Training samples: {len(self.train_file_list)}, Validation samples: {len(self.validation_file_list)}")
