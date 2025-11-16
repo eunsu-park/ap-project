@@ -15,7 +15,7 @@ fixed = [
     "#SBATCH --ntasks-per-node=8",
     # "#SBATCH --gres=gpu:1",
     "#SBATCH --gres=gpu:a100_10g:1",
-    "#SBATCH --mem-per-cpu=4000M # Maximum allowable mempry per CPU 4G",
+    "#SBATCH --mem=8000M # Maximum allowable mempry per CPU 4G",
     "#SBATCH --qos=standard",
     "#SBATCH --account=wangj # Replace PI_ucid which the NJIT UCID of PI",
     "#SBATCH --time=23:59:59  # D-HH:MM:SS",
@@ -48,6 +48,7 @@ if __name__ == "__main__" :
         config["experiment"]["enable_undersampling"] = False
         config["experiment"]["enable_oversampling"] = True
         config["experiment"]["batch_size"] = 4
+        config["experiment"]["num_workers"] = 4
         config["training"]["report_freq"] = 1000
         config_path = f"./configs/{config_name}.yaml"
         with open(config_path, 'w') as f:
