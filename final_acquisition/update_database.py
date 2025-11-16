@@ -312,7 +312,5 @@ if __name__ == "__main__":
             print("No valid files to process")
 
         file_list = []
-        # file_list += glob(f"{DATA_ROOT}/aia_tmp/*.fits")
-        # file_list += glob(f"{DATA_ROOT}/hmi_tmp/*.fits")
-        file_list += glob(f"{DATA_ROOT}/invalid_header/*.fits")
+        file_list += glob(f"{DATA_ROOT}/downloaded/*.fits")
         print(f"Total files: {len(file_list)}")
