@@ -375,7 +375,7 @@ class CustomDataset(Dataset):
         if self.enable_memory_cache and file_name in self.memory_cache:
             return self.memory_cache[file_name]
         
-        if (self.enable_oversampling is True) and (self.phase is True):
+        if (self.enable_oversampling is True) and (self.phase == "train" is True):
             file_path = f"{self.data_root}/oversampling/{file_name}"
         else :
             file_path = f"{self.data_root}/original/{file_name}"
@@ -401,7 +401,7 @@ class CustomDataset(Dataset):
         input_array = input_array[:self.split_index]
         input_array = input_array[-self.input_sequence_length:]
 
-        if (self.enable_oversampling is True) and (self.phase is True) :
+        if (self.enable_oversampling is True) and (self.phase == "train" is True) :
             factors = (0.8, 0.9, 1.0, 1.1, 1.2)
             input_shape = input_array.shape
             for i in range(input_shape[0]):
