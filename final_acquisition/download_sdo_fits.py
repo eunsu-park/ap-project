@@ -48,31 +48,58 @@ def download_single_file(source_url: str, destination: str, overwrite: bool = Fa
 def run(source_url):
     file_name = os.path.basename(source_url)
 
-    if os.path.exists(f"{DATA_ROOT}/aia/{file_name}") :
-        return
+    # if os.path.exists(f"{DATA_ROOT}/aia/{file_name}") :
+    #     return
 
-    if os.path.exists(f"{DATA_ROOT}/hmi/{file_name}") :
-        return
+    # if os.path.exists(f"{DATA_ROOT}/hmi/{file_name}") :
+    #     return
         
-    if os.path.exists(f"{DATA_ROOT}/downloaded/{file_name}") :
-        return
+    # if os.path.exists(f"{DATA_ROOT}/downloaded/{file_name}") :
+    #     return
 
-    if os.path.exists(f"{DATA_ROOT}/invalid_file/{file_name}") :
-        return
+    # if os.path.exists(f"{DATA_ROOT}/invalid_file/{file_name}") :
+    #     return
 
-    if os.path.exists(f"{DATA_ROOT}/invalid_header/{file_name}") :
-        return
+    # if os.path.exists(f"{DATA_ROOT}/invalid_header/{file_name}") :
+    #     return
 
-    if os.path.exists(f"{DATA_ROOT}/non_zero_quality/{file_name}") :
-        return
+    # if os.path.exists(f"{DATA_ROOT}/non_zero_quality/{file_name}") :
+    #     return
 
-    if "spike" in file_name : # do not download spike file
-        return
+    # if "spike" in file_name : # do not download spike file
+    #     return
 
     destination = f"{DATA_ROOT}/downloaded/{file_name}"
     download_single_file(source_url=source_url, destination=destination)
 
 
+def make_clean(url_list):
+
+    clean_url_list = []
+
+    for url in url_list :
+        file_name = os.path.basename(url)
+
+        A = os.path.exists(f"{DATA_ROOT}/aia/{file_name}")
+
+        B = os.path.exists(f"{DATA_ROOT}/hmi/{file_name}")
+            
+        C = os.path.exists(f"{DATA_ROOT}/downloaded/{file_name}")
+
+        D = os.path.exists(f"{DATA_ROOT}/invalid_file/{file_name}")
+
+        E = os.path.exists(f"{DATA_ROOT}/invalid_header/{file_name}")
+
+        F = os.path.exists(f"{DATA_ROOT}/non_zero_quality/{file_name}")
+
+        G = "spike" in file_name # do not download spike file
+
+        if A + B + C + D + E + F + G == 0 :
+            clean_url_list.append(url)
+
+    return clean_url_list
+
+    
 def main():
 
     csv_file_list = glob(f"{CSV_DIR}/*.csv")
@@ -87,6 +114,7 @@ def main():
             df_list.append(df)
         df = pd.concat(df_list)
         url_list = df['url'].tolist()
+        url_list = make_clean(url_list)
         random.shuffle(url_list)
         print(f"{len(url_list)} files in url_list")
 

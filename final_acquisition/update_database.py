@@ -243,74 +243,66 @@ if __name__ == "__main__":
     file_list += glob(f"{DATA_ROOT}/downloaded/*.fits")
     print(f"Total files: {len(file_list)}")
 
-    while len(file_list) > 0 :
+    # 병렬 처리 설정
+    num_processes = 8 #cpu_count()
+    print(f"Using {num_processes} processes\n")
     
-        file_list = file_list[:1000]
+    # ==========================================================
+    # 1단계: 메타데이터 추출 (병렬 처리)
+    # ==========================================================
+    print("Step 1: Extracting metadata (parallel)...")
+    metadata_list = []
+    error_counts = {
+        "invalid_file": 0,
+        "invalid_header": 0,
+        "non_zero_quality": 0
+    }
     
-        # 병렬 처리 설정
-        num_processes = 8 #cpu_count()
-        print(f"Using {num_processes} processes\n")
+    with Pool(processes=num_processes) as pool:
+        results = list(tqdm(
+            pool.imap(extract_metadata_only, file_list),
+            total=len(file_list),
+            desc="Extracting"
+        ))
+    
+    # 결과 분류
+    for result in results:
+        if isinstance(result, dict):
+            metadata_list.append(result)
+        elif result == "invalid_header":
+            error_counts["invalid_header"] += 1
+        elif result == "non_zero_quality":
+            error_counts["non_zero_quality"] += 1
+        elif isinstance(result, str) and result.startswith("invalid_file"):
+            error_counts["invalid_file"] += 1
+    
+    print(f"\nValid files: {len(metadata_list)}")
+    for key, value in error_counts.items():
+        print(f"{key}: {value}")
+    
+    # ==========================================================
+    # 2단계: DB 업데이트 (순차 처리)
+    # ==========================================================
+    if len(metadata_list) > 0:
+        print("\nStep 2: Updating database (sequential)...")
+        stats = batch_insert_to_db(metadata_list)
         
         # ==========================================================
-        # 1단계: 메타데이터 추출 (병렬 처리)
+        # 최종 통계
         # ==========================================================
-        print("Step 1: Extracting metadata (parallel)...")
-        metadata_list = []
-        error_counts = {
-            "invalid_file": 0,
-            "invalid_header": 0,
-            "non_zero_quality": 0
-        }
-        
-        with Pool(processes=num_processes) as pool:
-            results = list(tqdm(
-                pool.imap(extract_metadata_only, file_list),
-                total=len(file_list),
-                desc="Extracting"
-            ))
-        
-        # 결과 분류
-        for result in results:
-            if isinstance(result, dict):
-                metadata_list.append(result)
-            elif result == "invalid_header":
-                error_counts["invalid_header"] += 1
-            elif result == "non_zero_quality":
-                error_counts["non_zero_quality"] += 1
-            elif isinstance(result, str) and result.startswith("invalid_file"):
-                error_counts["invalid_file"] += 1
-        
-        print(f"\nValid files: {len(metadata_list)}")
-        for key, value in error_counts.items():
-            print(f"{key}: {value}")
-        
-        # ==========================================================
-        # 2단계: DB 업데이트 (순차 처리)
-        # ==========================================================
-        if len(metadata_list) > 0:
-            print("\nStep 2: Updating database (sequential)...")
-            stats = batch_insert_to_db(metadata_list)
-            
-            # ==========================================================
-            # 최종 통계
-            # ==========================================================
-            print("\n" + "="*60)
-            print("PROCESSING SUMMARY")
-            print("="*60)
-            print(f"Total processed         : {len(file_list):6d}")
-            print(f"Valid metadata          : {len(metadata_list):6d}")
-            print(f"Success (inserted)      : {stats['success']:6d}")
-            print(f"Updated                 : {stats['updated']:6d}")
-            print(f"Duplicate (skipped)     : {stats['duplicate']:6d}")
-            print(f"Invalid file            : {error_counts['invalid_file']:6d}")
-            print(f"Invalid header          : {error_counts['invalid_header']:6d}")
-            print(f"Non-zero quality        : {error_counts['non_zero_quality']:6d}")
-            print(f"DB errors               : {stats['db_error']:6d}")
-            print(f"Move errors             : {stats['move_error']:6d}")
-            print("="*60)
-        else:
-            print("No valid files to process")
-
-        file_list = []
-        file_list += glob(f"{DATA_ROOT}/downloaded/*.fits")
-        print(f"Total files: {len(file_list)}")
+        print("\n" + "="*60)
+        print("PROCESSING SUMMARY")
+        print("="*60)
+        print(f"Total processed         : {len(file_list):6d}")
+        print(f"Valid metadata          : {len(metadata_list):6d}")
+        print(f"Success (inserted)      : {stats['success']:6d}")
+        print(f"Updated                 : {stats['updated']:6d}")
+        print(f"Duplicate (skipped)     : {stats['duplicate']:6d}")
+        print(f"Invalid file            : {error_counts['invalid_file']:6d}")
+        print(f"Invalid header          : {error_counts['invalid_header']:6d}")
+        print(f"Non-zero quality        : {error_counts['non_zero_quality']:6d}")
+        print(f"DB errors               : {stats['db_error']:6d}")
+        print(f"Move errors             : {stats['move_error']:6d}")
+        print("="*60)
+    else:
+        print("No valid files to process")
