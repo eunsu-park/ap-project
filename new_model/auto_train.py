@@ -13,8 +13,8 @@ fixed = [
     "#SBATCH --partition=gpu",
     "#SBATCH --nodes=1",
     "#SBATCH --ntasks-per-node=4",
-    # "#SBATCH --gres=gpu:1",
-    "#SBATCH --gres=gpu:a100_10g:1",
+    "#SBATCH --gres=gpu:1",
+    # "#SBATCH --gres=gpu:a100_10g:1",
     "#SBATCH --mem=8000M # Maximum allowable mempry per CPU 4G",
     "#SBATCH --qos=standard",
     "#SBATCH --account=wangj # Replace PI_ucid which the NJIT UCID of PI",
@@ -72,7 +72,8 @@ if __name__ == "__main__" :
 
         for subsample_index in range(3):
 
-            experiment_name = f"mig_balanced_days{input_day}_to_day{output_day}_sub_{subsample_index}"
+            # experiment_name = f"mig_balanced_days{input_day}_to_day{output_day}_sub_{subsample_index}"
+            experiment_name = f"balanced_days{input_day}_to_day{output_day}_sub_{subsample_index}"
             config_name = experiment_name
             config = base_config.copy()
             config["experiment"]["experiment_name"] = experiment_name
