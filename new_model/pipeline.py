@@ -261,10 +261,14 @@ def oversample(train_file_list, num_oversample):
 
         if file_class == 1 :
             for m in range(num_oversample) :
-                tmp = os.path.splitext(file_name)
-                new_file_name = f"{tmp[0]}_{m}{tmp[1]}"
-                train_file_name.append(new_file_name)
-                train_file_class.append(file_class)
+                if m == 0 :
+                    train_file_name.append(file_name)
+                    train_file_class.append(file_class)
+                else :
+                    tmp = os.path.splitext(file_name)
+                    new_file_name = f"{tmp[0]}_{m}{tmp[1]}"
+                    train_file_name.append(new_file_name)
+                    train_file_class.append(file_class)
 
         else :
             train_file_name.append(file_name)
@@ -338,7 +342,7 @@ class CustomDataset(Dataset):
         try:
             self.stat_dict = get_statistics(
                 stat_file_path = self.stat_file_path,
-                data_root = f"{self.data_root}/original",
+                data_root = f"{self.data_root}/oversampling",
                 data_file_list = train_file_name,
                 variables = self.omni_variables,
             )
@@ -375,11 +379,13 @@ class CustomDataset(Dataset):
         if self.enable_memory_cache and file_name in self.memory_cache:
             return self.memory_cache[file_name]
         
-        if (self.enable_oversampling is True) and (self.phase == "train" is True):
-            file_path = f"{self.data_root}/oversampling/{file_name}"
-        else :
-            file_path = f"{self.data_root}/original/{file_name}"
-            
+        file_path = f"{self.data_root}/oversampling/{file_name}"
+
+        # if (self.enable_oversampling is True) and (self.phase == "train" is True):
+        #     file_path = f"{self.data_root}/oversampling/{file_name}"
+        # else :
+        #     file_path = f"{self.data_root}/original/{file_name}"
+
         sdo_data, omni_data = read_h5(file_path, self.sdo_wavelengths, self.omni_variables)
         sdo_array = []
         for wavelength in self.sdo_wavelengths :
