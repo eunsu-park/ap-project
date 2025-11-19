@@ -12,10 +12,10 @@ fixed = [
     f"#SBATCH --error={HOME}/TEMP/%x.%j.err # prints the error message",
     "#SBATCH --partition=gpu",
     "#SBATCH --nodes=1",
-    "#SBATCH --ntasks-per-node=8",
+    "#SBATCH --ntasks-per-node=4",
     # "#SBATCH --gres=gpu:1",
     "#SBATCH --gres=gpu:a100_10g:1",
-    "#SBATCH --mem=16000M # Maximum allowable mempry per CPU 4G",
+    "#SBATCH --mem=8000M # Maximum allowable mempry per CPU 4G",
     "#SBATCH --qos=standard",
     "#SBATCH --account=wangj # Replace PI_ucid which the NJIT UCID of PI",
     "#SBATCH --time=71:59:59  # D-HH:MM:SS",
@@ -86,7 +86,7 @@ if __name__ == "__main__" :
             config["experiment"]["subsample_index"] = subsample_index
             config["experiment"]["enable_oversampling"] = True
             config["experiment"]["batch_size"] = 4
-            config["experiment"]["num_workers"] = 4
+            config["experiment"]["num_workers"] = 2
             config["training"]["report_freq"] = 1000
 
             config_path = f"./configs/{config_name}.yaml"
