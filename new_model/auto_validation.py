@@ -97,7 +97,7 @@ def original(base_config, input_day, output_day, epoch, overwrite=False):
 
 def subsample(base_config, input_day, output_day, epoch, subsample_index, overwrite=False):
 
-    experiment_name = f"days{input_day}_to_day{output_day}_sub_{subsample_index}"
+    experiment_name = f"balanced_days{input_day}_to_day{output_day}_sub_{subsample_index}"
     save_root = base_config["environment"]["save_root"]
     experiment_dir = f"{save_root}/{experiment_name}"
     checkpoint_dir = f"{experiment_dir}/checkpoint"
@@ -108,13 +108,16 @@ def subsample(base_config, input_day, output_day, epoch, subsample_index, overwr
     config = base_config.copy()
     config["experiment"]["experiment_name"] = experiment_name
 
+    config["experiment"]["experiment_name"] = experiment_name
     config["data"]["sdo_sequence_length"] = 4 * input_day
     config["data"]["input_sequence_length"] = 8 * input_day
     config["data"]["target_sequence_length"] = 8 * output_day
     config["data"]["target_day"] = output_day
     config["experiment"]["apply_pos_weight"] = False
     config["experiment"]["enable_undersampling"] = True
+    config["experiment"]["num_subsample"] = 3
     config["experiment"]["subsample_index"] = subsample_index
+    config["experiment"]["enable_oversampling"] = True
     config["training"]["report_freq"] = 100
 
     checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
@@ -176,11 +179,11 @@ if __name__ == "__main__" :
     for input_day in input_days :
         for epoch in range(100, 501, 100) :
 
-            original(base_config, input_day, output_day, epoch)
+            # original(base_config, input_day, output_day, epoch)
             
-            # for subsample_index in range(12):
+            for subsample_index in range(3):
 
-            #     subsample(base_config, input_day, output_day, epoch, subsample_index)                
+                subsample(base_config, input_day, output_day, epoch, subsample_index)                
 
     ### Single run
     # original(base_config, input_day=4, output_day=1, epoch=100, overwrite=True)
