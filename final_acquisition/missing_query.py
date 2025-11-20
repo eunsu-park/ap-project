@@ -18,8 +18,8 @@ DATA_ROOT = "/Users/eunsupark/Data/sdo/fits"
 def query_hmi_45s(date_target):
     client = drms.Client(email="eunsupark@kasi.re.kr")
     date = date_target - datetime.timedelta(seconds=45)
-    date_start = date - datetime.timedelta(minutes=3)
-    date_end = date + datetime.timedelta(minutes=3)
+    date_start = date - datetime.timedelta(minutes=6)
+    date_end = date + datetime.timedelta(minutes=6)
     date_start = date_start.strftime("%Y.%m.%d_%H:%M:%S")
     date_end = date_end.strftime("%Y.%m.%d_%H:%M:%S")
 
@@ -38,8 +38,8 @@ def query_hmi_45s(date_target):
 
 def query_aia(date_target, wavelengths=[193, 211]):
     client = drms.Client(email="harim.lee@njit.edu")
-    date_start = date_target - datetime.timedelta(minutes=3)
-    date_end = date_target + datetime.timedelta(minutes=3)
+    date_start = date_target - datetime.timedelta(minutes=6)
+    date_end = date_target + datetime.timedelta(minutes=6)
     date_start = date_start.strftime("%Y.%m.%d_%H:%M:%S")
     date_end = date_end.strftime("%Y.%m.%d_%H:%M:%S")
     client = drms.Client(email="harim.lee@njit.edu")
@@ -75,6 +75,8 @@ if __name__ == "__main__" :
             missing_dict[date].append(f"{instrument}_{wavelength}")
         else :
             missing_dict[date] = [f"{instrument}_{wavelength}"]
+
+    print(len(missing_dict))
 
     for k, vs in missing_dict.items():
         date = k
