@@ -30,7 +30,7 @@ fixed = [
 
 def original(base_config, input_day, output_day, epoch, overwrite=False):
 
-    experiment_name = f"over_days{input_day}_to_day{output_day}"
+    experiment_name = f"sdo_over_days{input_day}_to_day{output_day}"
     save_root = base_config["environment"]["save_root"]
     experiment_dir = f"{save_root}/{experiment_name}"
     checkpoint_dir = f"{experiment_dir}/checkpoint"
@@ -47,6 +47,8 @@ def original(base_config, input_day, output_day, epoch, overwrite=False):
     config["experiment"]["apply_pos_weight"] = False
     config["experiment"]["enable_undersampling"] = False
     config["experiment"]["enable_oversampling"] = True
+    config["experiment"]["num_oversample"] = 13
+
     config["training"]["report_freq"] = 1000
     checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
     if not os.path.exists(checkpoint_path):
@@ -177,13 +179,13 @@ if __name__ == "__main__" :
     output_day = 1
 
     for input_day in input_days :
-        for epoch in range(100, 501, 100) :
+        for epoch in range(20, 101, 20) :
 
-            # original(base_config, input_day, output_day, epoch)
+            original(base_config, input_day, output_day, epoch)
             
-            for subsample_index in range(3):
+            # for subsample_index in range(3):
 
-                subsample(base_config, input_day, output_day, epoch, subsample_index)                
+            #     subsample(base_config, input_day, output_day, epoch, subsample_index)                
 
     ### Single run
     # original(base_config, input_day=4, output_day=1, epoch=100, overwrite=True)
