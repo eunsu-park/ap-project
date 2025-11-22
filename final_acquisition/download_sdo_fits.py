@@ -92,9 +92,11 @@ def make_clean(url_list):
 
         F = os.path.exists(f"{DATA_ROOT}/non_zero_quality/{file_name}")
 
-        G = "spike" in file_name # do not download spike file
+        G = os.path.exists(f"{DATA_ROOT}/duplicated/{file_name}")
 
-        if A + B + C + D + E + F + G == 0 :
+        H = "spike" in file_name # do not download spike file
+
+        if A + B + C + D + E + F + G + H == 0 :
             clean_url_list.append(url)
 
     return clean_url_list

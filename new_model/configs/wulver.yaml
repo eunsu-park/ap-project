@@ -30,7 +30,7 @@ experiment:
   num_subsample: 3
   subsample_index: 0
   enable_oversampling: false
-  num_oversample: 5
+  num_oversample: 13
   apply_pos_weight: false
 
 data:
@@ -93,8 +93,8 @@ training:
   optimizer: 'adam'  # 'adam' or 'sgd'
   learning_rate: 0.0002
   report_freq: 1000
-  num_epochs: 500
-  model_save_freq: 100
+  num_epochs: 100
+  model_save_freq: 20
 
 validation:
   checkpoint_path: /home/hl545/ap/results/wulver_mm_class/checkpoint/model_epoch50.pth
