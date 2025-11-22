@@ -30,7 +30,7 @@ fixed = [
 
 def original(base_config, input_day, output_day, epoch, overwrite=False):
 
-    experiment_name = f"sdo_over_days{input_day}_to_day{output_day}"
+    experiment_name = f"sdo_omni_over_days{input_day}_to_day{output_day}"
     save_root = base_config["environment"]["save_root"]
     experiment_dir = f"{save_root}/{experiment_name}"
     checkpoint_dir = f"{experiment_dir}/checkpoint"
