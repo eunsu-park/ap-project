@@ -407,14 +407,14 @@ class CustomDataset(Dataset):
         input_array = input_array[:self.split_index]
         input_array = input_array[-self.input_sequence_length:]
 
-        # if (self.enable_oversampling is True) and (self.phase == "train" is True) :
-        #     factors = (0.8, 0.9, 1.0, 1.1, 1.2)
-        #     input_shape = input_array.shape
-        #     for i in range(input_shape[0]):
-        #         for j in range(input_shape[1]) :
-        #             value = input_array[i, j]
-        #             new_value = value * factors[random.randint(0, 4)]
-        #             input_array[i, j] = new_value
+        if (self.enable_oversampling is True) and (self.phase == "train" is True) :
+            factors = (0.8, 0.9, 1.0, 1.1, 1.2)
+            input_shape = input_array.shape
+            for i in range(input_shape[0]):
+                for j in range(input_shape[1]) :
+                    value = input_array[i, j]
+                    new_value = value * factors[random.randint(0, 4)]
+                    input_array[i, j] = new_value
 
         target_array = []
         for variable in self.target_variables :

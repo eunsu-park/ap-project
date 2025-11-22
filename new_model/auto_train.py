@@ -36,7 +36,7 @@ if __name__ == "__main__" :
     input_days = (1, 2, 3, 4, 5, 6, 7)
     output_day = 1
     for input_day in input_days :
-        experiment_name = f"sdo_over_days{input_day}_to_day{output_day}"
+        experiment_name = f"sdo_omni_over_days{input_day}_to_day{output_day}"
         config_name = experiment_name
         config = base_config.copy()
         config["experiment"]["experiment_name"] = experiment_name
