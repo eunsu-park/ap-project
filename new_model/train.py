@@ -10,6 +10,7 @@ from typing import Dict, Any, Optional
 import torch
 import torch.optim as optim
 import torch.nn as nn
+import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import numpy as np
 import hydra
@@ -486,7 +487,7 @@ def main(config):
 if __name__ == '__main__':
     freeze_support()
     main()
-    
+
 
 # import os
 # import sys
