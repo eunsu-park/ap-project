@@ -33,8 +33,6 @@ if __name__ == "__main__" :
     with open(base_config_path, 'r') as f:
         base_config = yaml.safe_load(f)
 
-    scripts = []
-
     
     input_days = (1, 2, 3, 4, 5, 6, 7)
     output_day = 1

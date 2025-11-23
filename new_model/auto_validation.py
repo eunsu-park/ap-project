@@ -117,9 +117,9 @@ def subsample(base_config, input_day, output_day, epoch, subsample_index, overwr
     config["data"]["target_day"] = output_day
     config["experiment"]["apply_pos_weight"] = False
     config["experiment"]["enable_undersampling"] = True
-    config["experiment"]["num_subsample"] = 3
+    config["experiment"]["num_subsample"] = 10
     config["experiment"]["subsample_index"] = subsample_index
-    config["experiment"]["enable_oversampling"] = True
+    config["experiment"]["enable_oversampling"] = False
     config["training"]["report_freq"] = 100
 
     checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
@@ -174,18 +174,17 @@ if __name__ == "__main__" :
     with open(base_config_path, 'r') as f:
         base_config = yaml.safe_load(f) 
 
-
     input_days = (1, 2, 3, 4, 5, 6, 7)
     output_day = 1
 
     for input_day in input_days :
         for epoch in range(20, 101, 20) :
 
-            original(base_config, input_day, output_day, epoch)
+            # original(base_config, input_day, output_day, epoch)
             
-            # for subsample_index in range(3):
+            for subsample_index in range(10):
 
-            #     subsample(base_config, input_day, output_day, epoch, subsample_index)                
+                subsample(base_config, input_day, output_day, epoch, subsample_index)                
 
     ### Single run
     # original(base_config, input_day=4, output_day=1, epoch=100, overwrite=True)
