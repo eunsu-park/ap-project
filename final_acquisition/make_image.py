@@ -1,4 +1,6 @@
 import os
+import pickle
+import datetime
 from glob import glob
 from multiprocessing import Pool, freeze_support
 
@@ -7,8 +9,19 @@ from sunpy.map import Map
 from PIL import Image
 from aiapy.calibrate import register, update_pointing, correct_degradation
 
-from utils_image import resize_image, rotate_image
-from utils_sdo import aia_intscale, hmi_intscale
+import pandas as pd
+import matplotlib.pyplot as plt
+from sunpy.map import Map
+import numpy as np
+from PIL import Image
+from aiapy.calibrate import register, update_pointing, correct_degradation
+from aiapy.calibrate.util import get_correction_table
+from astropy.time import Time
+from aiapy.calibrate.util import get_pointing_table
+
+from egghouse.image import resize_image, rotate_image
+from egghouse.sdo.aia import aia_intscale
+from egghouse.sdo.hmi import hmi_intscale
 
 
 DATA_ROOT = "/Users/eunsupark/Data/sdo"
@@ -16,6 +29,78 @@ POINTING_TABLE_PATH = f"{DATA_ROOT}/fits/pointing_table.pkl"
 CORRECTION_TABLE_PATH = f"{DATA_ROOT}/fits/correction_table.pkl"
 REFERENCE_MEDIAN_PATH = f"{DATA_ROOT}/fits/reference_median_values.pkl"
 
+
+def load_pointing_table(pointing_table_path):
+    if os.path.exists(pointing_table_path) is False :
+
+        # date_start = datetime.datetime(
+        #     year = 2010,
+        #     month = 9,
+        #     day = 1,
+        # )
+        # date_start -= datetime.timedelta(days=1)
+        # date_start = Time(date_start, format='datetime')
+        # date_end = datetime.datetime(
+        #     year = 2025,
+        #     month = 1,
+        #     day = 1,
+        # )
+        # date_end += datetime.timedelta(days=1)
+        # date_end = Time(date_end, format='datetime')
+
+        # pointing_table = get_pointing_table(source="JSOC",
+        #                                     time_range=(date_start, date_end))
+        # pickle.dump(pointing_table, open(pointing_table_path, 'wb'))
+        # print(f"Pointing table saved: {pointing_table_path}")
+        # del pointing_table
+
+        pointing_tables = {}
+
+        year = 2010
+        year_end = 2025
+
+        while year < year_end :
+            date_start = datetime.datetime(
+                year = year,
+                month = 1,
+                day = 1
+            )
+            date_start -= datetime.timedelta(days=1)
+            date_start = Time(date_start, format='datetime')
+
+            date_end = datetime.datetime(
+                year = year+1,
+                month = 1,
+                day = 1
+            )
+            date_end += datetime.timedelta(days=1)
+            date_end = Time(date_end, format='datetime')
+
+            pointing_table = get_pointing_table(source="JSOC",
+                                                time_range=(date_start, date_end))
+            pointing_tables[str(year)] = pointing_table
+
+            print(type(pointing_table))
+
+        pickle.dump(pointing_tables, open(pointing_table_path, 'wb'))
+        print(f"Pointing table saved: {pointing_table_path}")
+        del pointing_tables
+
+    pointing_tables = pickle.load(open(pointing_table_path, 'rb'))
+    print(f"Pointing table loaded: {pointing_table_path}")
+    return pointing_tables
+
+
+def load_correction_table(correction_table_path):
+    if os.path.exists(correction_table_path) is False :
+        correction_table = get_correction_table(source="JSOC")
+        pickle.dump(correction_table, open(correction_table_path, 'wb'))
+        print(f"Pointing table saved: {correction_table_path}")
+        del correction_table
+
+    correction_table = pickle.load(open(correction_table_path, 'rb'))
+    print(f"Correction table loaded: {correction_table_path}")
+    return correction_table
 
 
 def register_map(smap, pointing_tables, correction_table):
@@ -66,13 +151,13 @@ if __name__ == "__main__" :
     pointing_tables = load_pointing_table(pointing_table_path=POINTING_TABLE_PATH)
     correction_table = load_correction_table(correction_table_path=CORRECTION_TABLE_PATH)
 
-    file_list_aia = glob(f"{DATA_ROOT}/aia/*.fits")[:10] # [:1000]
-    print(len(file_list_aia))
+    # file_list_aia = glob(f"{DATA_ROOT}/aia/*.fits")[:10] # [:1000]
+    # print(len(file_list_aia))
 
-    # median_dict = get_reference_median(reference_median_path=REFERENCE_MEDIAN_PATH)
+    # # median_dict = get_reference_median(reference_median_path=REFERENCE_MEDIAN_PATH)
 
-    for file_path in file_list_aia :
-        main_aia(file_path, pointing_tables, correction_table)
+    # for file_path in file_list_aia :
+    #     main_aia(file_path, pointing_tables, correction_table)
 
 
 
@@ -83,7 +168,7 @@ if __name__ == "__main__" :
     # pool.map(main_hmi, file_list_hmi)
     # pool.close()
 
-    # N = 0
+    # N = 0python
     # for file_path in file_list :
     #     main(file_path)
 
