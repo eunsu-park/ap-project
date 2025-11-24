@@ -34,7 +34,8 @@ if __name__ == "__main__" :
         base_config = yaml.safe_load(f)
 
     
-    input_days = (1, 2, 3, 4, 5, 6, 7)
+    # input_days = (1, 2, 3, 4, 5, 6, 7)
+    input_days = (1, 4)
     output_day = 1
     for subsample_index in range(10):
 
