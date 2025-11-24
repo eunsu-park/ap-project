@@ -99,7 +99,7 @@ def original(base_config, input_day, output_day, epoch, overwrite=False):
 
 def subsample(base_config, input_day, output_day, epoch, subsample_index, overwrite=False):
 
-    experiment_name = f"contrastive_days{input_day}_to_day{output_day}_sub_{subsample_index:02d}"
+    experiment_name = f"mse_contrastive_days{input_day}_to_day{output_day}_sub_{subsample_index:02d}"
     save_root = base_config["environment"]["save_root"]
     experiment_dir = f"{save_root}/{experiment_name}"
     checkpoint_dir = f"{experiment_dir}/checkpoint"
@@ -187,6 +187,8 @@ if __name__ == "__main__" :
             for subsample_index in range(10):
 
                 subsample(base_config, input_day, output_day, epoch, subsample_index)                
+                import sys
+                sys.exit()
 
     ### Single run
     # original(base_config, input_day=4, output_day=1, epoch=100, overwrite=True)
