@@ -120,7 +120,9 @@ def subsample(base_config, input_day, output_day, epoch, subsample_index, overwr
     config["experiment"]["num_subsample"] = 10
     config["experiment"]["subsample_index"] = subsample_index
     config["experiment"]["enable_oversampling"] = False
-    config["training"]["report_freq"] = 100
+    config["experiment"]["num_workers"] = 4
+    config["training"]["contrastive_type"] = 'mse'
+    config["training"]["report_freq"] = 1000
 
     checkpoint_path = f"{checkpoint_dir}/model_epoch{epoch}.pth"
     if not os.path.exists(checkpoint_path):
