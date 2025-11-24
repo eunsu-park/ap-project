@@ -187,8 +187,8 @@ if __name__ == "__main__" :
             for subsample_index in range(10):
 
                 subsample(base_config, input_day, output_day, epoch, subsample_index)                
-                import sys
-                sys.exit()
+                # import sys
+                # sys.exit()
 
     ### Single run
     # original(base_config, input_day=4, output_day=1, epoch=100, overwrite=True)
