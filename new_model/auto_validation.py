@@ -167,7 +167,7 @@ def subsample(base_config, input_day, output_day, epoch, subsample_index, overwr
 
     os.system(f"sbatch {script_path}")
     del lines, config, config_name, script_path
-    time.sleep(5)
+    time.sleep(60)
 
 
 if __name__ == "__main__" :
