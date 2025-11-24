@@ -42,8 +42,7 @@ if __name__ == "__main__" :
         lines.insert(2, f"#SBATCH --job-name=ap-train-sub:{subsample_index:02d}")
 
         for input_day in input_days :
-            # experiment_name = f"mig_balanced_days{input_day}_to_day{output_day}_sub_{subsample_index}"
-            experiment_name = f"contrastive_days{input_day}_to_day{output_day}_sub_{subsample_index:02d}"
+            experiment_name = f"mse_contrastive_days{input_day}_to_day{output_day}_sub_{subsample_index:02d}"
             config_name = experiment_name
             config = base_config.copy()
             config["experiment"]["experiment_name"] = experiment_name
@@ -58,6 +57,7 @@ if __name__ == "__main__" :
             config["experiment"]["enable_oversampling"] = False
             config["experiment"]["batch_size"] = 4
             config["experiment"]["num_workers"] = 4
+            config["training"]["contrastive_type"] = 'mse'
             config["training"]["report_freq"] = 1000
 
             config_path = f"./configs/{config_name}.yaml"
