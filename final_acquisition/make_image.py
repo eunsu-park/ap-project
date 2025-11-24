@@ -3,6 +3,8 @@ import pickle
 import datetime
 from glob import glob
 from multiprocessing import Pool, freeze_support
+import warnings
+warnings.filterwarnings('ignore')
 
 import pandas as pd
 from sunpy.map import Map
@@ -19,7 +21,7 @@ from aiapy.calibrate.util import get_correction_table
 from astropy.time import Time
 from aiapy.calibrate.util import get_pointing_table
 
-from egghouse.image import resize_image, rotate_image
+from egghouse.image import resize_image, rotate_image, circle_mask, pad_image
 from egghouse.sdo.aia import aia_intscale
 from egghouse.sdo.hmi import hmi_intscale
 
@@ -27,7 +29,6 @@ from egghouse.sdo.hmi import hmi_intscale
 DATA_ROOT = "/Users/eunsupark/Data/sdo"
 POINTING_TABLE_PATH = f"{DATA_ROOT}/fits/pointing_table.pkl"
 CORRECTION_TABLE_PATH = f"{DATA_ROOT}/fits/correction_table.pkl"
-REFERENCE_MEDIAN_PATH = f"{DATA_ROOT}/fits/reference_median_values.pkl"
 
 
 def load_pointing_table(pointing_table_path):
@@ -101,6 +102,7 @@ def load_correction_table(correction_table_path):
     correction_table = pickle.load(open(correction_table_path, 'rb'))
     print(f"Correction table loaded: {correction_table_path}")
     return correction_table
+correction_table = load_correction_table(correction_table_path=CORRECTION_TABLE_PATH)
 
 
 def register_map(smap, pointing_tables, correction_table):
@@ -113,18 +115,64 @@ def register_map(smap, pointing_tables, correction_table):
     return smap
 
 
-def main_aia(file_path, pointing_tables, correction_table) :
+def register_aia(smap, correction_table):
+    smap = register(smap)
+    smap = correct_degradation(smap, correction_table=correction_table)
+    meta = smap.meta
+    data = smap.data
+
+    if data.shape != (4096, 4096):
+        data = pad_image(data, (4096, 4096), -5000.)
+        meta["CRPIX1"] = 2047.5
+        meta["CRPIX2"] = 2047.5
+        meta["NAXIS1"] = 4096
+        meta["NAXIS2"] = 4096
+
+        smap = Map(data, meta)
+
+    return smap
+
+
+def register_hmi(smap):
+    smap = register(smap)
+    meta = smap.meta
+    data = smap.data
+
+    image_size = data.shape
+    radius = meta["R_SUN"] * 0.99
+    center = int(meta["CRPIX1"]), int(meta["CRPIX2"])
+    mask_type = "outer"
+
+    mask = circle_mask(image_size, radius, center, mask_type)
+    data[np.where(mask==1)] = -5000.
+
+    if data.shape != (4096, 4096):
+        data = pad_image(data, (4096, 4096), -5000.)
+        meta["CRPIX1"] = 2047.5
+        meta["CRPIX2"] = 2047.5
+        meta["NAXIS1"] = 4096
+        meta["NAXIS2"] = 4096
+
+    smap = Map(data, meta)
+    return smap
+
+
+def main_aia(file_path) :
     file_name = os.path.basename(file_path)
     file_name = os.path.splitext(file_name)[0]
     smap = Map(file_path)
     quality = smap.meta["QUALITY"]
     if quality == 0 :
-        smap = register_map(smap=smap, pointing_tables=pointing_tables, correction_table=correction_table)
-        image = aia_intscale(smap.data, exptime=smap.meta["EXPTIME"], wavelnth=smap.meta["WAVELNTH"], bytescale=True)
+        smap = register_aia(smap=smap, correction_table=correction_table)
+        data = smap.data / smap.meta["EXPTIME"]
+        data = np.clip(data+ 1, 1, None)
+        data = np.log2(data) * (255./14.)
+        image = np.clip(data, 0, 255).astype(np.uint8)
+        # image = aia_intscale(smap.data, exptime=smap.meta["EXPTIME"], wavelnth=smap.meta["WAVELNTH"], bytescale=True)
         image = resize_image(image, (64, 64))
         image = Image.fromarray(image)
         save_path = f"{DATA_ROOT}/png/aia/{file_name}.png"
-        image.save(save_path, compress_level=9, optimize=True)
+        image.save(save_path)#, compress_level=9, optimize=True)
     else :
         print(f"{file_path}: {quality}")
 
@@ -135,12 +183,12 @@ def main_hmi(file_path) :
     smap = Map(file_path)
     quality = smap.meta["QUALITY"]
     if quality == 0 :
-        smap = register_map(smap)
+        smap = register_hmi(smap)
         image = hmi_intscale(smap.data)
         image = resize_image(image, (64, 64))
         image = Image.fromarray(image)
         save_path = f"{DATA_ROOT}/png/hmi/{file_name}.png"
-        image.save(save_path, compress_level=9, optimize=True)
+        image.save(save_path)#, compress_level=9, optimize=True)
     else :
         print(f"{file_path}: {quality}")
 
@@ -148,11 +196,24 @@ def main_hmi(file_path) :
 if __name__ == "__main__" :
     freeze_support()
 
-    pointing_tables = load_pointing_table(pointing_table_path=POINTING_TABLE_PATH)
-    correction_table = load_correction_table(correction_table_path=CORRECTION_TABLE_PATH)
+    # pointing_tables = load_pointing_table(pointing_table_path=POINTING_TABLE_PATH)
+    
 
-    # file_list_aia = glob(f"{DATA_ROOT}/aia/*.fits")[:10] # [:1000]
-    # print(len(file_list_aia))
+    file_list_aia = glob(f"{DATA_ROOT}/fits/aia/*.fits")
+    print(len(file_list_aia))
+
+    pool = Pool(8)
+    pool.map(main_aia, file_list_aia)
+    pool.close()
+
+    # file_list_hmi = glob(f"{DATA_ROOT}/fits/hmi/*.fits")[:100]
+    # print(len(file_list_hmi))
+
+    # pool = Pool(8)
+    # pool.map(main_hmi, file_list_hmi)
+    # pool.close()
+
+
 
     # # median_dict = get_reference_median(reference_median_path=REFERENCE_MEDIAN_PATH)
 
