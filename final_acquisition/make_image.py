@@ -21,12 +21,11 @@ from aiapy.calibrate.util import get_correction_table
 from astropy.time import Time
 from aiapy.calibrate.util import get_pointing_table
 
-from egghouse.image import resize_image, rotate_image, circle_mask, pad_image
-from egghouse.sdo.aia import aia_intscale
-from egghouse.sdo.hmi import hmi_intscale
+from egghouse.image import resize_image, circle_mask, pad_image
+from concurrent.futures import ProcessPoolExecutor
 
 
-DATA_ROOT = "/Users/eunsupark/Data/sdo"
+DATA_ROOT = "/opt/archive/sdo"
 POINTING_TABLE_PATH = f"{DATA_ROOT}/fits/pointing_table.pkl"
 CORRECTION_TABLE_PATH = f"{DATA_ROOT}/fits/correction_table.pkl"
 
@@ -102,7 +101,6 @@ def load_correction_table(correction_table_path):
     correction_table = pickle.load(open(correction_table_path, 'rb'))
     print(f"Correction table loaded: {correction_table_path}")
     return correction_table
-correction_table = load_correction_table(correction_table_path=CORRECTION_TABLE_PATH)
 
 
 def register_map(smap, pointing_tables, correction_table):
@@ -118,22 +116,10 @@ def register_map(smap, pointing_tables, correction_table):
 def register_aia(smap, correction_table):
     smap = register(smap)
     smap = correct_degradation(smap, correction_table=correction_table)
-    meta = smap.meta
-    data = smap.data
-
-    if data.shape != (4096, 4096):
-        data = pad_image(data, (4096, 4096), -5000.)
-        meta["CRPIX1"] = 2047.5
-        meta["CRPIX2"] = 2047.5
-        meta["NAXIS1"] = 4096
-        meta["NAXIS2"] = 4096
-
-        smap = Map(data, meta)
-
     return smap
 
 
-def register_hmi(smap):
+def register_hmi(smap, fill_val=-5000):
     smap = register(smap)
     meta = smap.meta
     data = smap.data
@@ -144,153 +130,103 @@ def register_hmi(smap):
     mask_type = "outer"
 
     mask = circle_mask(image_size, radius, center, mask_type)
-    data[np.where(mask==1)] = -5000.
-
-    if data.shape != (4096, 4096):
-        data = pad_image(data, (4096, 4096), -5000.)
-        meta["CRPIX1"] = 2047.5
-        meta["CRPIX2"] = 2047.5
-        meta["NAXIS1"] = 4096
-        meta["NAXIS2"] = 4096
-
+    data[np.where(mask==1)] = fill_val
     smap = Map(data, meta)
     return smap
 
 
-def main_aia(file_path) :
-    file_name = os.path.basename(file_path)
-    file_name = os.path.splitext(file_name)[0]
-    smap = Map(file_path)
-    quality = smap.meta["QUALITY"]
-    if quality == 0 :
-        smap = register_aia(smap=smap, correction_table=correction_table)
-        data = smap.data / smap.meta["EXPTIME"]
-        data = np.clip(data+ 1, 1, None)
-        data = np.log2(data) * (255./14.)
-        image = np.clip(data, 0, 255).astype(np.uint8)
-        # image = aia_intscale(smap.data, exptime=smap.meta["EXPTIME"], wavelnth=smap.meta["WAVELNTH"], bytescale=True)
-        image = resize_image(image, (64, 64))
-        image = Image.fromarray(image)
-        save_path = f"{DATA_ROOT}/png/aia/{file_name}.png"
-        image.save(save_path)#, compress_level=9, optimize=True)
-    else :
-        print(f"{file_path}: {quality}")
+def register_smap(smap, correction_table):
+    instrument = smap.meta["TELESCOP"].split('/')[1].lower()
+    if instrument == "aia":
+        fill_val = 0.
+        smap = register_aia(smap, correction_table=correction_table)        
+    elif instrument == "hmi":
+        fill_val = -5000.
+        smap = register_hmi(smap, fill_val=fill_val)
+        
+    if smap.data.shape != (4096, 4096):
+        meta = smap.meta
+        data = smap.data
+        data = pad_image(data, (4096, 4096), fill_val)
+        meta["CRPIX1"] = 2047.5
+        meta["CRPIX2"] = 2047.5
+        meta["NAXIS1"] = 4096
+        meta["NAXIS2"] = 4096
+        smap = Map(data, meta)
+
+    return smap
 
 
-def main_hmi(file_path) :
-    file_name = os.path.basename(file_path)
-    file_name = os.path.splitext(file_name)[0]
-    smap = Map(file_path)
-    quality = smap.meta["QUALITY"]
-    if quality == 0 :
-        smap = register_hmi(smap)
-        image = hmi_intscale(smap.data)
-        image = resize_image(image, (64, 64))
-        image = Image.fromarray(image)
-        save_path = f"{DATA_ROOT}/png/hmi/{file_name}.png"
-        image.save(save_path)#, compress_level=9, optimize=True)
-    else :
-        print(f"{file_path}: {quality}")
+def to_image_aia(smap):
+    data = smap.data / smap.meta["EXPTIME"]
+    data = np.clip(data+ 1, 1, None)
+    data = np.log2(data) * (255./14.)
+    image = np.clip(data, 0, 255).astype(np.uint8)
+    return image
 
+
+def to_image_hmi(smap):
+    data = (smap.data + 100.) * (255./200.)
+    image = np.clip(data, 0, 255).astype(np.uint8)
+    return image
+
+
+def to_image(smap):
+    instrument = smap.meta["TELESCOP"].split('/')[1].lower()
+    if instrument == "aia":
+        image = to_image_aia(smap)
+    elif instrument == "hmi":
+        image = to_image_hmi(smap)
+    return image
+
+
+def main(file_path, correction_table) :
+
+    save_path = file_path.replace("fits", "png")
+    if os.path.exists(save_path) is True :
+        return True, file_path
+    
+    save_dir = os.path.dirname(save_path)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir, exist_ok=True)
+
+    try:
+        smap = Map(file_path)
+        quality = smap.meta["QUALITY"]
+        if quality == 0 :
+            smap = register_smap(smap=smap, correction_table=correction_table)
+            image = to_image(smap)
+            image = resize_image(image, (64, 64))
+            image = Image.fromarray(image)
+            image.save(save_path)#, compress_level=9, optimize=True)
+            return True, file_path
+        else :
+            return False, file_path
+    except:
+        return False, file_path
+    
 
 if __name__ == "__main__" :
-    freeze_support()
+    # freeze_support()
 
+    correction_table = load_correction_table(correction_table_path=CORRECTION_TABLE_PATH)
     # pointing_tables = load_pointing_table(pointing_table_path=POINTING_TABLE_PATH)
     
 
-    file_list_aia = glob(f"{DATA_ROOT}/fits/aia/*.fits")
+    file_list_aia = glob(f"{DATA_ROOT}/fits/aia/*/*/*.fits")#[:100]
     print(len(file_list_aia))
 
-    pool = Pool(8)
-    pool.map(main_aia, file_list_aia)
-    pool.close()
-
-    # file_list_hmi = glob(f"{DATA_ROOT}/fits/hmi/*.fits")[:100]
-    # print(len(file_list_hmi))
-
-    # pool = Pool(8)
-    # pool.map(main_hmi, file_list_hmi)
-    # pool.close()
+    file_list_hmi = glob(f"{DATA_ROOT}/fits/hmi/*/*/*.fits")#[:100]
+    print(len(file_list_hmi))
 
 
 
-    # # median_dict = get_reference_median(reference_median_path=REFERENCE_MEDIAN_PATH)
+    file_list = file_list_aia + file_list_hmi
+    with ProcessPoolExecutor(max_workers=8) as executor:
+        futures = {executor.submit(main, file_path, correction_table): file_path for file_path in file_list}
+        results = [future.result() for future in futures]
 
-    # for file_path in file_list_aia :
-    #     main_aia(file_path, pointing_tables, correction_table)
-
-
-
-    # file_list_hmi = glob(f"{DATA_ROOT}/hmi/*.fits") # [:1000]
-    # print(len(file_list_hmi))
-
-    # pool = Pool(4)
-    # pool.map(main_hmi, file_list_hmi)
-    # pool.close()
-
-    # N = 0python
-    # for file_path in file_list :
-    #     main(file_path)
-
-    #     N += 1
-
-    #     if N == 0 :
-    #         break
-
-
-# # smap.peek()
-# image = aia_intscale(smap.data, exptime=smap.meta["EXPTIME"], wavelnth=smap.meta["WAVELNTH"], bytescale=True)
-# # plt.imshow(image)
-# # plt.show()
-# img = Image.fromarray(image)
-# img.save("original.png")
-
-# smap = normalize_map(smap)
-# print(get_median_value(smap))
-# # smap.peek()
-# image = aia_intscale(smap.data, exptime=smap.meta["EXPTIME"], wavelnth=smap.meta["WAVELNTH"], bytescale=True)
-# # plt.imshow(image)
-# # plt.show()
-# img = Image.fromarray(image)
-# img.save("processed.png")
-
-
-# date = datetime.datetime(
-#     year = 2024,
-#     month = 1,
-#     day = 1,
-#     hour = 1,
-# )
-
-# df = pd.read_csv(CSV_PATH, parse_dates=['datetime'])
-# mask = df['datetime'] == date
-
-# if mask.any() :
-#     row = df.loc[mask].iloc[0]
-#     aia_193 = row['aia_193']
-#     aia_211 = row['aia_211']
-#     hmi_magnetogram = row['hmi_magnetogram']
-
-# # if not pd.isna(aia_193) :
-
-# sdo_193 = f"{DATA_ROOT}/aia/{aia_193}"
-# print(sdo_193)
-
-# smap = register_map(sdo_193)
-# print(get_median_value(smap))
-# # smap.peek()
-# image = aia_intscale(smap.data, exptime=smap.meta["EXPTIME"], wavelnth=smap.meta["WAVELNTH"], bytescale=True)
-# # plt.imshow(image)
-# # plt.show()
-# img = Image.fromarray(image)
-# img.save("original.png")
-
-# smap = normalize_map(smap)
-# print(get_median_value(smap))
-# # smap.peek()
-# image = aia_intscale(smap.data, exptime=smap.meta["EXPTIME"], wavelnth=smap.meta["WAVELNTH"], bytescale=True)
-# # plt.imshow(image)
-# # plt.show()
-# img = Image.fromarray(image)
-# img.save("processed.png")
+    for result in results :
+        status, file_path = result
+        if status is False :
+            print(file_path)

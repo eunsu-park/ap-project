@@ -83,7 +83,7 @@ training:
   report_freq: 100
   num_epochs: 10
   model_save_freq: 1
-  contrastive_type: "mse"
+  contrastive_type: 'mse'
   contrastive_temperature: 0.3
   lambda_contrastive: 0.1
 
