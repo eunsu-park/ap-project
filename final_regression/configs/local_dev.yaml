@@ -109,3 +109,4 @@ validation:
   checkpoint_path: /Users/eunsupark/ap_project/results/local_dev/checkpoint/model_epoch500.pth
   output_dir: /Users/eunsupark/ap_project/results/local_dev_v2/epoch_500
   compute_alignment: true  # Whether to compute feature alignment (cosine similarity)
+  save_plots: true  # Whether to save individual validation plots

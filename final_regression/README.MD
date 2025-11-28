@@ -168,9 +168,17 @@ Validator                  # 전체 검증 루프 관리
 ```python
 from validators import Validator
 
-validator = Validator(config, model, criterion, device, logger)
+validator = Validator(
+    config, model, criterion, device, logger,
+    save_plots=True  # 개별 플롯 저장
+)
 results = validator.validate(dataloader)
 ```
+
+**플롯 저장 기능:**
+- `save_plots=True`: 각 샘플별 예측 vs 타겟 플롯 자동 저장
+- 개별 샘플 플롯 + 전체 평균 플롯 생성
+- `{output_dir}/plots/` 디렉토리에 PNG 파일로 저장
 
 ## ⚙️ 설정 가이드
 
@@ -253,7 +261,14 @@ validation:
   checkpoint_path: /path/to/model.pth       # ⚠️ 수정 필요
   output_dir: /path/to/output               # ⚠️ 수정 필요
   compute_alignment: true                   # Feature alignment 계산 여부
+  save_plots: true                          # 개별 샘플 플롯 저장 여부
 ```
+
+**save_plots 옵션:**
+- `true`: 각 샘플별 예측 vs 타겟 플롯 저장 (권장)
+- `false`: 플롯 저장 안 함 (빠른 검증만 필요할 때)
+
+플롯은 `{output_dir}/plots/` 디렉토리에 저장됩니다.
 
 ## 📊 출력 결과
 
@@ -279,8 +294,19 @@ results/{experiment_name}/
 ```
 {output_dir}/
 ├── validation_results.txt                # 요약 텍스트
-└── validation_results.csv                # 상세 결과 CSV
+├── validation_results.csv                # 상세 결과 CSV
+└── plots/                                # 예측 vs 타겟 플롯들
+    ├── sample_001.png                   # 개별 샘플 플롯
+    ├── sample_002.png
+    ├── ...
+    └── overall_validation_results.png    # 전체 평균 플롯
 ```
+
+**플롯 내용:**
+- 각 타겟 변수별로 시계열 그래프
+- 파란색 선: 실제 타겟 (Ground Truth)
+- 주황색 선: 모델 예측 (Prediction)
+- Denormalized 값으로 표시 (원본 스케일)
 
 ## 🔍 주요 기능
 

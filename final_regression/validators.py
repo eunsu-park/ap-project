@@ -14,6 +14,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
+# Import save_plot from utils
+try:
+    from utils import save_plot
+    SAVE_PLOT_AVAILABLE = True
+except ImportError:
+    SAVE_PLOT_AVAILABLE = False
+
 
 class MetricsAggregator:
     """Aggregate validation metrics across batches."""
@@ -308,7 +315,8 @@ class Validator:
         model: nn.Module,
         criterion: nn.Module,
         device: torch.device,
-        logger=None
+        logger=None,
+        save_plots: bool = True
     ):
         """
         Args:
@@ -317,12 +325,14 @@ class Validator:
             criterion: Loss function.
             device: Device for computation.
             logger: Optional logger for output.
+            save_plots: Whether to save individual validation plots.
         """
         self.config = config
         self.model = model
         self.criterion = criterion
         self.device = device
         self.logger = logger
+        self.save_plots = save_plots
         
         # Components
         self.metrics_aggregator = MetricsAggregator(config.data.target_variables)
@@ -407,6 +417,18 @@ class Validator:
         self.metrics_aggregator.reset()
         failed_batches = 0
         
+        # Create plots subdirectory if saving plots
+        if self.save_plots:
+            plots_dir = Path(self.results_writer.output_dir) / "plots"
+            plots_dir.mkdir(parents=True, exist_ok=True)
+            
+            if not SAVE_PLOT_AVAILABLE:
+                if self.logger:
+                    self.logger.warning("save_plot function not available from utils, plots will not be saved")
+                else:
+                    print("Warning: save_plot function not available, plots will not be saved")
+                self.save_plots = False
+        
         for batch_idx, data_dict in enumerate(dataloader):
             try:
                 # Validate batch
@@ -414,6 +436,12 @@ class Validator:
                 
                 # Extract file names
                 file_names = self._extract_file_names(data_dict, batch_idx)
+                
+                # Save individual plots if enabled
+                if self.save_plots and SAVE_PLOT_AVAILABLE:
+                    self._save_individual_plots(
+                        batch_result, file_names, plots_dir, dataloader
+                    )
                 
                 # Update aggregator
                 self.metrics_aggregator.update(batch_result, file_names)
@@ -436,6 +464,10 @@ class Validator:
             results['failed_batches'] = failed_batches
             results['success_rate'] = ((len(dataloader) - failed_batches) / len(dataloader)) * 100
             results['output_directory'] = str(self.results_writer.output_dir)
+            
+            # Create overall validation plot
+            if self.save_plots and SAVE_PLOT_AVAILABLE:
+                self._save_overall_plot(results, dataloader)
             
             # Log summary
             self.log_summary(results)
@@ -476,6 +508,99 @@ class Validator:
             return [str(name) for name in file_names_raw]
         else:
             return [str(file_names_raw)]
+    
+    def _save_individual_plots(
+        self,
+        batch_result: Dict[str, Any],
+        file_names: List[str],
+        plots_dir: Path,
+        dataloader
+    ):
+        """Save individual validation plots for each sample.
+        
+        Args:
+            batch_result: Batch validation results.
+            file_names: List of file names.
+            plots_dir: Directory to save plots.
+            dataloader: Dataloader (for accessing stat_dict).
+        """
+        targets = batch_result['targets']  # (batch_size, n_groups, n_variables)
+        predictions = batch_result['predictions']
+        
+        for i, file_name in enumerate(file_names):
+            # Remove extension if present
+            file_name_base = os.path.splitext(file_name)[0]
+            
+            # Extract individual sample data
+            sample_targets = targets[i]  # (n_groups, n_variables)
+            sample_predictions = predictions[i]
+            
+            # Save plot
+            plot_path = str(plots_dir / file_name_base)
+            plot_title = f'Validation - {file_name_base}'
+            
+            try:
+                save_plot(
+                    targets=sample_targets,
+                    outputs=sample_predictions,
+                    target_variables=self.config.data.target_variables,
+                    stat_dict=dataloader.dataset.stat_dict,
+                    plot_path=plot_path,
+                    plot_title=plot_title,
+                    logger=self.logger
+                )
+            except Exception as e:
+                if self.logger:
+                    self.logger.warning(f"Failed to save plot for {file_name_base}: {e}")
+                else:
+                    print(f"Warning: Failed to save plot for {file_name_base}: {e}")
+    
+    def _save_overall_plot(self, results: Dict[str, Any], dataloader):
+        """Save overall validation plot with averaged results.
+        
+        Args:
+            results: Validation results dictionary.
+            dataloader: Dataloader (for accessing stat_dict).
+        """
+        try:
+            # Extract all targets and predictions
+            all_targets = []
+            all_predictions = []
+            
+            for file_result in results['file_results']:
+                all_targets.append(file_result['targets'])
+                all_predictions.append(file_result['predictions'])
+            
+            # Convert to arrays and compute mean
+            all_targets = np.array(all_targets)  # (n_samples, n_groups, n_variables)
+            all_predictions = np.array(all_predictions)
+            
+            mean_targets = np.mean(all_targets, axis=0)  # (n_groups, n_variables)
+            mean_predictions = np.mean(all_predictions, axis=0)
+            
+            # Save overall plot
+            plots_dir = Path(self.results_writer.output_dir) / "plots"
+            overall_plot_path = str(plots_dir / "overall_validation_results")
+            overall_plot_title = "Overall Validation Results (Mean)"
+            
+            save_plot(
+                targets=mean_targets,
+                outputs=mean_predictions,
+                target_variables=self.config.data.target_variables,
+                stat_dict=dataloader.dataset.stat_dict,
+                plot_path=overall_plot_path,
+                plot_title=overall_plot_title,
+                logger=self.logger
+            )
+            
+            if self.logger:
+                self.logger.info(f"Overall validation plot saved: {overall_plot_path}.png")
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.warning(f"Failed to create overall validation plot: {e}")
+            else:
+                print(f"Warning: Failed to create overall validation plot: {e}")
     
     def log_progress(self, batch_idx: int, total_batches: int):
         """Log validation progress.

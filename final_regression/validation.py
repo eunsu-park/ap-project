@@ -97,12 +97,14 @@ def main(config):
     criterion = nn.MSELoss()
     
     # Create validator
+    save_plots = config.validation.get('save_plots', True)
     validator = Validator(
         config=config,
         model=model,
         criterion=criterion,
         device=device,
-        logger=logger
+        logger=logger,
+        save_plots=save_plots
     )
     
     # Run validation
