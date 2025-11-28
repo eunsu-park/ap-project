@@ -14,7 +14,7 @@ hydra:
     chdir: false
 
 environment:
-  seed: 250104
+  seed: 250104s
   device: 'mps'  # 'cuda', 'cpu', or 'mps'
   data_root: '/Users/eunsupark/projects/ap/datasets'
   save_root: '/Users/eunsupark/projects/ap/results'
