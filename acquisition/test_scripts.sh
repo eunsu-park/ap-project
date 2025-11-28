@@ -1,4 +1,0 @@
-# python get_sdo.py --days 2 --waves 193 211 --destination /Users/eunsupark/ap_project/data/sdo_jp2/aia --parallel 8
-# python get_lasco.py --days 30 --cameras c1 c2 c3 c4 --extensions fts fits jpg --destination /Users/eunsupark/ap_project/data/lasco --parallel 8
-# python get_secchi.py --days 2 --data-types science beacon --spacecrafts ahead --extensions fts fits jpg sav --instrument euvi hi_1 hi_2 cor1 cor2 --categories img cal seq --destination /Users/eunsupark/ap_project/data/secchi --parallel 8
-python get_omni.py --dataset omni_low_res --start-year 2023 --end-year 2025 --output-dir /Users/eunsupark/ap_project/data/omni/low_res --overwrite
