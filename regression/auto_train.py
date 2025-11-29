@@ -206,7 +206,7 @@ if __name__ == "__main__" :
     input_days = (1, 2, 3, 4, 5, 6, 7)
     output_day = 1
 
-    for input_day in [3] :
+    for input_day in input_days :
 
         run_info = {
             "prefix": "reg",
