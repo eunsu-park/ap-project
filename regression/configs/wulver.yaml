@@ -89,7 +89,7 @@ model:
 
 training:
   # Basic training parameters
-  num_epochs: 1000
+  num_epochs: 100
   learning_rate: 0.0002
   optimizer: 'adam'  # 'adam' or 'sgd'
   
@@ -103,7 +103,7 @@ training:
   
   # Logging and checkpointing
   report_freq: 1000  # Report metrics every N batches
-  model_save_freq: 100  # Save checkpoint every N epochs
+  model_save_freq: 20  # Save checkpoint every N epochs
 
 validation:
   checkpoint_path: /home/hl545/ap/results/wulver_mm_class/checkpoint/model_epoch50.pth
