@@ -209,7 +209,7 @@ if __name__ == "__main__" :
     input_days = (1, 2, 3, 4, 5, 6, 7)
     output_day = 1
 
-    for input_day in (1, 4, 7) :
+    for input_day in [1] :
     # for input_day in input_days :
 
         run_info = {
@@ -228,7 +228,7 @@ if __name__ == "__main__" :
             "lambda_contrastive": 0.0,
             "report_freq": 1000
         }
-        run(base_config, run_info)
+        # run(base_config, run_info)
         del run_info
 
         run_info = {
@@ -247,7 +247,7 @@ if __name__ == "__main__" :
             "lambda_contrastive": 0.0,
             "report_freq": 1000
         }
-        # run_over(base_config, run_info)
+        run_over(base_config, run_info)
         del run_info
 
         run_info = {
