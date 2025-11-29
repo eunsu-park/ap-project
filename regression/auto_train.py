@@ -44,7 +44,7 @@ def run(base_config, run_info):
     report_freq = run_info["report_freq"]
 
     experiment_name = f"{prefix}_{input_day}_to_{output_day}"
-    config_name = experiment_name
+    config_name = f"auto_{experiment_name}"
     config = base_config.copy()
     config["experiment"]["experiment_name"] = experiment_name
     config["data"]["sdo_sequence_length"] = 4 * input_day
@@ -63,7 +63,7 @@ def run(base_config, run_info):
     config["training"]["lambda_contrastive"] = lambda_contrastive
     config["training"]["report_freq"] = report_freq
 
-    config_path = f"./configs/auto_{config_name}.yaml"
+    config_path = f"./configs/{config_name}.yaml"
     with open(config_path, 'w') as f:
         yaml.dump(config, f)
         print(f"Saved config to: {config_path}")
@@ -105,7 +105,7 @@ def run_under(base_config, run_info):
     lines.insert(2, f"#SBATCH --job-name=ap-train-{experiment_name}")
 
     for subsample_index in range(run_info["num_subsample"]):
-        config_name = f"{experiment_name}_{subsample_index:02d}"
+        config_name = f"auto_{experiment_name}_{subsample_index:02d}"
         config = base_config.copy()
         config["experiment"]["experiment_name"] = experiment_name
         config["data"]["sdo_sequence_length"] = 4 * input_day
@@ -124,7 +124,7 @@ def run_under(base_config, run_info):
         config["training"]["lambda_contrastive"] = lambda_contrastive
         config["training"]["report_freq"] = report_freq
 
-        config_path = f"./configs/auto_{config_name}.yaml"
+        config_path = f"./configs/{config_name}.yaml"
         with open(config_path, 'w') as f:
             yaml.dump(config, f)
             print(f"Saved config to: {config_path}")
@@ -158,7 +158,7 @@ def run_over(base_config, run_info):
     report_freq = run_info["report_freq"]
 
     experiment_name = f"{prefix}_{input_day}_to_{output_day}_over"
-    config_name = experiment_name
+    config_name = f"auto_{experiment_name}"
     config = base_config.copy()
     config["experiment"]["experiment_name"] = experiment_name
     config["data"]["sdo_sequence_length"] = 4 * input_day
@@ -177,7 +177,7 @@ def run_over(base_config, run_info):
     config["training"]["lambda_contrastive"] = lambda_contrastive
     config["training"]["report_freq"] = report_freq
 
-    config_path = f"./configs/auto_{config_name}.yaml"
+    config_path = f"./configs/{config_name}.yaml"
     with open(config_path, 'w') as f:
         yaml.dump(config, f)
         print(f"Saved config to: {config_path}")
