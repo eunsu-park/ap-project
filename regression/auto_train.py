@@ -243,7 +243,7 @@ if __name__ == "__main__" :
             "lambda_contrastive": 0.0,
             "report_freq": 1000
         }
-        run_over(base_config, run_info)
+        # run_over(base_config, run_info)
         del run_info
 
         run_info = {
@@ -262,5 +262,5 @@ if __name__ == "__main__" :
             "lambda_contrastive": 0.0,
             "report_freq": 100
         }
-        run_under(base_config, run_info)
+        # run_under(base_config, run_info)
         del run_info
