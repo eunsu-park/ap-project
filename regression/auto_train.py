@@ -81,6 +81,7 @@ def run(base_config, run_info):
 
     os.system(f"sbatch {script_path}")
     del lines, config, config_name, script_path
+    time.sleep(10)
 
 
 def run_under(base_config, run_info):
@@ -139,6 +140,7 @@ def run_under(base_config, run_info):
 
     os.system(f"sbatch {script_path}")
     del lines, config, config_name, script_path
+    time.sleep(10)
 
 
 def run_over(base_config, run_info):
@@ -195,6 +197,7 @@ def run_over(base_config, run_info):
 
     os.system(f"sbatch {script_path}")
     del lines, config, config_name, script_path
+    time.sleep(10)
 
 
 if __name__ == "__main__" :
@@ -224,7 +227,7 @@ if __name__ == "__main__" :
             "lambda_contrastive": 0.0,
             "report_freq": 1000
         }
-        run(base_config, run_info)
+        # run(base_config, run_info)
         del run_info
 
         run_info = {
@@ -243,7 +246,7 @@ if __name__ == "__main__" :
             "lambda_contrastive": 0.0,
             "report_freq": 1000
         }
-        # run_over(base_config, run_info)
+        run_over(base_config, run_info)
         del run_info
 
         run_info = {
