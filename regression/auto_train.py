@@ -13,7 +13,7 @@ WULVER_CONFIG = {
     "NUM_NODE": 1,
     "NUM_CPU_CORE": 8,
     "NUM_GPU": 1,
-    "MIG": False,
+    "MIG": True,
     "MEM": 8000,
     "QOS": "standard",
     "PI": "wangj",
