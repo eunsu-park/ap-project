@@ -65,7 +65,7 @@ def generate_config(base_config, info):
     return config
 
 
-def run(base_config, info):
+def run(base_config, info, dry_run=True):
     config = generate_config(base_config, info)
     experiment_name = config["experiment"]["experiment_name"]
     config_name = f"auto_{experiment_name}"
@@ -78,10 +78,10 @@ def run(base_config, info):
 
     commands = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
     script_path = f"./auto_{experiment_name}.sh"
-    SUBMITTER.submit(job_name=job_name, commands=commands, script_path=script_path)
+    SUBMITTER.submit(job_name=job_name, commands=commands, script_path=script_path, dry_run=dry_run)
 
 
-def run_under(base_config, info):
+def run_under(base_config, info, dry_run=True):
     commands = []
     main_experiment_name = f"{info["INPUT_DAY"]}_to_{info["OUTPUT_DAY"]}_under"
     if info["PREFIX"] :
@@ -105,10 +105,10 @@ def run_under(base_config, info):
         commands.append(command)
 
     script_path = f"./auto_{main_experiment_name}.sh"
-    SUBMITTER.submit(job_name=main_job_name, commands=commands, script_path=script_path)
+    SUBMITTER.submit(job_name=main_job_name, commands=commands, script_path=script_path, dry_run=dry_run)
 
 
-def run_over(base_config, info):
+def run_over(base_config, info, dry_run=True):
 
     info["ENABLE_OVERSAMPLING"] = True
     info["SUFFIX"] = "over"
@@ -125,11 +125,16 @@ def run_over(base_config, info):
 
     commands = f"/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name {config_name}"
     script_path = f"./auto_{experiment_name}.sh"
-    SUBMITTER.submit(job_name=job_name, commands=commands, script_path=script_path)
+    SUBMITTER.submit(job_name=job_name, commands=commands, script_path=script_path, dry_run=dry_run)
 
 
 
 if __name__ == "__main__" :
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--run", action="store_true", default=False)
+    args = parser.parse_args()
 
     base_config_path = "./configs/wulver.yaml"
     with open(base_config_path, 'r') as f:
@@ -142,8 +147,8 @@ if __name__ == "__main__" :
         RUN_INFO["INPUT_DAY"] = input_day
         RUN_INFO["OUTPUT_DAY"] = output_day
         WULVER_CONFIG["MIG"] = False
-        run(base_config, RUN_INFO)
+        run(base_config, RUN_INFO, dry_run=not args.run)
         WULVER_CONFIG["MIG"] = True
-        run_under(base_config, RUN_INFO)
+        run_under(base_config, RUN_INFO, dry_run=not args.run)
         WULVER_CONFIG["MIG"] = False
-        run_over(base_config, RUN_INFO)
+        run_over(base_config, RUN_INFO, dry_run=not args.run)
