@@ -394,3 +394,51 @@ def calculate_metrics(targets: np.ndarray, predictions: np.ndarray,
         }
     
     return metrics
+
+
+class WulverSubmitter:
+    def __init__(self, config):
+        lines = [
+            "#!/bin/bash -l",
+            ""
+        ]
+        lines += [f"#SBATCH --output={config["OUT_DIR"]}/%x.%j.out"]
+        lines += [f"#SBATCH --error={config["ERR_DIR"]}/%x.%j.err"]
+        lines += [f"#SBATCH --partition={config["PARTITION"]}"]
+        lines += [f"#SBATCH --nodes={config["NUM_NODE"]}"]
+        lines += [f"#SBATCH --ntasks-per-node={config["NUM_CPU_CORE"]}"]
+        if config["MIG"] :
+            lines += [f"#SBATCH --gres=gpu:a100_10g:{config["NUM_GPU"]}"]
+        else :
+            lines += [f"#SBATCH --gres=gpu:{config["NUM_GPU"]}"]
+        lines += [f"#SBATCH --mem={config["MEM"]:d}M"]
+        if config["QOS"] not in ("standard", f"high_{config["PI"]}", "low"):
+            raise NameError
+        lines += [f"#SBATCH --qos={config["QOS"]}"]
+        lines += [f"#SBATCH --account={config["PI"]}"]
+        lines += [f"#SBATCH --time={config["TIME"]}"]
+        lines += [""]
+        lines += ["module purge > /dev/null 2>&1"]
+        lines += ["module load wulver # Load slurm, easybuild"]
+        lines += ["conda activate ap"]
+        self.lines = lines
+
+    def submit(self, job_name, commands, script_path, dry_run=True):
+        lines = self.lines.copy()
+        lines.insert(2, f"#SBATCH --job-name={job_name}")
+
+        if isinstance(commands, str):
+            lines.append(commands)
+        elif isinstance(commands, list):
+            for command in commands :
+                lines.append(command)
+        else :
+            raise TypeError
+        with open(script_path, "w") as f :
+            f.write("\n".join(lines))
+        if dry_run :
+            return
+        else :
+            os.system(f"sbatch {script_path}")
+            return
+    
