@@ -23,6 +23,7 @@ from aiapy.calibrate.util import get_pointing_table
 
 from egghouse.image import resize_image, circle_mask, pad_image
 from concurrent.futures import ProcessPoolExecutor
+# from egghouse.database
 
 
 DATA_ROOT = "/opt/archive/sdo"
@@ -230,3 +231,26 @@ if __name__ == "__main__" :
         status, file_path = result
         if status is False :
             print(file_path)
+
+
+# import os
+# import shutil
+# from pathlib import Path
+# from typing import List, Optional, Dict
+# from egghouse.database import PostgresManager
+
+# # ============================================================================
+# # 설정
+# # ============================================================================
+
+# DB_CONFIG = {
+#     'host': 'localhost',
+#     'port': 5432,
+#     'database': 'sdo_data',
+#     'user': 'eunsupark',
+#     'password': 'eunsupark',
+#     'log_queries': False
+# }
+
+# TABLE_NAME = 'aia_193'
+# TRASH_DIR = '/archive/sdo/trash'  # 삭제된 파일 보관 위치
