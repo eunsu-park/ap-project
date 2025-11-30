@@ -112,6 +112,7 @@ def run_over(base_config, info, dry_run=True):
 
     info["ENABLE_OVERSAMPLING"] = True
     info["SUFFIX"] = "over"
+    info["NUM_OVERSAMPLE"] = 5
 
     config = generate_config(base_config, info)
     experiment_name = config["experiment"]["experiment_name"]
