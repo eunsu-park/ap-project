@@ -148,8 +148,8 @@ if __name__ == "__main__" :
         RUN_INFO["INPUT_DAY"] = input_day
         RUN_INFO["OUTPUT_DAY"] = output_day
         WULVER_CONFIG["MIG"] = False
-        run(base_config, RUN_INFO, dry_run=not args.run)
+        run(base_config, RUN_INFO.copy(), dry_run=not args.run)
         WULVER_CONFIG["MIG"] = True
-        run_under(base_config, RUN_INFO, dry_run=not args.run)
+        run_under(base_config, RUN_INFO.copy(), dry_run=not args.run)
         WULVER_CONFIG["MIG"] = False
-        run_over(base_config, RUN_INFO, dry_run=not args.run)
+        run_over(base_config, RUN_INFO.copy(), dry_run=not args.run)
