@@ -1,4 +1,5 @@
 import os
+import time
 import random
 import logging
 from datetime import datetime
@@ -436,6 +437,7 @@ class WulverSubmitter:
             raise TypeError
         with open(script_path, "w") as f :
             f.write("\n".join(lines))
+        time.sleep(1)
         if dry_run :
             return
         else :
