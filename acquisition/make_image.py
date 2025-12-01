@@ -1,10 +1,13 @@
 import os
 import pickle
+import shutil
+from pathlib import Path
 import datetime
 from glob import glob
 from multiprocessing import Pool, freeze_support
 import warnings
 warnings.filterwarnings('ignore')
+from typing import List, Optional, Dict
 
 import pandas as pd
 from sunpy.map import Map
@@ -23,7 +26,7 @@ from aiapy.calibrate.util import get_pointing_table
 
 from egghouse.image import resize_image, circle_mask, pad_image
 from concurrent.futures import ProcessPoolExecutor
-# from egghouse.database
+from egghouse.database import PostgresManager
 
 
 DATA_ROOT = "/opt/archive/sdo"
@@ -207,7 +210,138 @@ def main(file_path, correction_table) :
         return False, file_path
     
 
+def delete_and_move_file(
+    file_path: str,
+    move_to: Optional[str] = None,
+    db_config: dict = None,
+    table_name: str = None,
+    delete_file: bool = False
+) -> Dict[str, any]:
+    """
+    특정 file_path를 가진 레코드 삭제 및 파일 이동
+    
+    Args:
+        file_path: 삭제할 파일의 경로
+        move_to: 파일을 이동할 목적지 (None이면 TRASH_DIR 사용)
+        db_config: 데이터베이스 설정 (None이면 기본값 사용)
+        table_name: 테이블 이름
+        delete_file: True면 파일 완전 삭제 (이동 안 함)
+        
+    Returns:
+        결과 딕셔너리 {
+            'success': bool,
+            'record_deleted': bool,
+            'file_moved': bool,
+            'message': str,
+            'details': dict
+        }
+    """
+    if db_config is None:
+        db_config = DB_CONFIG
+    
+    result = {
+        'success': False,
+        'record_deleted': False,
+        'file_moved': False,
+        'file_deleted': False,
+        'message': '',
+        'details': {}
+    }
+    
+    with PostgresManager(**db_config) as db:
+        # 1. 레코드 존재 확인
+        records = db.select(
+            table_name,
+            where={'file_path': file_path}
+        )
+        
+        if not records:
+            result['message'] = f"No record found with file_path: {file_path}"
+            return result
+        
+        record = records[0]
+        result['details']['record'] = record
+        
+        # 2. 파일 존재 확인
+        file_exists = os.path.exists(file_path)
+        result['details']['file_exists'] = file_exists
+        
+        if not file_exists:
+            print(f"⚠ Warning: File does not exist: {file_path}")
+        
+        # 3. 파일 처리 (삭제 또는 이동)
+        if file_exists:
+            if delete_file:
+                # 파일 완전 삭제
+                try:
+                    os.remove(file_path)
+                    result['file_deleted'] = True
+                    result['details']['action'] = 'deleted'
+                    print(f"✓ File deleted: {file_path}")
+                except Exception as e:
+                    result['message'] = f"Failed to delete file: {e}"
+                    return result
+            else:
+                # 파일 이동
+                if move_to is None:
+                    # 기본 trash 디렉토리에 같은 구조로 보관
+                    # /archive/sdo/fits/aia/2011/20110101/file.fits
+                    # → /archive/sdo/trash/aia/2011/20110101/file.fits
+                    relative_path = file_path.replace('/archive/sdo/fits/', '')
+                    move_to = os.path.join(TRASH_DIR, relative_path)
+                
+                # 목적지 디렉토리 생성
+                dest_dir = os.path.dirname(move_to)
+                Path(dest_dir).mkdir(parents=True, exist_ok=True)
+                
+                # 파일 이동
+                try:
+                    shutil.move(file_path, move_to)
+                    result['file_moved'] = True
+                    result['details']['moved_to'] = move_to
+                    print(f"✓ File moved: {file_path} → {move_to}")
+                except Exception as e:
+                    result['message'] = f"Failed to move file: {e}"
+                    return result
+        
+        # 4. DB 레코드 삭제
+        try:
+            deleted_count = db.delete(
+                table_name,
+                where={'file_path': file_path}
+            )
+            result['record_deleted'] = True
+            result['details']['deleted_count'] = deleted_count
+            print(f"✓ Record deleted from database (ID: {record.get('id')})")
+        except Exception as e:
+            result['message'] = f"Failed to delete record: {e}"
+            # 파일을 이동했다면 되돌리기
+            if result['file_moved']:
+                shutil.move(move_to, file_path)
+                print(f"⚠ Rolled back file move due to DB error")
+            return result
+        
+        # 5. 성공
+        result['success'] = True
+        result['message'] = 'Successfully deleted record and processed file'
+        
+    return result
+    
+
+
 if __name__ == "__main__" :
+
+    DB_CONFIG = {
+        'host': 'localhost',
+        'port': 5432,
+        'database': 'sdo',
+        'user': 'eunsupark',
+        'password': 'eunsupark',
+        'log_queries': False
+    }
+
+    TRASH_DIR = "/opt/archive/sdo/fits/06_invalid_data"
+
     # freeze_support()
 
     correction_table = load_correction_table(correction_table_path=CORRECTION_TABLE_PATH)
@@ -220,8 +354,6 @@ if __name__ == "__main__" :
     file_list_hmi = glob(f"{DATA_ROOT}/fits/hmi/*/*/*.fits")#[:100]
     print(len(file_list_hmi))
 
-
-
     file_list = file_list_aia + file_list_hmi
     with ProcessPoolExecutor(max_workers=8) as executor:
         futures = {executor.submit(main, file_path, correction_table): file_path for file_path in file_list}
@@ -230,7 +362,21 @@ if __name__ == "__main__" :
     for result in results :
         status, file_path = result
         if status is False :
-            print(file_path)
+            if ".193." in file_path :
+                table_name = "aia_193"
+            elif ".211." in file_path :
+                table_name = "aia_211"
+            elif "hmi" in file_path :
+                table_name = "hmi_magnetogram"
+            delete_and_move_file(
+                file_path=file_path,
+                move_to=TRASH_DIR,
+                db_config=DB_CONFIG,
+                table_name=table_name)
+
+    
+
+
 
 
 # import os
