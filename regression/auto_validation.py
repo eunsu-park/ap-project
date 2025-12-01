@@ -7,8 +7,8 @@ from utils import WulverSubmitter
 HOME = os.path.expanduser('~')
 PYTHON_PATH = "/home/hl545/miniconda3/envs/ap/bin/python"
 WULVER_CONFIG = {
-    "OUT_DIR": f"{HOME}/TEMP",
-    "ERR_DIR": f"{HOME}/TEMP",
+    "OUT_DIR": f"{HOME}/TEMP_VAL",
+    "ERR_DIR": f"{HOME}/TEMP_VAL",
     "PARTITION": "gpu",
     "NUM_NODE": 1,
     "NUM_CPU_CORE": 8,

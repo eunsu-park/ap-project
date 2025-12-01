@@ -706,6 +706,9 @@ class MultimodalDataset(Dataset):
             split_index=self.config.split_index
         )
         
+        # Expose statistics as stat_dict for backward compatibility with plotting
+        self.stat_dict = statistics
+        
         print(f"Dataset initialized: {len(self)} samples in {self.config.phase} phase")
     
     def _extract_config(self, config) -> DataConfig:

@@ -527,6 +527,15 @@ class Validator:
         targets = batch_result['targets']  # (batch_size, n_groups, n_variables)
         predictions = batch_result['predictions']
         
+        # Check if stat_dict is available
+        stat_dict = None
+        if hasattr(dataloader, 'dataset') and hasattr(dataloader.dataset, 'stat_dict'):
+            stat_dict = dataloader.dataset.stat_dict
+        else:
+            if self.logger:
+                self.logger.warning("stat_dict not available in dataset - plots will be skipped")
+            return
+        
         for i, file_name in enumerate(file_names):
             # Remove extension if present
             file_name_base = os.path.splitext(file_name)[0]
@@ -544,7 +553,7 @@ class Validator:
                     targets=sample_targets,
                     outputs=sample_predictions,
                     target_variables=self.config.data.target_variables,
-                    stat_dict=dataloader.dataset.stat_dict,
+                    stat_dict=stat_dict,
                     plot_path=plot_path,
                     plot_title=plot_title,
                     logger=self.logger
@@ -563,6 +572,16 @@ class Validator:
             dataloader: Dataloader (for accessing stat_dict).
         """
         try:
+            # Check if stat_dict is available
+            stat_dict = None
+            if hasattr(dataloader, 'dataset') and hasattr(dataloader.dataset, 'stat_dict'):
+                stat_dict = dataloader.dataset.stat_dict
+            
+            if stat_dict is None:
+                if self.logger:
+                    self.logger.warning("Skipping overall plot: stat_dict not available in dataset")
+                return
+            
             # Extract all targets and predictions
             all_targets = []
             all_predictions = []
@@ -587,7 +606,7 @@ class Validator:
                 targets=mean_targets,
                 outputs=mean_predictions,
                 target_variables=self.config.data.target_variables,
-                stat_dict=dataloader.dataset.stat_dict,
+                stat_dict=stat_dict,
                 plot_path=overall_plot_path,
                 plot_title=overall_plot_title,
                 logger=self.logger
