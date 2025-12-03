@@ -437,7 +437,7 @@ class WulverSubmitter:
             raise TypeError
         with open(script_path, "w") as f :
             f.write("\n".join(lines))
-        time.sleep(1)
+        time.sleep(5)
         if dry_run :
             return
         else :
