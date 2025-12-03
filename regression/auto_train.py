@@ -21,7 +21,7 @@ WULVER_CONFIG = {
 }
 SUBMITTER = WulverSubmitter(WULVER_CONFIG)
 RUN_INFO = {
-    "PREFIX": "reg",
+    "PREFIX": "reg_consistency",
     "SUFFIX": None,
     "INPUT_DAY": None,
     "OUTPUT_DAY": None,
@@ -34,7 +34,7 @@ RUN_INFO = {
     "NUM_WORKERS": 4,
     "CONTRASTIVE_TYPE": "mse",
     "CONTRASTIVE_TEMPERATURE" : 0.3,
-    "LAMBDA_CONTRASTIVE": 0.0,
+    "LAMBDA_CONTRASTIVE": 0.1,
     "REPORT_FREQ": 1000
 }
 
@@ -226,9 +226,9 @@ if __name__ == "__main__":
         RUN_INFO["INPUT_DAY"] = input_day
         RUN_INFO["OUTPUT_DAY"] = output_day
         
-        # run(base_config, RUN_INFO.copy(), dry_run=not args.run)
-        # run_under(base_config, RUN_INFO.copy(), dry_run=not args.run)
-        # run_over(base_config, RUN_INFO.copy(), dry_run=not args.run)
+        run(base_config, RUN_INFO.copy(), dry_run=not args.run)
+        run_under(base_config, RUN_INFO.copy(), dry_run=not args.run)
+        run_over(base_config, RUN_INFO.copy(), dry_run=not args.run)
         run_mix(base_config, RUN_INFO.copy(), dry_run=not args.run)
     
     print("\n" + "="*80)
