@@ -29,7 +29,7 @@ RUN_INFO = {
     "NUM_SUBSAMPLE": 10,
     "SUBSAMPLE_INDEX": None,
     "ENABLE_OVERSAMPLING": False,
-    "NUM_OVERSAMPLE": 13,
+    "NUM_OVERSAMPLE": 5,
     "BATCH_SIZE": 4,
     "NUM_WORKERS": 4,
     "CONTRASTIVE_TYPE": "mse",
@@ -205,7 +205,7 @@ if __name__ == "__main__":
     with open(base_config_path, 'r') as f:
         base_config = yaml.safe_load(f)
 
-    input_days = (5, 6, 7)
+    input_days = (4, 5, 6, 7)
     output_day = 1
     
     print("="*80)
