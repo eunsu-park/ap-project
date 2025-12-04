@@ -172,7 +172,7 @@ def compute_statistics(
         try:
             with h5py.File(file_path, 'r') as f:
                 for variable in variables:
-                    dataset_name = f"omni/{variable}"
+                    dataset_name = f"omni_{variable}"
                     if dataset_name in f:
                         data = f[dataset_name][:]
                         stats_computers[variable].update(data)

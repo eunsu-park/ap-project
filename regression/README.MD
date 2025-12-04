@@ -23,24 +23,59 @@ project/
 ├── configs/
 │   └── local_dev.yaml        # 설정 파일
 │
-├── Core Components
-│   ├── pipeline.py           # 데이터 파이프라인
-│   ├── losses.py             # Loss 함수들
-│   ├── trainers.py           # 학습 로직
-│   └── validators.py         # 검증 로직
+├── Modularized Packages (새로운 구조!)
+│   ├── datasets/             # 데이터 파이프라인 (8 files)
+│   │   ├── __init__.py
+│   │   ├── config.py         # DataConfig
+│   │   ├── statistics.py     # Normalizer, OnlineStatistics, compute_statistics
+│   │   ├── io.py             # HDF5Reader
+│   │   ├── preprocessing.py  # DataProcessor
+│   │   ├── sampling.py       # SamplingStrategy
+│   │   ├── dataset.py        # BaseDataset, TrainDataset, ValidationDataset
+│   │   └── dataloader.py     # create_dataloader
+│   │
+│   ├── models/               # 신경망 모델 (6 files)
+│   │   ├── __init__.py
+│   │   ├── convlstm.py       # ConvLSTMCell, ConvLSTMModel
+│   │   ├── transformer.py    # PositionalEncoding, TransformerEncoderModel
+│   │   ├── fusion.py         # CrossModalAttention, CrossModalFusion
+│   │   ├── multimodal.py     # MultiModalModel
+│   │   └── factory.py        # create_model
+│   │
+│   ├── losses/               # Loss 함수들 (5 files)
+│   │   ├── __init__.py
+│   │   ├── contrastive.py    # MultiModalContrastiveLoss, MultiModalMSELoss
+│   │   ├── regression.py     # WeightedMSELoss, HuberMultiCriteriaLoss, etc.
+│   │   ├── advanced.py       # AdaptiveWeightLoss, QuantileLoss, etc.
+│   │   └── factory.py        # create_loss_functions, create_loss
+│   │
+│   └── utils/                # 유틸리티 함수들 (8 files)
+│       ├── __init__.py
+│       ├── seed.py           # set_seed
+│       ├── logging_utils.py  # setup_logger, log_message
+│       ├── device.py         # setup_device
+│       ├── model_io.py       # load_model
+│       ├── visualization.py  # save_plot, plotting functions
+│       ├── metrics.py        # calculate_metrics
+│       └── slurm.py          # WulverSubmitter
 │
-├── Scripts
+├── Training & Validation
+│   ├── trainers.py           # Trainer, MetricsTracker, CheckpointManager
+│   ├── validators.py         # Validator, MetricsAggregator, ResultsWriter
 │   ├── train.py              # 학습 스크립트
 │   └── validation.py         # 검증 스크립트
-│
-├── Model & Utilities
-│   ├── networks.py           # 모델 정의
-│   └── utils.py              # 유틸리티 함수
 │
 └── Documentation
     ├── README.md             # 이 파일
     └── CONFIG_GUIDE.md       # 설정 가이드 (선택)
 ```
+
+**주요 변경사항:**
+- `pipeline.py` → `datasets/` 패키지로 모듈화
+- `networks.py` → `models/` 패키지로 모듈화
+- `losses.py` → `losses/` 패키지로 모듈화 (더 많은 loss 추가)
+- `utils.py` → `utils/` 패키지로 모듈화
+- `trainers.py`, `validators.py`는 그대로 유지 (이미 잘 구조화됨)
 
 ## 🚀 빠른 시작
 
@@ -84,22 +119,40 @@ python validation.py --config-name=local_dev
 
 ## 📚 주요 컴포넌트
 
-### 1. pipeline.py - 데이터 파이프라인
+### 1. datasets/ - 데이터 파이프라인
 
-**주요 클래스:**
+**주요 클래스 (모듈별로 정리됨):**
 
 ```python
+# datasets/config.py
+DataConfig                  # 데이터 설정
+
+# datasets/statistics.py
 Normalizer                  # SDO/OMNI 데이터 정규화
 OnlineStatistics           # 메모리 효율적 통계 계산
+compute_statistics         # 통계 계산 헬퍼 함수
+
+# datasets/sampling.py
 SamplingStrategy           # Under/Oversampling 전략
+
+# datasets/io.py
 HDF5Reader                 # HDF5 파일 읽기
+
+# datasets/preprocessing.py
 DataProcessor              # 데이터 전처리
-MultimodalDataset          # PyTorch Dataset
+
+# datasets/dataset.py
+BaseMultimodalDataset      # 기본 Dataset 클래스
+TrainDataset              # 학습용 Dataset (sampling + augmentation)
+ValidationDataset         # 검증용 Dataset (원본 데이터)
+
+# datasets/dataloader.py
+create_dataloader()       # DataLoader 생성 팩토리 함수
 ```
 
 **사용 예시:**
 ```python
-from pipeline import create_dataloader
+from datasets import create_dataloader
 
 dataloader = create_dataloader(config, logger)
 for batch in dataloader:
@@ -109,21 +162,85 @@ for batch in dataloader:
     labels = batch['labels']     # (B, 1, 1)
 ```
 
-### 2. losses.py - Loss 함수
+**주요 개선사항:**
+- Train/Validation Dataset 명확히 분리
+- 각 기능별로 독립적인 모듈
+- 더 쉬운 테스트와 유지보수
 
-**주요 클래스:**
+### 2. models/ - 신경망 모델
+
+**주요 클래스 (모듈별로 정리됨):**
 
 ```python
+# models/convlstm.py
+ConvLSTMCell              # ConvLSTM 셀
+ConvLSTMModel             # 다층 ConvLSTM
+
+# models/transformer.py
+PositionalEncoding        # 위치 인코딩
+TransformerEncoderModel   # Transformer 인코더
+
+# models/fusion.py
+CrossModalAttention       # Cross-modal attention
+CrossModalFusion          # 모달리티 융합
+
+# models/multimodal.py
+MultiModalModel           # 전체 멀티모달 모델
+
+# models/factory.py
+create_model()            # 모델 생성 팩토리 함수
+```
+
+**사용 예시:**
+```python
+from models import create_model
+
+model = create_model(config, logger)
+model.to(device)
+
+# Forward pass
+outputs, transformer_features, convlstm_features = model(
+    solar_wind_input, 
+    image_input,
+    return_features=True
+)
+```
+
+**주요 개선사항:**
+- 각 컴포넌트가 독립적인 파일
+- 명확한 아키텍처 구조
+- 쉬운 컴포넌트 교체 및 실험
+
+### 3. losses/ - Loss 함수
+
+**주요 클래스 (모듈별로 정리됨):**
+
+```python
+# losses/contrastive.py
 MultiModalContrastiveLoss   # InfoNCE contrastive loss
 MultiModalMSELoss          # MSE consistency loss
+
+# losses/regression.py
+WeightedMSELoss            # 시간 가중 MSE
+HuberMultiCriteriaLoss     # Huber + temporal/gradient weighting
+MAEOutlierFocusedLoss      # MAE + outlier detection
+
+# losses/advanced.py
+AdaptiveWeightLoss         # 에러 적응형 가중치
+GradientBasedWeightLoss    # 그래디언트 기반 가중치
+QuantileLoss               # Quantile regression
+MultiTaskLoss              # Multi-task learning
+
+# losses/factory.py
 create_loss_functions()    # Config에서 loss 생성
+create_loss()              # 단일 loss 생성
 ```
 
 **사용 예시:**
 ```python
 from losses import create_loss_functions
 
-reg_criterion, cont_criterion = create_loss_functions(config)
+reg_criterion, cont_criterion = create_loss_functions(config, logger)
 
 # 학습 시
 reg_loss = reg_criterion(outputs, targets)
@@ -131,7 +248,65 @@ cont_loss = cont_criterion(transformer_features, convlstm_features)
 total_loss = reg_loss + lambda_contrastive * cont_loss
 ```
 
-### 3. trainers.py - 학습 관리
+**주요 개선사항:**
+- 10+ loss 함수 제공 (기존 2개에서 확장)
+- Contrastive / Regression / Advanced로 카테고리 분리
+- 연구 친화적 구조 (새 loss 추가 용이)
+
+### 4. utils/ - 유틸리티 함수
+
+**주요 함수 (모듈별로 정리됨):**
+
+```python
+# utils/seed.py
+set_seed()                 # 재현성을 위한 시드 설정
+
+# utils/logging_utils.py
+setup_logger()             # Logger 설정
+log_message()              # 로깅 헬퍼
+
+# utils/device.py
+setup_device()             # Device 설정 (CUDA/MPS/CPU)
+
+# utils/model_io.py
+load_model()               # 체크포인트에서 모델 로드
+
+# utils/visualization.py
+save_plot()                # 비교 플롯 저장
+denormalize_predictions()  # 예측 역정규화
+create_comparison_plot()   # 비교 플롯 생성
+save_data_h5()             # HDF5로 데이터 저장
+
+# utils/metrics.py
+calculate_metrics()        # 평가 메트릭 계산
+
+# utils/slurm.py
+WulverSubmitter            # SLURM 작업 제출
+```
+
+**사용 예시:**
+```python
+from utils import set_seed, setup_logger, setup_device, load_model
+
+# 환경 설정
+set_seed(42, logger)
+logger = setup_logger(__name__, log_dir='./logs')
+device = setup_device(config, logger)
+
+# 모델 로드
+model = load_model(model, checkpoint_path, device, logger)
+
+# 시각화
+from utils import save_plot
+save_plot(targets, outputs, var_names, stats, 'path', 'Title', logger)
+```
+
+**주요 개선사항:**
+- 각 기능별로 독립적인 모듈
+- 더 명확한 함수 분류
+- SLURM 지원 추가
+
+### 5. trainers.py - 학습 관리
 
 **주요 클래스:**
 
@@ -154,7 +329,7 @@ trainer = Trainer(
 history = trainer.fit(dataloader, num_epochs=10)
 ```
 
-### 4. validators.py - 검증 관리
+### 6. validators.py - 검증 관리
 
 **주요 클래스:**
 
@@ -310,7 +485,36 @@ results/{experiment_name}/
 
 ## 🔍 주요 기능
 
-### 1. 자동 Metrics 추적
+### 0. 모듈화의 이점 (새로운!)
+
+**명확한 구조:**
+- `datasets/`: 모든 데이터 관련 로직
+- `models/`: 모든 신경망 아키텍처
+- `losses/`: 모든 loss 함수
+- `utils/`: 모든 유틸리티 함수
+
+**장점:**
+- ✅ **유지보수**: 코드 위치를 쉽게 찾을 수 있음
+- ✅ **테스트**: 각 모듈을 독립적으로 테스트 가능
+- ✅ **재사용**: 필요한 부분만 import
+- ✅ **협업**: 여러 사람이 동시에 작업 가능
+- ✅ **확장**: 새 기능 추가가 명확함
+
+**이전 vs 이후:**
+```python
+# 이전 (Monolithic)
+from pipeline import create_dataloader        # 950 lines
+from networks import create_model             # 927 lines
+from losses import create_loss_functions      # 903 lines
+
+# 이후 (Modular)
+from datasets import create_dataloader        # 8개 파일로 분리
+from models import create_model               # 6개 파일로 분리
+from losses import create_loss_functions      # 5개 파일로 분리
+from utils import set_seed, setup_logger      # 8개 파일로 분리
+```
+
+### 2. 자동 Metrics 추적
 
 학습 중 metrics가 자동으로 추적되고 로깅됩니다:
 
@@ -326,7 +530,7 @@ history = trainer.fit(dataloader, num_epochs)
 # - 학습 곡선 자동 플롯
 ```
 
-### 2. 체계적인 Checkpoint 관리
+### 3. 체계적인 Checkpoint 관리
 
 ```python
 # Best model 자동 저장
@@ -339,7 +543,7 @@ checkpoint_manager.save_periodic(model, optimizer, epoch, loss)
 checkpoint_manager.save(..., 'model_final.pth')
 ```
 
-### 3. 완전한 재현성
+### 4. 완전한 재현성
 
 ```python
 # Config에서 시드 설정
@@ -356,7 +560,7 @@ environment:
 # - Data augmentation
 ```
 
-### 4. 유연한 Loss 설정
+### 5. 유연한 Loss 설정
 
 ```yaml
 # Config만 수정하면 즉시 적용
@@ -488,10 +692,10 @@ scaler.update()
 
 ## 🔧 개발 가이드
 
-### 새 Loss 함수 추가
+### 새 Loss 함수 추가 (모듈화된 구조)
 
 ```python
-# losses.py에 추가
+# losses/regression.py 또는 losses/advanced.py에 추가
 class MyCustomLoss(nn.Module):
     def __init__(self, param1, param2):
         super().__init__()
@@ -503,9 +707,12 @@ class MyCustomLoss(nn.Module):
         loss = ...
         return loss
 
-# create_loss_functions() 수정
-if config.training.loss_type == 'my_custom':
-    criterion = MyCustomLoss(param1=..., param2=...)
+# losses/factory.py의 create_loss() 수정
+loss_map = {
+    'mse': nn.MSELoss,
+    'my_custom': MyCustomLoss,  # 추가
+    # ...
+}
 ```
 
 ### 새 Metric 추가
@@ -532,10 +739,10 @@ def train_step(self, data_dict):
     }
 ```
 
-### 새 데이터 증강 추가
+### 새 데이터 증강 추가 (모듈화된 구조)
 
 ```python
-# pipeline.py의 DataProcessor.apply_augmentation() 수정
+# datasets/preprocessing.py의 DataProcessor.apply_augmentation() 수정
 def apply_augmentation(self, input_array, sample_idx, file_name):
     rng = np.random.RandomState(seed)
     
@@ -548,6 +755,28 @@ def apply_augmentation(self, input_array, sample_idx, file_name):
         augmented = my_custom_augmentation(augmented, rng)
     
     return augmented
+```
+
+### 새 모델 컴포넌트 추가
+
+```python
+# models/my_component.py 생성
+class MyComponent(nn.Module):
+    def __init__(self, ...):
+        super().__init__()
+        # 구현
+    
+    def forward(self, x):
+        # 구현
+        return output
+
+# models/__init__.py에 추가
+from .my_component import MyComponent
+
+__all__ = [
+    # ...
+    'MyComponent',
+]
 ```
 
 ## 📊 데이터 포맷

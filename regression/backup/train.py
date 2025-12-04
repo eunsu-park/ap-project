@@ -15,8 +15,8 @@ import torch
 import torch.optim as optim
 
 from utils import set_seed, setup_logger, setup_device
-from datasets import create_dataloader
-from models import create_model
+from pipeline import create_dataloader
+from networks import create_model
 from losses import create_loss_functions
 from trainers import Trainer, save_training_history, plot_training_curves
 

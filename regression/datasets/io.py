@@ -46,14 +46,14 @@ class HDF5Reader:
             with h5py.File(file_path, 'r') as f:
                 # Read SDO data
                 for wavelength in sdo_wavelengths:
-                    dataset_name = f"sdo/{wavelength}"
+                    dataset_name = f"sdo_{wavelength}"
                     if dataset_name not in f:
                         raise KeyError(f"SDO wavelength {wavelength} not found in {file_path}")
                     sdo_data[wavelength] = f[dataset_name][:]
                 
                 # Read OMNI data
                 for variable in omni_variables:
-                    dataset_name = f"omni/{variable}"
+                    dataset_name = f"omni_{variable}"
                     if dataset_name not in f:
                         raise KeyError(f"OMNI variable {variable} not found in {file_path}")
                     omni_data[variable] = f[dataset_name][:]

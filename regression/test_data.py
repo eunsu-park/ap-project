@@ -3,7 +3,7 @@ import random
 import numpy as np
 import torch
 import hydra
-from data import create_dataloader
+from datasets import create_dataloader
 
 @hydra.main(config_path="./configs", version_base=None)
 def main(config):
