@@ -14,7 +14,7 @@ import torch
 import torch.nn as nn
 
 from utils import set_seed, setup_logger, setup_device, load_model
-from data import create_dataloader
+from pipeline import create_dataloader
 from networks import create_model
 from validators import Validator
 
