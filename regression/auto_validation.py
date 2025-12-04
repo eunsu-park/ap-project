@@ -30,7 +30,7 @@ RUN_INFO = {
     "SUBSAMPLE_INDEX": None,
     "ENABLE_OVERSAMPLING": False,
     "NUM_OVERSAMPLE": 13,
-    "BATCH_SIZE": 4,
+    "BATCH_SIZE": 1,
     "NUM_WORKERS": 4,
     "CONTRASTIVE_TYPE": "mse",
     "CONTRASTIVE_TEMPERATURE" : 0.3,
@@ -126,7 +126,7 @@ def run_over(base_config, info, dry_run=True):
     오버샘플링 실험의 validation을 실행
     여러 epoch의 체크포인트를 하나의 job으로 묶어서 제출
     """
-    info["ENABLE_OVERSAMPLING"] = True
+    info["ENABLE_OVERSAMPLING"] = False
     info["SUFFIX"] = "over"
     info["NUM_OVERSAMPLE"] = 5
 
@@ -193,7 +193,7 @@ def run_under(base_config, info, dry_run=True):
     
     for subsample_index in range(info["NUM_SUBSAMPLE"]):
         sub_info = info.copy()
-        sub_info["ENABLE_UNDERSAMPLING"] = True
+        sub_info["ENABLE_UNDERSAMPLING"] = False
         sub_info["SUFFIX"] = f"sub_{subsample_index:02d}"
         sub_info["SUBSAMPLE_INDEX"] = subsample_index
         
@@ -264,8 +264,8 @@ def run_mix(base_config, info, dry_run=True):
     
     for subsample_index in range(num_subsample_mix):
         sub_info = info.copy()
-        sub_info["ENABLE_UNDERSAMPLING"] = True
-        sub_info["ENABLE_OVERSAMPLING"] = True
+        sub_info["ENABLE_UNDERSAMPLING"] = False
+        sub_info["ENABLE_OVERSAMPLING"] = False
         sub_info["SUFFIX"] = f"mix_sub_{subsample_index:02d}"
         sub_info["SUBSAMPLE_INDEX"] = subsample_index
         sub_info["NUM_SUBSAMPLE"] = num_subsample_mix

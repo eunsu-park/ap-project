@@ -1,0 +1,110 @@
+# Enhanced Multi-Modal Model Configuration
+# Configuration for transformer + ConvLSTM + CrossModalFusion architecture
+
+defaults:
+  - _self_
+  - override hydra/job_logging: none
+  - override hydra/hydra_logging: none
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .
+  job:
+    chdir: false
+
+
+data_dir: '/opt/projects/ap/data'
+dataset_dir: '/opt/projects/ap/datasets'
+
+sdo_database:
+ - "host": "localhost"
+ - "port": 5432
+ - "database": "sdo"
+ - "user": "eunsupark"
+ - "password": "eunsupark"
+ - "log_queries": False
+
+omni_database:
+ - "host": "localhost",
+ - "port": 5432,
+ - "database": "omni",
+ - "user": "eunsupark",
+ - "password": "eunsupark",
+ - "log_queries": False
+
+merge_data:
+  - 'omni_cadence': 3
+  - 'sdo_cadence': 6
+  - 'dataset_cadence': 3
+  
+  - 'before_day': 10
+  - 'after_day': 5
+
+
+
+make_dataset:
+  sdo:
+    wavelengths:
+      - 'aia_193'
+      - 'aia_211'
+      - 'hmi_magnetogram'
+
+  omni:
+    input_variables:
+      - 'bx_gse_gsm_nt'
+      - 'by_gsm_nt'
+      - 'bz_gsm_nt'
+      - 'b_magnitude_of_avg_field_vector_nt'
+      - 'plasma_flow_speed_km_s'
+      - 'proton_density_n_cm3'
+      - 'proton_temperature_k'
+      - 'kp_index'
+      - 'ap_index_nt'
+      - 'dst_index_nt'
+      - 'f10_7_index_sfu'
+      - 'sunspot_number_r'
+
+    target_variables:
+      - 'ap_index_nt'
+
+
+  # input_days: 
+
+
+
+
+# environment:
+#   data_dir: '/opt/projects/ap/data'
+#   dataset_dir: '/opt/projects/ap/datasets'
+
+# data:
+#   dataset_name: 'three_twelve_to_one'
+#   image_size: 64
+#   sdo_wavelengths:
+#    - 'aia_193'
+#    - 'aia_211'
+#    - 'hmi_magnetogram'
+#   num_sdo_wavelengths: 3
+#   sdo_sequence_length: 40
+#   sdo_image_size: 64
+#   split_index: 80
+#   input_variables:
+#     - 'bx_gse_gsm_nt' #
+#     - 'by_gsm_nt' #
+#     - 'bz_gsm_nt' #
+#     - 'b_magnitude_of_avg_field_vector_nt' #
+#     - 'plasma_flow_speed_km_s' #
+#     - 'proton_density_n_cm3' #
+#     - 'proton_temperature_k' #
+#     - 'kp_index' #
+#     - 'ap_index_nt' #
+#     - 'dst_index_nt' #
+#     - 'f10_7_index_sfu' #
+#     - 'sunspot_number_r' #
+#   num_input_variables: 12
+#   input_sequence_length: 80
+#   target_variables:
+#     - 'ap_index_nt' #
+#   num_target_variables: 1
+#   target_sequence_length: 40
