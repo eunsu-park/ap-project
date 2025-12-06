@@ -15,6 +15,7 @@ class DataConfig:
     
     # Paths
     data_root: str
+    dataset_dir_name: str
     dataset_name: str
     
     # SDO configuration

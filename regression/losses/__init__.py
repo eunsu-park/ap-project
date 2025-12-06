@@ -1,77 +1,99 @@
 """
-Loss functions for multimodal solar wind prediction.
-
-This package provides various loss functions for regression and
-multimodal alignment, including:
-- Contrastive losses (InfoNCE, MSE consistency)
-- Regression losses (MSE, MAE, Huber with various weighting strategies)
-- Advanced losses (adaptive weighting, gradient-based, quantile, multi-task)
-
-Main components:
-- MultiModalContrastiveLoss: InfoNCE-style contrastive loss
-- MultiModalMSELoss: MSE-based consistency loss
-- WeightedMSELoss: Time-weighted MSE loss
-- HuberMultiCriteriaLoss: Huber with temporal and gradient weighting
-- MAEOutlierFocusedLoss: MAE with outlier detection
-- AdaptiveWeightLoss: Error-adaptive weighting
-- GradientBasedWeightLoss: Emphasis on rapid changes
-- QuantileLoss: Quantile regression with uncertainty weighting
-- MultiTaskLoss: Regression + outlier detection
-- create_loss_functions: Factory for regression + contrastive losses
-- create_loss: Factory for single loss function
-
-Example usage:
-    from loss import create_loss_functions
-    
-    # Using the factory function (recommended)
-    regression_loss, contrastive_loss = create_loss_functions(config, logger)
-    
-    # Or directly
-    from loss import HuberMultiCriteriaLoss, MultiModalContrastiveLoss
-    
-    reg_loss = HuberMultiCriteriaLoss(beta=0.3)
-    cont_loss = MultiModalContrastiveLoss(temperature=0.3)
+Loss functions package for solar wind prediction.
 """
 
-# Contrastive losses
-from .contrastive import MultiModalContrastiveLoss, MultiModalMSELoss
+import torch.nn as nn
 
-# Regression losses
-from .regression import (
+from .losses import (
     WeightedMSELoss,
     HuberMultiCriteriaLoss,
-    MAEOutlierFocusedLoss
-)
-
-# Advanced losses
-from .advanced import (
+    MAEOutlierFocusedLoss,
+    MultiModalContrastiveLoss,
+    MultiModalMSELoss,
     AdaptiveWeightLoss,
     GradientBasedWeightLoss,
     QuantileLoss,
     MultiTaskLoss
 )
 
-# Factory functions
-from .factory import create_loss_functions, create_loss
+from utils import get_logger
+
+
+def create_loss_functions(config):
+    """Create regression and contrastive loss functions from config."""
+    logger = get_logger()
+    
+    loss_type = config.training.loss_type.lower()
+    
+    if loss_type == 'mse':
+        regression_criterion = nn.MSELoss()
+        loss_name = "MSE"
+    elif loss_type == 'mae':
+        regression_criterion = nn.L1Loss()
+        loss_name = "MAE"
+    elif loss_type == 'huber':
+        regression_criterion = nn.HuberLoss(delta=10.0)
+        loss_name = "Huber"
+    else:
+        regression_criterion = nn.MSELoss()
+        loss_name = "MSE (default)"
+        logger.warning(f"Unknown loss type '{loss_type}', using MSE")
+    
+    contrastive_type = config.training.contrastive_type.lower()
+    
+    if contrastive_type == 'infonce':
+        contrastive_criterion = MultiModalContrastiveLoss(
+            temperature=config.training.contrastive_temperature,
+            normalize=True
+        )
+        cont_name = "InfoNCE"
+    else:
+        contrastive_criterion = MultiModalMSELoss(reduction='mean')
+        cont_name = "MSE Consistency"
+        if contrastive_type != 'mse':
+            logger.warning(f"Unknown contrastive type '{contrastive_type}', using MSE")
+    
+    logger.info(f"Losses: Regression={loss_name}, Contrastive={cont_name}")
+    
+    return regression_criterion, contrastive_criterion
+
+
+def create_loss(config):
+    """Create a single regression loss function."""
+    logger = get_logger()
+    loss_type = config.training.loss_type.lower()
+    
+    loss_map = {
+        'mse': nn.MSELoss,
+        'mae': nn.L1Loss,
+        'huber': lambda: nn.HuberLoss(delta=10.0),
+        'huber_multi': HuberMultiCriteriaLoss,
+        'mae_outlier': MAEOutlierFocusedLoss,
+        'adaptive': AdaptiveWeightLoss,
+        'gradient': GradientBasedWeightLoss,
+        'quantile': QuantileLoss,
+        'multitask': MultiTaskLoss,
+        'weighted_mse': WeightedMSELoss
+    }
+    
+    if loss_type not in loss_map:
+        logger.warning(f"Unknown loss type '{loss_type}', using MSE")
+        return nn.MSELoss()
+    
+    logger.info(f"Using {loss_type.upper()} loss")
+    return loss_map[loss_type]()
 
 
 __all__ = [
-    # Contrastive losses
-    'MultiModalContrastiveLoss',
-    'MultiModalMSELoss',
-    
-    # Regression losses
+    'create_loss_functions',
+    'create_loss',
     'WeightedMSELoss',
     'HuberMultiCriteriaLoss',
     'MAEOutlierFocusedLoss',
-    
-    # Advanced losses
+    'MultiModalContrastiveLoss',
+    'MultiModalMSELoss',
     'AdaptiveWeightLoss',
     'GradientBasedWeightLoss',
     'QuantileLoss',
     'MultiTaskLoss',
-    
-    # Factory functions (most commonly used)
-    'create_loss_functions',
-    'create_loss',
 ]

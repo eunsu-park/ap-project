@@ -1,11 +1,7 @@
 """
-Refactored training script for multimodal solar wind prediction.
+Simplified training script for solar wind prediction.
 
-Major improvements:
-- Modular design with Trainer class
-- Separated concerns (training, metrics, checkpoints)
-- Cleaner main function
-- Better error handling
+Uses consolidated config and utilities for clean, concise code.
 """
 
 import os
@@ -14,143 +10,59 @@ import hydra
 import torch
 import torch.optim as optim
 
-from utils import set_seed, setup_logger, setup_device
+from config import Config
+from utils import setup_experiment, get_logger
 from datasets import create_dataloader
 from models import create_model
 from losses import create_loss_functions
 from trainers import Trainer, save_training_history, plot_training_curves
 
 
-def setup_training_environment(config):
-    """Setup logging, seeding, and device.
-    
-    Args:
-        config: Configuration object.
-        
-    Returns:
-        Tuple of (logger, device)
-    """
-    # Create directories
-    save_root = config.environment.save_root
-    experiment_name = config.experiment.experiment_name
-    experiment_dir = f"{save_root}/{experiment_name}"
-    
-    directories = [
-        f"{experiment_dir}/checkpoint",
-        f"{experiment_dir}/log",
-        f"{experiment_dir}/snapshot",
-        f"{experiment_dir}/validation"
-    ]
-    
-    for directory in directories:
-        os.makedirs(directory, exist_ok=True)
-    
-    # Setup logger
-    logger = setup_logger(__name__, log_dir=f"{experiment_dir}/log")
-    logger.info(f"Training configuration:\n{config}")
-    
-    # Set seed and device
-    set_seed(config.environment.seed, logger=logger)
-    device = setup_device(config, logger=logger)
-    
-    return logger, device
-
-
-def create_training_components(config, model, logger=None):
-    """Create optimizer, scheduler, and loss functions.
-    
-    Args:
-        config: Configuration object.
-        model: PyTorch model.
-        logger: Optional logger for output.
-        
-    Returns:
-        Tuple of (optimizer, scheduler, criterion, contrastive_criterion)
-    """
-    # Optimizer
-    if config.training.optimizer == 'adam':
-        optimizer = optim.Adam(
-            model.parameters(),
-            lr=config.training.learning_rate
-        )
-        opt_name = "Adam"
-    elif config.training.optimizer == 'sgd':
-        optimizer = optim.SGD(
-            model.parameters(),
-            lr=config.training.learning_rate,
-            momentum=0.9
-        )
-        opt_name = "SGD"
+def create_optimizer(config, model):
+    """Create optimizer from config."""
+    if config.training.optimizer == 'sgd':
+        return optim.SGD(model.parameters(), lr=config.training.learning_rate, momentum=0.9)
     else:
-        optimizer = optim.Adam(
-            model.parameters(),
-            lr=config.training.learning_rate
-        )
-        opt_name = "Adam (default)"
-        if logger:
-            logger.warning(f"Unknown optimizer '{config.training.optimizer}', using Adam")
-    
-    # Learning rate scheduler
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer,
-        mode='min',
-        factor=0.5,
-        patience=5,
+        return optim.Adam(model.parameters(), lr=config.training.learning_rate)
+
+
+def create_scheduler(optimizer):
+    """Create learning rate scheduler."""
+    return optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='min', factor=0.5, patience=5
     )
-    
-    # Loss functions
-    criterion, contrastive_criterion = create_loss_functions(config, logger)
-    
-    if logger:
-        logger.info(f"Optimizer: {opt_name}, LR: {config.training.learning_rate}")
-        logger.info(f"Scheduler: ReduceLROnPlateau (factor=0.5, patience=5)")
-    
-    return optimizer, scheduler, criterion, contrastive_criterion
 
 
 @hydra.main(config_path="./configs", version_base=None)
-def main(config):
-    """Run training process.
+def main(hydra_cfg):
+    """Run training process."""
+    # Convert Hydra config to structured config
+    config = Config.from_hydra(hydra_cfg)
     
-    Args:
-        config: Configuration object containing training parameters.
-        
-    Raises:
-        RuntimeError: If training setup or execution fails.
-    """
-    # Setup environment
-    logger, device = setup_training_environment(config)
+    # Setup experiment (logger, seed, device)
+    setup_experiment(config, log_dir=config.log_dir)
+    logger = get_logger()
+    
+    # Create directories
+    os.makedirs(config.checkpoint_dir, exist_ok=True)
+    os.makedirs(config.log_dir, exist_ok=True)
     
     # Create dataloader
-    try:
-        dataloader = create_dataloader(config, logger=logger)
-        logger.info(f"Dataloader created: {len(dataloader.dataset)} samples, "
-                   f"{len(dataloader)} batches")
-    except Exception as e:
-        logger.error(f"Failed to create dataloader: {e}")
-        raise RuntimeError(f"Failed to create dataloader: {e}")
+    dataloader = create_dataloader(config)
+    logger.info(f"Dataloader: {len(dataloader.dataset)} samples, {len(dataloader)} batches")
     
     # Create model
-    try:
-        model = create_model(config, logger=logger)
-        model.to(device)
-        
-        # Log model parameters
-        total_params = sum(p.numel() for p in model.parameters())
-        trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-        logger.info(f"Model parameters: {total_params:,} total, {trainable_params:,} trainable")
-    except Exception as e:
-        logger.error(f"Failed to create model: {e}")
-        raise RuntimeError(f"Failed to create model: {e}")
+    model = create_model(config).to(config.environment.device)
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.info(f"Model: {total_params:,} total params, {trainable_params:,} trainable")
     
     # Create training components
-    try:
-        optimizer, scheduler, criterion, contrastive_criterion = create_training_components(
-            config, model, logger
-        )
-    except Exception as e:
-        logger.error(f"Failed to create training components: {e}")
-        raise RuntimeError(f"Failed to create training components: {e}")
+    optimizer = create_optimizer(config, model)
+    scheduler = create_scheduler(optimizer)
+    criterion, contrastive_criterion = create_loss_functions(config)
+    
+    logger.info(f"Optimizer: {config.training.optimizer.upper()}, LR: {config.training.learning_rate}")
     
     # Create trainer
     trainer = Trainer(
@@ -160,7 +72,7 @@ def main(config):
         scheduler=scheduler,
         criterion=criterion,
         contrastive_criterion=contrastive_criterion,
-        device=device,
+        device=torch.device(config.environment.device),
         logger=logger
     )
     

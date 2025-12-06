@@ -33,6 +33,7 @@ def create_dataloader(config, logger=None) -> DataLoader:
     else:
         data_config = DataConfig(
             data_root=config.environment.data_root,
+            dataset_dir_name=config.data.dataset_dir_name,
             dataset_name=config.data.dataset_name,
             sdo_wavelengths=config.data.sdo_wavelengths,
             sdo_sequence_length=config.data.sdo_sequence_length,
@@ -60,6 +61,7 @@ def create_dataloader(config, logger=None) -> DataLoader:
     
     statistics = compute_statistics(
         data_root=data_config.data_root,
+        dataset_dir_name=data_config.dataset_dir_name,
         data_file_list=train_file_names,
         variables=data_config.omni_variables,
         stat_file_path=data_config.stat_file_path,

@@ -1,65 +1,51 @@
 """
-Multimodal neural network models for solar wind prediction.
-
-This package provides neural network components for combining
-transformer-based time series processing with ConvLSTM-based
-image sequence processing.
-
-Main components:
-- MultiModalModel: Main model integrating all components
-- create_model: Factory function for model creation
-- ConvLSTMCell, ConvLSTMModel: ConvLSTM components
-- TransformerEncoderModel: Transformer encoder
-- CrossModalFusion: Cross-modal attention fusion
-
-Example usage:
-    from model import create_model
-    
-    # Using the factory function (recommended)
-    model = create_model(config, logger)
-    
-    # Or directly
-    from model import MultiModalModel
-    
-    model = MultiModalModel(
-        num_input_variables=num_vars,
-        input_sequence_length=seq_len,
-        ...
-    )
+Model package for solar wind prediction.
 """
 
-# ConvLSTM components
-from .convlstm import ConvLSTMCell, ConvLSTMModel
-
-# Transformer components
-from .transformer import PositionalEncoding, TransformerEncoderModel
-
-# Fusion components
-from .fusion import CrossModalAttention, CrossModalFusion
-
-# Main model
+from .transformer import TransformerEncoderModel
+from .convlstm import ConvLSTMModel
+from .fusion import CrossModalFusion
 from .multimodal import MultiModalModel
 
-# Factory function
-from .factory import create_model
+from utils import get_logger
+
+
+def create_model(config):
+    """Create MultiModalModel from configuration."""
+    logger = get_logger()
+    
+    num_input_variables = len(config.data.input_variables)
+    num_target_groups = config.data.target_sequence_length
+    num_target_variables = len(config.data.target_variables)
+    
+    logger.info(
+        f"Creating MultiModalModel: "
+        f"Output shape (batch, {num_target_groups}, {num_target_variables})"
+    )
+    
+    return MultiModalModel(
+        num_input_variables=num_input_variables,
+        input_sequence_length=config.data.input_sequence_length,
+        num_target_variables=num_target_variables,
+        num_target_groups=num_target_groups,
+        transformer_d_model=config.model.transformer_d_model,
+        transformer_nhead=config.model.transformer_nhead,
+        transformer_num_layers=config.model.transformer_num_layers,
+        transformer_dim_feedforward=config.model.transformer_dim_feedforward,
+        transformer_dropout=config.model.transformer_dropout,
+        convlstm_input_channels=config.model.convlstm_input_channels,
+        convlstm_hidden_channels=config.model.convlstm_hidden_channels,
+        convlstm_kernel_size=config.model.convlstm_kernel_size,
+        convlstm_num_layers=config.model.convlstm_num_layers,
+        fusion_num_heads=config.model.fusion_num_heads,
+        fusion_dropout=config.model.fusion_dropout
+    )
 
 
 __all__ = [
-    # ConvLSTM
-    'ConvLSTMCell',
-    'ConvLSTMModel',
-    
-    # Transformer
-    'PositionalEncoding',
-    'TransformerEncoderModel',
-    
-    # Fusion
-    'CrossModalAttention',
-    'CrossModalFusion',
-    
-    # Main model (most commonly used)
-    'MultiModalModel',
-    
-    # Factory function (most commonly used)
     'create_model',
+    'MultiModalModel',
+    'TransformerEncoderModel',
+    'ConvLSTMModel',
+    'CrossModalFusion',
 ]
