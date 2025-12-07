@@ -6,7 +6,6 @@ workload manager (specifically for Wulver cluster).
 """
 
 import os
-import time
 from typing import Union, List
 
 
@@ -83,8 +82,6 @@ class WulverSubmitter:
         # Write script
         with open(script_path, "w") as f:
             f.write("\n".join(lines))
-        
-        time.sleep(5)
         
         # Submit if not dry run
         if not dry_run:
