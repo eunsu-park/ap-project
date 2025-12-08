@@ -16,8 +16,8 @@ hydra:
 environment:
   seed: 250104
   device: 'cuda'
-  data_root: '/mmfs1/home/hl545/ap/data/datasets'
-  save_root: '/mmfs1/home/hl545/ap/results'
+  data_root: '/mmfs1/home/hl545/ap/renew/datasets'
+  save_root: '/mmfs1/home/hl545/ap/renew/results'
 
 experiment:
   experiment_name: 'wulver_default'
@@ -30,7 +30,7 @@ experiment:
   num_subsample: 10
   subsample_index: 0
   
-  enable_oversampling: true
+  enable_oversampling: false
   num_oversample: 13
 
 data:
@@ -46,23 +46,23 @@ data:
   
   # OMNI (time series) configuration
   input_variables:
-    - 'Bx_GSE_GSM_nT'
-    - 'By_GSM_nT'
-    - 'Bz_GSM_nT'
-    - 'B_Magnitude_of_Avg_Field_Vector_nT'
-    - 'Plasma_Flow_Speed_km_s'
-    - 'Proton_Density_n_cm3'
-    - 'Proton_Temperature_K'
-    - 'Kp_Index'
-    - 'ap_Index_nT'
-    - 'DST_Index_nT'
-    - 'f10_7_Index_sfu'
-    - 'Sunspot_Number_R'
+      - 'bx_gse_gsm_nt'
+      - 'by_gsm_nt'
+      - 'bz_gsm_nt'
+      - 'b_magnitude_of_avg_field_vector_nt'
+      - 'plasma_flow_speed_km_s'
+      - 'proton_density_n_cm3'
+      - 'proton_temperature_k'
+      - 'kp_index'
+      - 'ap_index_nt'
+      - 'dst_index_nt'
+      - 'f10_7_index_sfu'
+      - 'sunspot_number_r'
   input_sequence_length: 56
   
   # Target configuration
   target_variables:
-    - 'ap_Index_nT'
+    - 'ap_index_nt'
   target_sequence_length: 8
   target_day: 1
   

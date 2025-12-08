@@ -246,6 +246,16 @@ if __name__ == "__main__":
             input_day = int(items[2])
             output_day = int(items[3])
             RUN_INFO["PREFIX"] = prefix
+            if prefix == "reg_consistency":
+                RUN_INFO["CONTRASTIVE_TYPE"] = "mse"
+                RUN_INFO["LAMBDA_CONTRASTIVE"] = 0.1
+            elif prefix == "reg_contrastive":
+                RUN_INFO["CONTRASTIVE_TYPE"] = "infonce"
+                RUN_INFO["LAMBDA_CONTRASTIVE"] = 0.1
+            else :
+                RUN_INFO["CONTRASTIVE_TYPE"] = "mse"
+                RUN_INFO["LAMBDA_CONTRASTIVE"] = 0.0
+
             RUN_INFO["INPUT_DAY"] = input_day
             RUN_INFO["OUTPUT_DAY"] = output_day
 

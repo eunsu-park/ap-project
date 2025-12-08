@@ -20,7 +20,7 @@ environment:
   save_root: '/opt/projects/ap/results'
 
 experiment:
-  experiment_name: 'local_test'
+  experiment_name: 'local_default'
   phase: 'train'  # 'train' or 'validation'
   batch_size: 4
   num_workers: 8
