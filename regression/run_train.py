@@ -23,8 +23,8 @@ SUBMITTER = WulverSubmitter(WULVER_CONFIG)
 # Default parameters
 SYSTEM = "wulver" # "local" or "wulver"
 CONTRASTIVE = [
-    {"type": None, "temperature": 0.0, "lambda": 0.0},
-    # {"type": "mse", "temperature": 0.3, "lambda": 0.1},
+    # {"type": None, "temperature": 0.0, "lambda": 0.0},
+    {"type": "mse", "temperature": 0.3, "lambda": 0.1},
     # {"type": "infonce", "temperature": 0.3, "lambda": 0.1}
 ]   
 INPUT_DAYS = [1, 2, 3, 4, 5, 6, 7]
