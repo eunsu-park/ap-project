@@ -104,7 +104,7 @@ def run_single(**info):
         job_name=job_name,
         commands=commands,
         script_path=script_path,
-        dry_run=True
+        dry_run=False
     )
 
 
@@ -139,7 +139,7 @@ def run_all_original():
                     job_name=job_name,
                     commands=commands,
                     script_path=script_path,
-                    dry_run=True
+                    dry_run=False
                 )
                 COUNT += 1
 
@@ -177,7 +177,7 @@ def run_all_oversampling():
                     job_name=job_name,
                     commands=commands,
                     script_path=script_path,
-                    dry_run=True
+                    dry_run=False
                 )
                 COUNT += 1
 
@@ -222,7 +222,7 @@ def run_all_under():
                     job_name=job_name,
                     commands=commands,
                     script_path=script_path,
-                    dry_run=True
+                    dry_run=False
                 )
                 COUNT += 1
 
@@ -267,7 +267,7 @@ def run_all_mixed():
                     job_name=job_name,
                     commands=commands,
                     script_path=script_path,
-                    dry_run=True
+                    dry_run=False
                 )
                 COUNT += 1
 
