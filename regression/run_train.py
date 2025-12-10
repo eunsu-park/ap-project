@@ -64,7 +64,7 @@ def generate_config(**info):
 
     experiment_name = "_".join(experiment_name)
 
-    default_config_path = f"./configs/{info["system"]}_default.yaml"
+    default_config_path = f"./configs/{info["system"].lower()}_default.yaml"
     with open(default_config_path, 'r') as f:
         config = yaml.safe_load(f)
 
@@ -82,7 +82,7 @@ def generate_config(**info):
     config["training"]["contrastive_temperature"] = info["contrastive_temperature"]
     config["training"]["lambda_contrastive"] = info["lambda_contrastive"]
 
-    config_name = f"AUTO-TRAIN_{info['system']}_{experiment_name}.yaml"
+    config_name = f"AUTO-TRAIN_{info['system'].lower()}_{experiment_name}.yaml"
     config_path = f"./configs/{config_name}"
     config_path = os.path.abspath(config_path)
     with open(config_path, 'w') as f:
