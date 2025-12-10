@@ -17,6 +17,7 @@ environment:
   seed: 250104
   device: 'cuda'
   data_root: '/mmfs1/home/hl545/ap/renew/datasets'
+  dataset_dir_name: 'oversampling'
   save_root: '/mmfs1/home/hl545/ap/renew/results'
 
 experiment:
