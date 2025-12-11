@@ -92,7 +92,7 @@ def generate_config(**info):
     return experiment_name, config_name
 
 
-def run_single(**info):
+def run_single(dry_run, **info):
     experiment_name, config_name = generate_config(**info)
     job_name = "TRAIN_" + experiment_name
     print(f"Generated config: {config_name} for job: {job_name}")
@@ -104,11 +104,11 @@ def run_single(**info):
         job_name=job_name,
         commands=commands,
         script_path=script_path,
-        dry_run=False
+        dry_run=dry_run
     )
 
 
-def run_all_original():
+def run_all_original(dry_run=False):
     COUNT = 0
     for contrastive in CONTRASTIVE :
         contrastive_type = contrastive["type"]  # "mse" or "infonce" or None
@@ -139,14 +139,14 @@ def run_all_original():
                     job_name=job_name,
                     commands=commands,
                     script_path=script_path,
-                    dry_run=False
+                    dry_run=dry_run
                 )
                 COUNT += 1
 
     return COUNT
 
 
-def run_all_oversampling():
+def run_all_oversampling(dry_run=False):
     COUNT = 0
     for contrastive in CONTRASTIVE :
         contrastive_type = contrastive["type"]  # "mse" or "infonce" or None
@@ -177,14 +177,14 @@ def run_all_oversampling():
                     job_name=job_name,
                     commands=commands,
                     script_path=script_path,
-                    dry_run=False
+                    dry_run=dry_run
                 )
                 COUNT += 1
 
     return COUNT
 
 
-def run_all_under():
+def run_all_under(dry_run=False):
     COUNT = 0
     for contrastive in CONTRASTIVE :
         contrastive_type = contrastive["type"]  # "mse" or "infonce" or None
@@ -222,14 +222,14 @@ def run_all_under():
                     job_name=job_name,
                     commands=commands,
                     script_path=script_path,
-                    dry_run=False
+                    dry_run=dry_run
                 )
                 COUNT += 1
 
     return COUNT
 
 
-def run_all_mixed():
+def run_all_mixed(dry_run=False):
     COUNT = 0
     for contrastive in CONTRASTIVE :
         contrastive_type = contrastive["type"]  # "mse" or "infonce" or None
@@ -267,18 +267,18 @@ def run_all_mixed():
                     job_name=job_name,
                     commands=commands,
                     script_path=script_path,
-                    dry_run=False
+                    dry_run=dry_run
                 )
                 COUNT += 1
 
     return COUNT
 
 
-def run_all():
-    count_original = run_all_original()
-    count_oversampling = run_all_oversampling()
-    count_under = run_all_under()
-    count_mixed = run_all_mixed()
+def run_all(dry_run):
+    count_original = run_all_original(dry_run=dry_run)
+    count_oversampling = run_all_oversampling(dry_run=dry_run)
+    count_under = run_all_under(dry_run=dry_run)
+    count_mixed = run_all_mixed(dry_run=dry_run)
     print(f"\nTotal original jobs prepared: {count_original}")
     print(f"\nTotal oversampling jobs prepared: {count_oversampling}")
     print(f"\nTotal undersampling jobs prepared: {count_under}")
@@ -287,10 +287,15 @@ def run_all():
 
 if __name__ == "__main__" :
 
-    count_original = run_all_original()
-    count_oversampling = run_all_oversampling()
-    count_under = run_all_under()
-    count_mixed = run_all_mixed()
+    import argparse
+    parse = argparse.ArgumentParser()
+    parse.add_argument('--dry_run', action='store_true', help='Dry run without submitting jobs')
+    args = parse.parse_args()
+
+    count_original = run_all_original(dry_run=args.dry_run)
+    count_oversampling = run_all_oversampling(dry_run=args.dry_run)
+    count_under = run_all_under(dry_run=args.dry_run)
+    count_mixed = run_all_mixed(dry_run=args.dry_run)
     print(f"\nTotal original jobs prepared: {count_original}")
     print(f"\nTotal oversampling jobs prepared: {count_oversampling}")
     print(f"\nTotal undersampling jobs prepared: {count_under}")

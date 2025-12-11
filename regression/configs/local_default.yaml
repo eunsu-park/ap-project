@@ -26,7 +26,7 @@ experiment:
   num_workers: 8
   
   # Sampling strategies
-  enable_undersampling: false
+  enable_undersampling: true
   num_subsample: 10
   subsample_index: 0
   

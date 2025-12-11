@@ -8,6 +8,11 @@ def read_h5(file_path):
             for sub_key in f[key].keys():
                 data = f[key][sub_key]
                 print(f"{key}/{sub_key}: {data.shape}")
+    
+        data = f['omni']['ap_index_nt'][:]
+        print(data.shape)
+        print(data.min())
+        print(data.max())
 
 
 if __name__ == "__main__" :
