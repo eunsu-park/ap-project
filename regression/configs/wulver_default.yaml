@@ -27,7 +27,7 @@ experiment:
   
   # Sampling strategies
   enable_undersampling: false
-  num_subsample: 10
+  num_subsample: 14
   subsample_index: 0
   
   enable_oversampling: false

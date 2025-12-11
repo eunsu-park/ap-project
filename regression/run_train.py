@@ -2,23 +2,27 @@ import os
 import yaml
 from utils.slurm import WulverSubmitter
 
+
 ## System info
 HOME = os.path.expanduser('~')
 PYTHON_PATH = "/home/hl545/miniconda3/envs/ap/bin/python"
-WULVER_CONFIG = {
-    "OUT_DIR": f"{HOME}/ap/renew/train_outs",
-    "ERR_DIR": f"{HOME}/ap/renew/train_errs",
-    "PARTITION": "gpu",
-    "NUM_NODE": 1,
-    "NUM_CPU_CORE": 8,
-    "NUM_GPU": 1,
-    "MIG": False,
-    "MEM": 8000,
-    "QOS": "standard",
-    "PI": "wangj",
-    "TIME": "3-00:00:00" # D-HH:MM:SS"
-}
-SUBMITTER = WulverSubmitter(WULVER_CONFIG)
+# WULVER_CONFIG = {
+#     "OUT_DIR": f"{HOME}/ap/renew/train_outs",
+#     "ERR_DIR": f"{HOME}/ap/renew/train_errs",
+#     "PARTITION": "gpu",
+#     "NUM_NODE": 1,
+#     "NUM_CPU_CORE": 8,
+#     "NUM_GPU": 1,
+#     "GPU": "gpu",
+#     # "GPU": "gpu:a100_10g",
+#     "MEM": 8000,
+#     "QOS": "standard",
+#     # "QOS": "low",
+#     # "QOS": "high_wangj",
+#     "PI": "wangj",
+#     "TIME": "3-00:00:00" # D-HH:MM:SS"
+# }
+# SUBMITTER = WulverSubmitter(WULVER_CONFIG)
 
 # Default parameters
 SYSTEM = "wulver" # "local" or "wulver"
@@ -30,7 +34,7 @@ CONTRASTIVE = [
 INPUT_DAYS = [1, 2, 3, 4, 5, 6, 7]
 OUTPUT_DAYS = [1]
 NUM_OVERSAMPLING = 5
-NUM_SUBSAMPLING = 10
+NUM_SUBSAMPLING = 14
 NUM_OVERSAMPLING_MAX = 5
 NUM_SUBSAMPLING_MIX = 3
 
@@ -58,7 +62,7 @@ def generate_config(**info):
     elif info["enable_oversampling"] == True :
         experiment_name.append("OVER")
     elif info["enable_undersampling"] == True :
-        experiment_name.append("UNDER")
+        experiment_name.append(f"UNDER-{info['subsampling_index']:02d}")
     else :
         experiment_name.append("ORIGINAL")
 
@@ -93,6 +97,25 @@ def generate_config(**info):
 
 
 def run_single(dry_run, **info):
+
+    WULVER_CONFIG = {
+        "OUT_DIR": f"{HOME}/ap/renew/train_outs",
+        "ERR_DIR": f"{HOME}/ap/renew/train_errs",
+        "PARTITION": "gpu",
+        "NUM_NODE": 1,
+        "NUM_CPU_CORE": 8,
+        "NUM_GPU": 1,
+        "GPU": "gpu",
+        # "GPU": "gpu:a100_10g",
+        "MEM": 8000,
+        "QOS": "standard",
+        # "QOS": "low",
+        # "QOS": "high_wangj",
+        "PI": "wangj",
+        "TIME": "3-00:00:00" # D-HH:MM:SS"
+    }
+    SUBMITTER = WulverSubmitter(WULVER_CONFIG)
+
     experiment_name, config_name = generate_config(**info)
     job_name = "TRAIN_" + experiment_name
     print(f"Generated config: {config_name} for job: {job_name}")
@@ -109,6 +132,25 @@ def run_single(dry_run, **info):
 
 
 def run_all_original(dry_run=False):
+
+    WULVER_CONFIG = {
+        "OUT_DIR": f"{HOME}/ap/renew/train_outs",
+        "ERR_DIR": f"{HOME}/ap/renew/train_errs",
+        "PARTITION": "gpu",
+        "NUM_NODE": 1,
+        "NUM_CPU_CORE": 8,
+        "NUM_GPU": 1,
+        "GPU": "gpu",
+        # "GPU": "gpu:a100_10g",
+        "MEM": 8000,
+        "QOS": "standard",
+        # "QOS": "low",
+        # "QOS": "high_wangj",
+        "PI": "wangj",
+        "TIME": "3-00:00:00" # D-HH:MM:SS"
+    }
+    SUBMITTER = WulverSubmitter(WULVER_CONFIG)
+
     COUNT = 0
     for contrastive in CONTRASTIVE :
         contrastive_type = contrastive["type"]  # "mse" or "infonce" or None
@@ -147,6 +189,25 @@ def run_all_original(dry_run=False):
 
 
 def run_all_oversampling(dry_run=False):
+
+    WULVER_CONFIG = {
+        "OUT_DIR": f"{HOME}/ap/renew/train_outs",
+        "ERR_DIR": f"{HOME}/ap/renew/train_errs",
+        "PARTITION": "gpu",
+        "NUM_NODE": 1,
+        "NUM_CPU_CORE": 8,
+        "NUM_GPU": 1,
+        "GPU": "gpu",
+        # "GPU": "gpu:a100_10g",
+        "MEM": 8000,
+        "QOS": "standard",
+        # "QOS": "low",
+        # "QOS": "high_wangj",
+        "PI": "wangj",
+        "TIME": "3-00:00:00" # D-HH:MM:SS"
+    }
+    SUBMITTER = WulverSubmitter(WULVER_CONFIG)
+
     COUNT = 0
     for contrastive in CONTRASTIVE :
         contrastive_type = contrastive["type"]  # "mse" or "infonce" or None
@@ -185,6 +246,25 @@ def run_all_oversampling(dry_run=False):
 
 
 def run_all_under(dry_run=False):
+
+    WULVER_CONFIG = {
+        "OUT_DIR": f"{HOME}/ap/renew/train_outs",
+        "ERR_DIR": f"{HOME}/ap/renew/train_errs",
+        "PARTITION": "gpu",
+        "NUM_NODE": 1,
+        "NUM_CPU_CORE": 8,
+        "NUM_GPU": 1,
+        "GPU": "gpu",
+        # "GPU": "gpu:a100_10g",
+        "MEM": 8000,
+        # "QOS": "standard",
+        # "QOS": "low",
+        "QOS": "high_wangj",
+        "PI": "wangj",
+        "TIME": "3-00:00:00" # D-HH:MM:SS"
+    }
+    SUBMITTER = WulverSubmitter(WULVER_CONFIG)
+
     COUNT = 0
     for contrastive in CONTRASTIVE :
         contrastive_type = contrastive["type"]  # "mse" or "infonce" or None
@@ -230,6 +310,25 @@ def run_all_under(dry_run=False):
 
 
 def run_all_mixed(dry_run=False):
+
+    WULVER_CONFIG = {
+        "OUT_DIR": f"{HOME}/ap/renew/train_outs",
+        "ERR_DIR": f"{HOME}/ap/renew/train_errs",
+        "PARTITION": "gpu",
+        "NUM_NODE": 1,
+        "NUM_CPU_CORE": 8,
+        "NUM_GPU": 1,
+        "GPU": "gpu",
+        # "GPU": "gpu:a100_10g",
+        "MEM": 8000,
+        "QOS": "standard",
+        # "QOS": "low",
+        # "QOS": "high_wangj",
+        "PI": "wangj",
+        "TIME": "3-00:00:00" # D-HH:MM:SS"
+    }
+    SUBMITTER = WulverSubmitter(WULVER_CONFIG)
+
     COUNT = 0
     for contrastive in CONTRASTIVE :
         contrastive_type = contrastive["type"]  # "mse" or "infonce" or None
@@ -293,10 +392,10 @@ if __name__ == "__main__" :
     args = parse.parse_args()
 
     count_original = run_all_original(dry_run=args.dry_run)
-    count_oversampling = run_all_oversampling(dry_run=args.dry_run)
+    # count_oversampling = run_all_oversampling(dry_run=args.dry_run)
     count_under = run_all_under(dry_run=args.dry_run)
-    count_mixed = run_all_mixed(dry_run=args.dry_run)
+    # count_mixed = run_all_mixed(dry_run=args.dry_run)
     print(f"\nTotal original jobs prepared: {count_original}")
-    print(f"\nTotal oversampling jobs prepared: {count_oversampling}")
+    # print(f"\nTotal oversampling jobs prepared: {count_oversampling}")
     print(f"\nTotal undersampling jobs prepared: {count_under}")
-    print(f"\nTotal mixed sampling jobs prepared: {count_mixed}")
+    # print(f"\nTotal mixed sampling jobs prepared: {count_mixed}")

@@ -33,12 +33,12 @@ class WulverSubmitter:
         lines += [f"#SBATCH --partition={config['PARTITION']}"]
         lines += [f"#SBATCH --nodes={config['NUM_NODE']}"]
         lines += [f"#SBATCH --ntasks-per-node={config['NUM_CPU_CORE']}"]
-        
-        # GPU configuration
-        if config.get("MIG", False):
-            lines += [f"#SBATCH --gres=gpu:a100_10g:{config['NUM_GPU']}"]
-        else:
-            lines += [f"#SBATCH --gres=gpu:{config['NUM_GPU']}"]
+        lines += [f"#SBATCH --gres={config['GPU']}:{config['NUM_GPU']}"]        
+        # # GPU configuration
+        # if config.get("MIG", False):
+        #     lines += [f"#SBATCH --gres=gpu:a100_10g:{config['NUM_GPU']}"]
+        # else:
+        #     lines += [f"#SBATCH --gres=gpu:{config['NUM_GPU']}"]
         
         lines += [f"#SBATCH --mem={config['MEM']:d}M"]
         
