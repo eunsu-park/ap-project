@@ -5,7 +5,7 @@ This module provides utilities for submitting jobs to SLURM
 workload manager (specifically for Wulver cluster).
 """
 
-import os
+import os, time
 from typing import Union, List
 
 
@@ -85,4 +85,6 @@ class WulverSubmitter:
         
         # Submit if not dry run
         if not dry_run:
+            time.sleep(5)
             os.system(f"sbatch {script_path}")
+            time.sleep(5)
