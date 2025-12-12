@@ -88,10 +88,13 @@ def run_all_original(dry_run=False):
         "NUM_CPU_CORE": 8,
         "NUM_GPU": 1,
         "GPU": "gpu",
+        # "GPU": "gpu:a100_10g",
         "MEM": 8000,
-        "QOS": "high_wangj",
+        "QOS": "standard",
+        # "QOS": "low",
+        # "QOS": "high_wangj",
         "PI": "wangj",
-        "TIME": "9-23:59:59" # D-HH:MM:SS"
+        "TIME": "3-00:00:00" # D-HH:MM:SS"
     }
     SUBMITTER = WulverSubmitter(WULVER_CONFIG)
 
@@ -148,11 +151,11 @@ def run_all_under(dry_run=False):
         "GPU": "gpu",
         # "GPU": "gpu:a100_10g",
         "MEM": 8000,
-        # "QOS": "standard",
+        "QOS": "standard",
         # "QOS": "low",
-        "QOS": "high_wangj",
+        # "QOS": "high_wangj",
         "PI": "wangj",
-        "TIME": "9-23:59:59" # D-HH:MM:SS"
+        "TIME": "3-00:00:00" # D-HH:MM:SS"
     }
     SUBMITTER = WulverSubmitter(WULVER_CONFIG)
 
