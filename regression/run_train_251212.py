@@ -146,9 +146,9 @@ def run_all_under(dry_run=False):
         "GPU": "gpu",
         # "GPU": "gpu:a100_10g",
         "MEM": 8000,
-        # "QOS": "standard",
+        "QOS": "standard",
         # "QOS": "low",
-        "QOS": "high_wangj",
+        # "QOS": "high_wangj",
         "PI": "wangj",
         "TIME": "3-00:00:00" # D-HH:MM:SS"
     }
