@@ -76,8 +76,6 @@ def generate_config(**info):
         return False
     config["validation"]["checkpoint_path"] = checkpoint_path
     output_dir = f"/home/hl545/ap/renew/results/{experiment_name}/validation/epoch_{info["epoch"]:03d}.pth"
-    if os.path.exists(output_dir):
-        return False
     config["validation"]["output_dir"] = output_dir
 
     config_name = f"AUTO-VALIDATION_{info['system'].lower()}_{experiment_name}.yaml"
@@ -137,7 +135,7 @@ def run_all_under(dry_run=False):
 
                         generated = generate_config(**info)
                         if not generated == False :
-                            experiment_name, config_name = generate_config(**info)
+                            experiment_name, config_name = generated#generate_config(**info)
                             job_name = "VALIDATION_" + experiment_name
                             print(f"Generated config: {config_name} for job: {job_name}")
                             commands.append(f"{PYTHON_PATH} validation.py --config-name {config_name}")
