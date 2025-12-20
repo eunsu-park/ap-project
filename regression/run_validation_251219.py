@@ -50,8 +50,6 @@ def generate_config(**info):
     else :
         experiment_name.append("ORIGINAL")
 
-    experiment_name.append(f"EPOCH_{info["epoch"]:04d}")
-
     experiment_name = "_".join(experiment_name)
 
     default_config_path = f"./configs/{info["system"].lower()}_default.yaml"
@@ -76,7 +74,7 @@ def generate_config(**info):
     output_dir = f"/home/hl545/ap/renew/results/{experiment_name}/validation/epoch_{info["epoch"]:03d}.pth"
     config["validation"]["output_dir"] = output_dir
 
-    config_name = f"AUTO-VALIDATION_{info['system'].lower()}_{experiment_name}.yaml"
+    config_name = f"AUTO-VALIDATION_{info['system'].lower()}_{experiment_name}_EPOCH_{info["epoch"]:04d}.yaml"
     config_path = f"./configs/{config_name}"
     config_path = os.path.abspath(config_path)
     with open(config_path, 'w') as f:
