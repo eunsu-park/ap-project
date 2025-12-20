@@ -50,6 +50,8 @@ def generate_config(**info):
     else :
         experiment_name.append("ORIGINAL")
 
+    experiment_name.append(f"EPOCH_{info["epoch"]:04d}")
+
     experiment_name = "_".join(experiment_name)
 
     default_config_path = f"./configs/{info["system"].lower()}_default.yaml"
@@ -113,7 +115,7 @@ def run_all_under(dry_run=False):
             for output_day in OUTPUT_DAYS :
                 for subsampling_index in range(NUM_SUBSAMPLING):
                     commands = []
-                    for epoch in (EPOCH_START, EPOCH_END+1, EPOCH_STEP):
+                    for epoch in range(EPOCH_START, EPOCH_END+1, EPOCH_STEP):
                         info = {}
                         info["system"] = SYSTEM.upper()
                         info["prefix"] = "REG"
