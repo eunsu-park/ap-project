@@ -70,6 +70,8 @@ def generate_config(**info):
     config["training"]["contrastive_temperature"] = info["contrastive_temperature"]
     config["training"]["lambda_contrastive"] = info["lambda_contrastive"]
     checkpoint_path = f"/home/hl545/ap/renew/results/{experiment_name}/checkpoint/model_epoch{info["epoch"]}.pth"
+    if not os.path.exists(checkpoint_path):
+        return False
     config["validation"]["checkpoint_path"] = checkpoint_path
     output_dir = f"/home/hl545/ap/renew/results/{experiment_name}/validation/epoch_{info["epoch"]:03d}.pth"
     config["validation"]["output_dir"] = output_dir
@@ -129,25 +131,30 @@ def run_all_under(dry_run=False):
                         info["output_day"] = output_day
                         info["epoch"] = epoch
 
-                        experiment_name, config_name = generate_config(**info)
-                        job_name = "VALIDATION_" + experiment_name
-                        print(f"Generated config: {config_name} for job: {job_name}")
-                        commands.append(f"{PYTHON_PATH} validation.py --config-name {config_name}")
+                        generated = generate_config(**info)
+                        if not generated == False :
+                            experiment_name, config_name = generated
+                            # experiment_name, config_name = generate_config(**info)
+                            job_name = "VALIDATION_" + experiment_name
+                            print(f"Generated config: {config_name} for job: {job_name}")
+                            commands.append(f"{PYTHON_PATH} validation.py --config-name {config_name}")
 
-                    experiment_name = experiment_name.split('_')
-                    experiment_name[-1] = f"UNDER-SUB-{subsampling_index:02d}-ALL"
-                    experiment_name = "_".join(experiment_name)
-                    job_name = "VALIDATION_" + experiment_name
-                    script_path = f"AUTO-VALIDATION_{experiment_name}.sh"
-                    SUBMITTER.submit(
-                        job_name=job_name,
-                        commands=commands,
-                        script_path=script_path,
-                        dry_run=dry_run
-                    )
-                    COUNT += 1
-                    import sys
-                    sys.exit()
+                    if len(commands) > 0 :
+
+                        experiment_name = experiment_name.split('_')
+                        experiment_name[-1] = f"UNDER-SUB-{subsampling_index:02d}-ALL"
+                        experiment_name = "_".join(experiment_name)
+                        job_name = "VALIDATION_" + experiment_name
+                        script_path = f"AUTO-VALIDATION_{experiment_name}.sh"
+                        SUBMITTER.submit(
+                            job_name=job_name,
+                            commands=commands,
+                            script_path=script_path,
+                            dry_run=dry_run
+                        )
+                        COUNT += 1
+                        # import sys
+                        # sys.exit()
 
     return COUNT
 
