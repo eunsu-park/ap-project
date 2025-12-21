@@ -79,22 +79,7 @@ def generate_config(**info):
 
 def run_single(dry_run, **info):
 
-    WULVER_CONFIG = {
-        "OUT_DIR": f"{HOME}/ap/renew/train_outs",
-        "ERR_DIR": f"{HOME}/ap/renew/train_errs",
-        "PARTITION": "gpu",
-        "NUM_NODE": 1,
-        "NUM_CPU_CORE": 8,
-        "NUM_GPU": 1,
-        "GPU": "gpu",
-        "MEM": 8000,
-        "QOS": "standard",
-        # "QOS": "low",
-        # "QOS": "high_wangj",
-        "PI": "wangj",
-        "TIME": "3-00:00:00" # D-HH:MM:SS"
-    }
-    SUBMITTER = WulverSubmitter(WULVER_CONFIG)
+
 
     experiment_name, config_name = generate_config(**info)
     job_name = "TRAIN_" + experiment_name
@@ -112,6 +97,23 @@ def run_single(dry_run, **info):
 
 
 if __name__ == "__main__" :
+
+    WULVER_CONFIG = {
+        "OUT_DIR": f"{HOME}/ap/renew/train_outs",
+        "ERR_DIR": f"{HOME}/ap/renew/train_errs",
+        "PARTITION": "gpu",
+        "NUM_NODE": 1,
+        "NUM_CPU_CORE": 8,
+        "NUM_GPU": 1,
+        "GPU": "gpu",
+        "MEM": 8000,
+        "QOS": "standard",
+        # "QOS": "low",
+        # "QOS": "high_wangj",
+        "PI": "wangj",
+        "TIME": "3-00:00:00" # D-HH:MM:SS"
+    }
+    SUBMITTER = WulverSubmitter(WULVER_CONFIG)
 
     import argparse
     parse = argparse.ArgumentParser()
@@ -153,6 +155,11 @@ if __name__ == "__main__" :
         job_name = "TRAIN_" + experiment_name
         print(f"Generated config: {config_name} for job: {job_name}")
         commands = f"{PYTHON_PATH} train.py --config-name {config_name}"
+        script_path = f"AUTO-TRAIN_{experiment_name}.sh"
 
-        run_single(dry_run=dry_run, info=info)
-
+        SUBMITTER.submit(
+            job_name=job_name,
+            commands=commands,
+            script_path=script_path,
+            dry_run=dry_run
+        )
