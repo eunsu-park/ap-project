@@ -1,10 +1,10 @@
 import os
 
 RESULT_ROOT = "/home/hl545/ap/renew/results"
-PREFIX = ("REG_MSE")
+PREFIX = ["REG_MSE"]
 NUM_SUBSAMPLE_UNDER = 14
-input_days = (1, 2, 3, 4, 5, 6, 7)
-output_days = (1, 2, 3)
+input_days = [1, 2, 3, 4, 5, 6, 7]
+output_days = [1, 2, 3]
 
 
 task_list = []
