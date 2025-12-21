@@ -14,7 +14,7 @@ for prefix in PREFIX:
     for input_day in input_days :
         for output_day in output_days :
             for subsample_index in range(NUM_SUBSAMPLE_UNDER):
-                dir_path = f"{RESULT_ROOT}/{PREFIX}_DATE-{input_day:02d}-TO-{output_day:02d}_UNDER_{subsample_index:02d}"
+                dir_path = f"{RESULT_ROOT}/{prefix}_DATE-{input_day:02d}-TO-{output_day:02d}_UNDER_{subsample_index:02d}"
                 dir_name = os.path.basename(dir_path)
                 model_path = f"{dir_path}/checkpoint/model_final.pth"
                 if not os.path.exists(model_path):
