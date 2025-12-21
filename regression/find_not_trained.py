@@ -18,6 +18,7 @@ for prefix in PREFIX:
                 dir_name = os.path.basename(dir_path)
                 model_path = f"{dir_path}/checkpoint/model_final.pth"
                 if not os.path.exists(model_path):
+                    print(dir_path)
                     print(f"{prefix}\tunder\t{input_day}\t{output_day}\t{subsample_index}")
                     task_list.append((prefix, "under", input_day, output_day, subsample_index))
 
