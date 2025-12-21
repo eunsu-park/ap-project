@@ -129,6 +129,9 @@ if __name__ == "__main__" :
     f = open("not_trained_tasks.txt", "r")
     lines = f.readlines()
     f.close()
+
+    COUNT = 0
+
     for line in lines:
         items = line.strip().split("\t")
         prefix = items[0]
@@ -163,3 +166,7 @@ if __name__ == "__main__" :
             script_path=script_path,
             dry_run=dry_run
         )
+
+        COUNT += 1
+
+    print(COUNT)
