@@ -259,13 +259,15 @@ class BaseDataset(Dataset):
             self.data_root,
             f"{self.dataset_name}_train.csv"
         )
-        self.train_list = self._load_file_list(train_list_path)
+        train_file_name, train_file_class = self._load_file_list(train_list_path)
+        self.train_list = list(zip(train_file_name, train_file_class))
 
         validation_list_path = os.path.join(
             self.data_root,
             f"{self.dataset_name}_validation.csv"
         )
-        self.validation_list = self._load_file_list(validation_list_path)
+        validation_file_name, validation_file_class = self._load_file_list(validation_list_path)
+        self.validation_list = list(zip(validation_file_name, validation_file_class))
 
         statistics_file_path = os.path.join(
             self.data_root,
@@ -275,7 +277,8 @@ class BaseDataset(Dataset):
             stat_file_path = statistics_file_path,
             data_root = self.data_root,
             data_dir_name = self.data_dir_name,
-            data_file_list = self.train_list,
+            # data_file_list = self.train_list,
+            data_file_list = train_file_name
             variables = self.omni_variables,
             overwrite=False
         )
@@ -295,7 +298,8 @@ class BaseDataset(Dataset):
                 key = f'class_day{day}'
                 tmp.append(list_labels[key][idx])
             labels.append(max(tmp))
-        return list(zip(file_names, labels))
+        # return list(zip(file_names, labels))
+        return file_names, labels
     
     def process_sdo(self, sdo_data: Dict[str, np.ndarray]) -> np.ndarray:
         sdo_arrays = []
