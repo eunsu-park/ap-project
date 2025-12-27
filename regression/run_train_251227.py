@@ -153,4 +153,4 @@ script_path = f"{job_name}.sh"
 submitter.submit(job_name = job_name,
                 commands = commands,
                 script_path = script_path,
-                dry_run=True)
+                dry_run=False)
