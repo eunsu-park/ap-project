@@ -278,7 +278,7 @@ class BaseDataset(Dataset):
             data_root = self.data_root,
             data_dir_name = self.data_dir_name,
             # data_file_list = self.train_list,
-            data_file_list = train_file_name
+            data_file_list = train_file_name,
             variables = self.omni_variables,
             overwrite=False
         )
