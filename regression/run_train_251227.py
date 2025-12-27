@@ -139,6 +139,7 @@ for T in range(3): # TARGET DAYS
         config["experiment"]["target_days"] = [T+1]
         config["experiment"]["subsample_index"] = S
 
+        config["data"]["target_start_index"] = 80 + (T * 8)
         config["data"]["target_end_index"] = 80 + ((T+1) * 8)
 
         config_name = f"AUTO-TRAIN_{config["experiment"]["experiment_name"]}.yaml"
