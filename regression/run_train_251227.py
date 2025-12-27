@@ -1,6 +1,8 @@
 import os
+import time
 import yaml
 
+from typing import Union, List
 
 ## System info
 HOME = os.path.expanduser('~')
@@ -23,9 +25,6 @@ SLURM job submission utilities.
 This module provides utilities for submitting jobs to SLURM
 workload manager (specifically for Wulver cluster).
 """
-
-import os, time
-from typing import Union, List
 
 
 class WulverSubmitter:
@@ -114,14 +113,14 @@ WULVER_CONFIG = {
     "ERR_DIR": f"{HOME}/ap/renew/train_errs",
     "PARTITION": "gpu",
     "NUM_NODE": 1,
-    "NUM_CPU_CORE": 4,
+    "NUM_CPU_CORE": 8,
     "NUM_GPU": 1,
     "GPU": "gpu",
     # "GPU": "gpu:a100_10g",
-    "MEM": 4000,
-    "QOS": "standard",
+    "MEM": 8000,
+    # "QOS": "standard",
     # "QOS": "low",
-    # "QOS": "high_wangj",
+    "QOS": "high_wangj",
     "PI": "wangj",
     "TIME": "3-00:00:00" # D-HH:MM:SS"
 }
@@ -131,6 +130,7 @@ with open(default_config_path, 'r') as f:
     default_config = yaml.safe_load(f)
 
 submitter = WulverSubmitter(WULVER_CONFIG)
+commands = []
 
 for T in range(3): # TARGET DAYS
     for S in range(NUM_SUBSAMPLING) : 
@@ -141,15 +141,16 @@ for T in range(3): # TARGET DAYS
 
         config["data"]["target_end_index"] = 80 + ((T+1) * 8)
 
-        job_name = f"AUTO-TRAIN_{config["experiment"]["experiment_name"]}"
-        config_name = f"{job_name}.yaml"
+        config_name = f"AUTO-TRAIN_{config["experiment"]["experiment_name"]}.yaml"
         config_path = f"./configs/{config_name}"
         config_path = os.path.abspath(config_path)
         with open(config_path, 'w') as f:
             yaml.dump(config, f)
-        commands = f"{PYTHON_PATH} train.py --config-name {config_name}"
-        script_path = f"{job_name}.sh"
-        submitter.submit(job_name = job_name,
-                         commands = commands,
-                         script_path = script_path,
-                         dry_run=True)
+        commands.append(f"{PYTHON_PATH} train.py --config-name {config_name}")
+
+job_name = f"AUTO-TRAIN-AP"
+script_path = f"{job_name}.sh"
+submitter.submit(job_name = job_name,
+                commands = commands,
+                script_path = script_path,
+                dry_run=True)
