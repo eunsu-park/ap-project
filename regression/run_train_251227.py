@@ -122,7 +122,7 @@ WULVER_CONFIG = {
     # "QOS": "low",
     "QOS": "high_wangj",
     "PI": "wangj",
-    "TIME": "3-00:00:00" # D-HH:MM:SS"
+    "TIME": "10-00:00:00" # D-HH:MM:SS"
 }
 
 default_config_path = "./configs/wulver.yaml"
