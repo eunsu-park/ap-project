@@ -1,23 +1,20 @@
-"""
-Simplified training script for solar wind prediction.
-
-Uses consolidated config and utilities for clean, concise code.
-"""
-
+# python standard library
 import os
 from multiprocessing import freeze_support
-import hydra
-import torch
-import torch.optim as optim
 
-from config import Config
-from utils import setup_experiment, get_logger
-from datasets import create_dataloader
-from models import create_model
+# third-party library
+import torch.optim as optim
+import hydra
+
+# custom library
+from pipeline import create_dataloader
+from networks import create_model
 from losses import create_loss_functions
+from utils import setup_experiment
 from trainers import Trainer, save_training_history, plot_training_curves
 
 
+# 향후 따로 빼야할까?
 def create_optimizer(config, model):
     """Create optimizer from config."""
     if config.training.optimizer == 'sgd':
@@ -26,6 +23,7 @@ def create_optimizer(config, model):
         return optim.Adam(model.parameters(), lr=config.training.learning_rate)
 
 
+# 향후 따로 빼야할까?
 def create_scheduler(optimizer):
     """Create learning rate scheduler."""
     return optim.lr_scheduler.ReduceLROnPlateau(
@@ -34,37 +32,33 @@ def create_scheduler(optimizer):
 
 
 @hydra.main(config_path="./configs", version_base=None)
-def main(hydra_cfg):
-    """Run training process."""
-    # Convert Hydra config to structured config
-    config = Config.from_hydra(hydra_cfg)
-    
-    # Setup experiment (logger, seed, device)
-    setup_experiment(config, log_dir=config.log_dir)
-    logger = get_logger()
-    
-    # Create directories
-    os.makedirs(config.checkpoint_dir, exist_ok=True)
-    os.makedirs(config.log_dir, exist_ok=True)
-    
-    # Create dataloader
-    dataloader = create_dataloader(config)
-    logger.info(f"Dataloader: {len(dataloader.dataset)} samples, {len(dataloader)} batches")
-    
-    # Create model
-    model = create_model(config).to(config.environment.device)
+def main(config):
+
+    device = setup_experiment(config)
+
+    # 이 부분은 setup_experiment 안으로?
+    # 디렉터리 관리하는 기능이 하나 있어야 할 것 같은데
+    save_root = config.environment.save_root
+    experiment_name = config.experiment.experiment_name
+    experiment_dir = os.path.join(save_root, experiment_name)
+    os.makedirs(experiment_dir, exist_ok=True)
+    checkpoint_dir = os.path.join(experiment_dir, "checkpoint")
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    log_dir = os.path.join(experiment_dir, "log")
+
+    # print(or logger) 수정?
+    dataloader = create_dataloader(config, phase="train")
+    model = create_model(config).to(device)
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    logger.info(f"Model: {total_params:,} total params, {trainable_params:,} trainable")
-    
-    # Create training components
+    print(f"Model: {total_params:,} total params, {trainable_params:,} trainable")
+
     optimizer = create_optimizer(config, model)
     scheduler = create_scheduler(optimizer)
     criterion, contrastive_criterion = create_loss_functions(config)
-    
-    logger.info(f"Optimizer: {config.training.optimizer.upper()}, LR: {config.training.learning_rate}")
-    
-    # Create trainer
+
+    print(f"Optimizer: {config.training.optimizer.upper()}, LR: {config.training.learning_rate}")
+
     trainer = Trainer(
         config=config,
         model=model,
@@ -72,27 +66,26 @@ def main(hydra_cfg):
         scheduler=scheduler,
         criterion=criterion,
         contrastive_criterion=contrastive_criterion,
-        device=torch.device(config.environment.device),
-        logger=logger
+        device=device,
+        logger=None
     )
-    
-    # Train
+
     try:
         history = trainer.fit(dataloader, config.training.num_epochs)
         
         # Save results
-        save_training_history(history, config, logger)
-        plot_training_curves(history, config, logger)
+        save_training_history(history, config, None)
+        plot_training_curves(history, config, None)
         
-        logger.info("Training completed successfully")
+        print("Training completed successfully")
     
     except KeyboardInterrupt:
-        logger.info("Training interrupted by user")
+        print("Training interrupted by user")
     except Exception as e:
-        logger.error(f"Training failed: {e}")
+        print(f"Training failed: {e}")
         raise
 
 
-if __name__ == '__main__':
+if __name__ == "__main__" :
     freeze_support()
     main()

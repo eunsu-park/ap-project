@@ -108,7 +108,7 @@ class CheckpointManager:
             filename: Optional filename. If None, uses 'model_epoch{epoch}.pth'.
         """
         if filename is None:
-            filename = f"model_epoch{epoch}.pth"
+            filename = f"model_epoch{epoch:04d}.pth"
         
         filepath = self.checkpoint_dir / filename
         

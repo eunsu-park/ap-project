@@ -1,23 +1,13 @@
-"""
-Loss functions for solar wind prediction.
-
-Consolidated module containing all loss functions:
-- Regression losses (MSE, MAE, Weighted, Huber)
-- Contrastive losses (InfoNCE, MSE Consistency)
-- Advanced losses (Adaptive, Gradient-based, Quantile, Multi-task)
-"""
-
-"""
-Regression loss functions with various weighting strategies.
-
-This module provides weighted regression losses for handling temporal
-sequences, outliers, and rapid changes.
-"""
-
+# python standard library
 from typing import Tuple
+
+# third-party library
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import hydra
+
+# custom library
 
 
 class WeightedMSELoss(nn.Module):
@@ -833,3 +823,92 @@ class MultiTaskLoss(nn.Module):
             return total_loss.sum()
         else:
             return total_loss
+
+
+def create_loss_functions(config):
+    regression_loss_type = config.training.regression_loss_type.lower()
+
+    if regression_loss_type == "mse" :
+        regression_criterion = nn.MSELoss()
+        regression_loss_name = "MSE"
+    elif regression_loss_type == "mae" :
+        regression_criterion = nn.L1Loss()
+        regression_loss_name = "MAE"
+    elif regression_loss_type == "huber" :
+        regression_criterion = nn.HuberLoss(delta=10.0)
+        regression_loss_name = "Huber"
+    else :
+        regression_criterion = nn.MSELoss()
+        regression_loss_name = "MSE"
+        print(f"Unknown regression loss type '{regression_loss_type}', using MSE")
+
+    contrastive_loss_type = config.training.contrastive_loss_type.lower()
+    if contrastive_loss_type == 'infonce':
+        contrastive_criterion = MultiModalContrastiveLoss(
+            temperature=config.training.contrastive_temperature,
+            normalize=True
+        )
+        contrastive_loss_name = "InfoNCE"
+    elif contrastive_loss_type == 'consistency':
+        contrastive_criterion = MultiModalMSELoss(reduction='mean')
+        contrastive_loss_name = "Consistency"
+    else :
+        contrastive_criterion = MultiModalMSELoss(reduction='mean')
+        print(f"Unknown contrastive loss type '{contrastive_loss_type}', using consistency")
+    
+    print(f"Losses: Regression={regression_loss_name}, Contrastive={contrastive_loss_name}")
+
+    return regression_criterion, contrastive_criterion
+
+
+@hydra.main(config_path="./configs", version_base=None)
+def main(config):
+    from networks import create_model
+    model = create_model(config)
+    print(model)
+
+    regression_criterion, contrastive_criterion = create_loss_functions(config)
+    print(regression_criterion)
+    print(contrastive_criterion)
+
+    sdo_shape = (
+        config.experiment.batch_size,
+        len(config.data.sdo_wavelengths),
+        config.data.sdo_end_index - config.data.sdo_start_index,
+        config.data.sdo_image_size,
+        config.data.sdo_image_size
+    )
+
+    inputs_shape = (
+        config.experiment.batch_size,
+        config.data.input_end_index - config.data.input_start_index,
+        len(config.data.input_variables)
+    )
+
+    targets_shape = (
+        config.experiment.batch_size,
+        config.data.target_end_index - config.data.target_start_index,
+        len(config.data.target_variables)
+    )
+
+    sdo = torch.randn(size=sdo_shape)
+    print(f"sdo: {sdo.shape}")
+
+    inputs = torch.randn(size=inputs_shape)
+    print(f"inputs: {inputs.shape}")
+
+    targets = torch.randn(size=targets_shape)
+    print(f"targets: {targets.shape}")
+
+    outputs, transformer_features, convlstm_features = model(inputs, sdo, return_features=True)
+    print(f"outputs: {outputs.shape}")
+
+    regression_loss = regression_criterion(outputs, targets)
+    print(f"regression loss: {regression_loss}")
+
+    contrastive_loss = contrastive_criterion(transformer_features, convlstm_features)
+    print(f"contrastive loss: {contrastive_loss}")
+
+
+if __name__ == "__main__" :
+    main()

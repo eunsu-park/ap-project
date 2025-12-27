@@ -1,3 +1,22 @@
+import os
+import yaml
+
+
+## System info
+HOME = os.path.expanduser('~')
+PYTHON_PATH = "/home/hl545/miniconda3/envs/ap/bin/python"
+
+# Default parameters
+SYSTEM = "wulver" # "local" or "wulver"
+CONTRASTIVE = [
+    {"type": "mse", "temperature": 0.3, "lambda": 0.1},
+]   
+
+
+INPUT_DAYS = [1, 2, 3, 4, 5, 6, 7]
+TARGET_DAYS = [[1], [2], [3]]
+NUM_SUBSAMPLING = 14
+
 """
 SLURM job submission utilities.
 
@@ -88,3 +107,49 @@ class WulverSubmitter:
             time.sleep(5)
             os.system(f"sbatch {script_path}")
             time.sleep(5)
+
+
+WULVER_CONFIG = {
+    "OUT_DIR": f"{HOME}/ap/renew/train_outs",
+    "ERR_DIR": f"{HOME}/ap/renew/train_errs",
+    "PARTITION": "gpu",
+    "NUM_NODE": 1,
+    "NUM_CPU_CORE": 4,
+    "NUM_GPU": 1,
+    "GPU": "gpu",
+    # "GPU": "gpu:a100_10g",
+    "MEM": 4000,
+    "QOS": "standard",
+    # "QOS": "low",
+    # "QOS": "high_wangj",
+    "PI": "wangj",
+    "TIME": "3-00:00:00" # D-HH:MM:SS"
+}
+
+default_config_path = "./configs/wulver.yaml"
+with open(default_config_path, 'r') as f:
+    default_config = yaml.safe_load(f)
+
+submitter = WulverSubmitter(WULVER_CONFIG)
+
+for T in range(3): # TARGET DAYS
+    for S in range(NUM_SUBSAMPLING) : 
+        config = default_config.copy()
+        config["experiment"]["experiment_name"] = f"SINGLE_{T+1}_{S:02d}"
+        config["experiment"]["target_days"] = [T+1]
+        config["experiment"]["subsample_index"] = S
+
+        config["data"]["target_end_index"] = 80 + ((T+1) * 8)
+
+        job_name = f"AUTO-TRAIN_{config["experiment"]["experiment_name"]}"
+        config_name = f"{job_name}.yaml"
+        config_path = f"./configs/{config_name}"
+        config_path = os.path.abspath(config_path)
+        with open(config_path, 'w') as f:
+            yaml.dump(config, f)
+        commands = f"{PYTHON_PATH} train.py --config-name {config_name}"
+        script_path = f"{job_name}.sh"
+        submitter.submit(job_name = job_name,
+                         commands = commands,
+                         script_path = script_path,
+                         dry_run=True)

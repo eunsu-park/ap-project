@@ -13,39 +13,44 @@ hydra:
   job:
     chdir: false
 
-environment:
-  seed: 250104
-  device: 'mps'  # 'cuda', 'cpu', or 'mps'
-  data_root: '/opt/projects/ap/datasets'
-  save_root: '/opt/projects/ap/results'
-
 experiment:
-  experiment_name: 'local_default'
-  phase: 'train'  # 'train' or 'validation'
+  experiment_name: 'local'
+  seed: 250104
   batch_size: 4
-  num_workers: 8
-  
-  # Sampling strategies
   enable_undersampling: true
   num_subsample: 14
   subsample_index: 0
-  
-  enable_oversampling: false
-  num_oversample: 5
+  input_days:
+   - 1
+   - 2
+   - 3
+   - 4
+   - 5
+   - 6
+   - 7
+  target_days:
+    - 1
+    - 2
+    - 3
+
+environment:
+  device: 'mps'
+  data_root: '/opt/projects/10_Harim/01_AP/03_Dataset'
+  save_root: '/opt/projects/10_Harim/01_AP/04_Result'
+  num_workers: 8
 
 data:
-  dataset_dir_name: 'oversampling'
+  data_dir_name: 'oversampling_13'
   dataset_name: 'three_twelve_to_one'
-  
-  # SDO (image) configuration
+
   sdo_wavelengths:
     - 'aia_193'
     - 'aia_211'
     - 'hmi_magnetogram'
   sdo_image_size: 64
-  sdo_sequence_length: 28
-  
-  # OMNI (time series) configuration
+  sdo_start_index: 12
+  sdo_end_index: 40
+
   input_variables:
       - 'bx_gse_gsm_nt'
       - 'by_gsm_nt'
@@ -59,16 +64,13 @@ data:
       - 'dst_index_nt'
       - 'f10_7_index_sfu'
       - 'sunspot_number_r'
-  input_sequence_length: 56
-  
-  # Target configuration
+  input_start_index: 24
+  input_end_index: 80
+
   target_variables:
     - 'ap_index_nt'
-  target_sequence_length: 8
-  target_day: 1
-  
-  # Split index for input/target separation
-  split_index: 80
+  target_start_index: 80
+  target_end_index: 104
 
 model:
   # Transformer configuration
@@ -89,25 +91,20 @@ model:
   fusion_dropout: 0.1
 
 training:
-  # Basic training parameters
-  num_epochs: 10
-  learning_rate: 0.0002
-  optimizer: 'adam'  # 'adam' or 'sgd'
-  
-  # Loss configuration
-  loss_type: 'mse'  # 'mse' or 'mae'
-  
-  # Contrastive loss configuration
-  contrastive_type: 'mse'  # 'mse' or 'infonce'
-  contrastive_temperature: 0.3  # Only used if contrastive_type='infonce'
+  regression_loss_type: 'mse'
+  contrastive_loss_type: 'consistency'  # 'consistency' or 'infonce'
+  infonce_temperature: 0.3  # Only used if contrastive_type='infonce'
   lambda_contrastive: 0.1  # Weight for contrastive loss
-  
-  # Logging and checkpointing
-  report_freq: 100  # Report metrics every N batches
-  model_save_freq: 1  # Save checkpoint every N epochs
+
+  optimizer: 'adam'  # 'adam' or 'sgd'
+  learning_rate: 0.0002
+
+  num_epochs: 10
+  report_freq: 100
+  model_save_freq: 1
 
 validation:
-  checkpoint_path: '/opt/projects/ap/results/local_default/checkpoint/model_epoch10.pth'
-  output_dir: '/opt/projects/ap/results/local_default/validation/epoch_010'
+  checkpoint_path: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth'
+  output_dir: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/validation/epoch_0010'
   compute_alignment: true  # Whether to compute feature alignment (cosine similarity)
   save_plots: true  # Whether to save individual validation plots

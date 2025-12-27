@@ -1,16 +1,116 @@
-"""
-Visualization utilities for plotting and data saving.
-
-This module provides functions for creating comparison plots
-and saving data in various formats.
-"""
-
+# python standard library
+import os
+import random
 import logging
 from typing import List, Optional
 
+# third-party library
 import numpy as np
+import torch
 import matplotlib.pyplot as plt
 import h5py
+
+# custom library
+
+
+def setup_seed(seed: int = 250104) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    print(f"Random seed: {seed}")
+
+
+def setup_device(requested_device) -> torch.device:    
+    # CUDA
+    if requested_device == 'cuda':
+        if torch.cuda.is_available():
+            device = torch.device('cuda')
+            gpu_name = torch.cuda.get_device_name(0)
+            print(f"Using CUDA: {gpu_name}")
+        else:
+            device = torch.device('cpu')
+            print("CUDA not available, using CPU")
+    
+    # MPS (Apple Silicon)
+    elif requested_device == 'mps':
+        if torch.backends.mps.is_available():
+            device = torch.device('mps')
+            print("Using MPS (Apple Silicon)")
+        else:
+            device = torch.device('cpu')
+            print("MPS not available, using CPU")
+    
+    # CPU
+    elif requested_device == 'cpu':
+        device = torch.device('cpu')
+        print("Using CPU")
+    
+    # Unknown
+    else:
+        device = torch.device('cpu')
+        print(f"Unknown device '{requested_device}', using CPU")
+    
+    return device
+
+
+def setup_experiment(config):
+    setup_seed(config.experiment.seed)
+    device = setup_device(config.environment.device)
+    return device
+
+
+def load_model(model: torch.nn.Module, checkpoint_path: str, 
+               device: torch.device) -> torch.nn.Module:
+    if not os.path.exists(checkpoint_path):
+        raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
+    
+    # Load checkpoint
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    
+    # Handle different checkpoint formats
+    if isinstance(checkpoint, dict):
+        if 'model_state_dict' in checkpoint:
+            state_dict = checkpoint['model_state_dict']
+        elif 'state_dict' in checkpoint:
+            state_dict = checkpoint['state_dict']
+        else:
+            state_dict = checkpoint
+    else:
+        state_dict = checkpoint
+    
+    # Load into model
+    model.load_state_dict(state_dict)
+    model.to(device)
+    model.eval()
+    
+    print(f"Model loaded: {checkpoint_path}")
+    return model
+
+
+def save_model(model: torch.nn.Module, save_path: str, 
+               epoch: Optional[int] = None, optimizer: Optional[torch.optim.Optimizer] = None):
+
+    checkpoint = {
+        'model_state_dict': model.state_dict()
+    }
+    
+    if epoch is not None:
+        checkpoint['epoch'] = epoch
+    
+    if optimizer is not None:
+        checkpoint['optimizer_state_dict'] = optimizer.state_dict()
+    
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    torch.save(checkpoint, save_path)
+    print(f"Model saved: {save_path}")
 
 
 def save_plot(targets: np.ndarray, outputs: np.ndarray, 

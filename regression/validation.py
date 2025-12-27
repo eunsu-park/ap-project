@@ -9,32 +9,26 @@ import hydra
 import torch
 import torch.nn as nn
 
-from config import Config
-from utils import setup_experiment, get_logger
-from datasets import create_dataloader
-from models import create_model
+from utils import setup_experiment
+from pipeline import create_dataloader
+from networks import create_model
 from validators import Validator
 
 
 @hydra.main(config_path="./configs", version_base=None)
-def main(hydra_cfg):
-    """Run validation process."""
-    # Convert Hydra config to structured config
-    config = Config.from_hydra(hydra_cfg)
+def main(config):
+
+    device = setup_experiment(config)
     
     # Setup experiment (logger, seed, device)
     output_dir = config.validation.output_dir
     os.makedirs(output_dir, exist_ok=True)
     
-    setup_experiment(config, log_dir=output_dir)
-    logger = get_logger()
-    
-    # Override phase to validation
-    config.experiment.phase = 'validation'
+    logger = None
     
     # Create validation dataloader
-    validation_dataloader = create_dataloader(config)
-    logger.info(
+    validation_dataloader = create_dataloader(config, 'validation')
+    print(
         f"Validation dataloader: {len(validation_dataloader.dataset)} samples, "
         f"{len(validation_dataloader)} batches"
     )
@@ -42,11 +36,11 @@ def main(hydra_cfg):
     # Create model
     model = create_model(config).to(config.environment.device)
     total_params = sum(p.numel() for p in model.parameters())
-    logger.info(f"Model: {total_params:,} parameters")
+    print(f"Model: {total_params:,} parameters")
     
     # Load checkpoint
     checkpoint_path = config.validation.checkpoint_path
-    logger.info(f"Loading checkpoint: {checkpoint_path}")
+    print(f"Loading checkpoint: {checkpoint_path}")
     
     checkpoint = torch.load(checkpoint_path, map_location=config.environment.device)
     if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
@@ -55,7 +49,7 @@ def main(hydra_cfg):
         model.load_state_dict(checkpoint)
     
     model.eval()
-    logger.info("Checkpoint loaded successfully")
+    print("Checkpoint loaded successfully")
     
     # Create loss criterion
     criterion = nn.MSELoss()
@@ -89,7 +83,7 @@ def main(hydra_cfg):
     print(f"Results saved to: {results['output_directory']}")
     print("=" * 80 + "\n")
     
-    logger.info("Validation completed successfully")
+    print("Validation completed successfully")
     
     return results
 
