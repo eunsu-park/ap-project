@@ -132,10 +132,15 @@ with open(default_config_path, 'r') as f:
 submitter = WulverSubmitter(WULVER_CONFIG)
 commands = []
 
+I = 6
 for T in range(3): # TARGET DAYS
     for S in range(NUM_SUBSAMPLING) : 
         config = default_config.copy()
-        config["experiment"]["experiment_name"] = f"SINGLE_{T+1}_{S:02d}"
+        config["experiment"]["experiment_name"] = f"SINGLE_{I}_{T+1}_{S:02d}"
+
+        config["experiment"]["sdo_start_index"] = 40 - (I*4)
+        config["experiment"]["input_start_index"] = 80 - (I*8) # 80-48=32
+
         config["experiment"]["target_days"] = [T+1]
         config["experiment"]["subsample_index"] = S
 
