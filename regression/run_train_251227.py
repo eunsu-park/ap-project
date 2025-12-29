@@ -132,7 +132,7 @@ with open(default_config_path, 'r') as f:
 submitter = WulverSubmitter(WULVER_CONFIG)
 commands = []
 
-I = 6
+I = 5
 for T in range(3): # TARGET DAYS
     for S in range(NUM_SUBSAMPLING) : 
         config = default_config.copy()
