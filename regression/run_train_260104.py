@@ -104,36 +104,49 @@ class WulverSubmitter:
             time.sleep(5)
 
 
-WULVER_CONFIG = {
-    "OUT_DIR": f"{HOME}/ap/renew/train_outs",
-    "ERR_DIR": f"{HOME}/ap/renew/train_errs",
-    "PARTITION": "gpu",
-    "NUM_NODE": 1,
-    "NUM_CPU_CORE": 8,
-    "NUM_GPU": 1,
-    "GPU": "gpu",
-    # "GPU": "gpu:a100_10g",
-    "MEM": 8000,
-    # "QOS": "standard",
-    "QOS": "low",
-    # "QOS": "high_wangj",
-    "PI": "wangj",
-    "TIME": "3-00:00:00" # D-HH:MM:SS"
-}
+
 
 default_config_path = "./configs/wulver.yaml"
 with open(default_config_path, 'r') as f:
     default_config = yaml.safe_load(f)
 
-submitter = WulverSubmitter(WULVER_CONFIG)
-commands = []
 
 INPUT_DAYS = [1, 2, 3, 4, 5, 6, 7]
 TARGET_DAYS = [[1], [2], [3]]
 NUM_SUBSAMPLING = 14
 
+N_SUBMIT = 0
+
 for I in INPUT_DAYS:
     for T in range(3):
+
+        if N_SUBMIT == 0 :
+            QOS = "high_wangj"
+        elif N_SUBMIT > 0 and N_SUBMIT < 9 :
+            QOS = "low"
+        else :
+            QOS = "standard"
+
+        WULVER_CONFIG = {
+            "OUT_DIR": f"{HOME}/ap/renew/train_outs",
+            "ERR_DIR": f"{HOME}/ap/renew/train_errs",
+            "PARTITION": "gpu",
+            "NUM_NODE": 1,
+            "NUM_CPU_CORE": 8,
+            "NUM_GPU": 1,
+            "GPU": "gpu",
+            # "GPU": "gpu:a100_10g",
+            "MEM": 8000,
+            # "QOS": "standard",
+            # "QOS": "low",
+            # "QOS": "high_wangj",
+            "QOS": QOS,
+            "PI": "wangj",
+            "TIME": "3-00:00:00" # D-HH:MM:SS"
+        }
+
+        submitter = WulverSubmitter(WULVER_CONFIG)
+
         commands = []
         for S in range(NUM_SUBSAMPLING) : 
             config = default_config.copy()
@@ -162,4 +175,6 @@ for I in INPUT_DAYS:
         submitter.submit(job_name = job_name,
                         commands = commands,
                         script_path = script_path,
-                        dry_run=False)
+                        dry_run=True)
+
+        N_SUBMIT += 1
