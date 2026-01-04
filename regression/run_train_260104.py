@@ -15,10 +15,6 @@ CONTRASTIVE = [
 ]   
 
 
-INPUT_DAYS = [1, 2, 3, 4, 5, 6, 7]
-TARGET_DAYS = [[1], [2], [3]]
-NUM_SUBSAMPLING = 14
-
 """
 SLURM job submission utilities.
 
@@ -119,10 +115,10 @@ WULVER_CONFIG = {
     # "GPU": "gpu:a100_10g",
     "MEM": 8000,
     # "QOS": "standard",
-    # "QOS": "low",
-    "QOS": "high_wangj",
+    "QOS": "low",
+    # "QOS": "high_wangj",
     "PI": "wangj",
-    "TIME": "10-00:00:00" # D-HH:MM:SS"
+    "TIME": "3-00:00:00" # D-HH:MM:SS"
 }
 
 default_config_path = "./configs/wulver.yaml"
@@ -132,31 +128,38 @@ with open(default_config_path, 'r') as f:
 submitter = WulverSubmitter(WULVER_CONFIG)
 commands = []
 
-I = 4
-for T in range(3): # TARGET DAYS
-    for S in range(NUM_SUBSAMPLING) : 
-        config = default_config.copy()
-        config["experiment"]["experiment_name"] = f"SINGLE_{I}_{T+1}_{S:02d}"
+INPUT_DAYS = [1, 2, 3, 4, 5, 6, 7]
+TARGET_DAYS = [[1], [2], [3]]
+NUM_SUBSAMPLING = 14
 
-        config["experiment"]["sdo_start_index"] = 40 - (I*4)
-        config["experiment"]["input_start_index"] = 80 - (I*8) # 80-48=32
+for I in INPUT_DAYS:
+    for T in range(3):
+        commands = []
+        for S in range(NUM_SUBSAMPLING) : 
+            config = default_config.copy()
+            experiment_name = f"SINGLE_{I}_{T+1}_{S:02d}"
+            config["experiment"]["experiment_name"] = experiment_name
 
-        config["experiment"]["target_days"] = [T+1]
-        config["experiment"]["subsample_index"] = S
+            config["experiment"]["enable_undersampling"] = True
+            config["experiment"]["subsample_index"] = S
 
-        config["data"]["target_start_index"] = 80 + (T * 8)
-        config["data"]["target_end_index"] = 80 + ((T+1) * 8)
+            config["data"]["sdo_start_index"] = 40 - (I*4)
+            config["data"]["input_start_index"] = 80 - (I*8) # 80-48=32
 
-        config_name = f"AUTO-TRAIN_{config["experiment"]["experiment_name"]}.yaml"
-        config_path = f"./configs/{config_name}"
-        config_path = os.path.abspath(config_path)
-        with open(config_path, 'w') as f:
-            yaml.dump(config, f)
-        commands.append(f"{PYTHON_PATH} train.py --config-name {config_name}")
+            config["data"]["target_days"] = [T+1]
+            config["data"]["target_start_index"] = 80 + (T * 8)
+            config["data"]["target_end_index"] = 80 + ((T+1) * 8)
 
-job_name = f"AUTO-TRAIN-AP"
-script_path = f"{job_name}.sh"
-submitter.submit(job_name = job_name,
-                commands = commands,
-                script_path = script_path,
-                dry_run=False)
+            config_name = f"AUTO-TRAIN_{experiment_name}.yaml"
+            config_path = f"./configs/{config_name}"
+            config_path = os.path.abspath(config_path)
+            with open(config_path, 'w') as f:
+                yaml.dump(config, f)
+            commands.append(f"{PYTHON_PATH} train.py --config-name {config_name}")
+
+        job_name = f"AUTO-TRAIN_{I}_{T+1}_UNDER"
+        script_path = f"{job_name}.sh"
+        submitter.submit(job_name = job_name,
+                        commands = commands,
+                        script_path = script_path,
+                        dry_run=True)
