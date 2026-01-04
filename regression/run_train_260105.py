@@ -132,7 +132,7 @@ WULVER_CONFIG = {
 submitter = WulverSubmitter(WULVER_CONFIG)
 
 
-INPUT_DAYS = [1, 2, 3, 4, 5, 6, 7]
+INPUT_DAYS = [2, 3, 7]
 NUM_SUBSAMPLING = 8 # 6
 
 for I in INPUT_DAYS:
