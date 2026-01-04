@@ -175,6 +175,6 @@ for I in INPUT_DAYS:
         submitter.submit(job_name = job_name,
                         commands = commands,
                         script_path = script_path,
-                        dry_run=True)
+                        dry_run=False)
 
         N_SUBMIT += 1
