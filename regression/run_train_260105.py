@@ -124,7 +124,7 @@ WULVER_CONFIG = {
     # "QOS": "standard",
     # "QOS": "low",
     # "QOS": "high_wangj",
-    "QOS": "standard"
+    "QOS": "standard",
     "PI": "wangj",
     "TIME": "3-00:00:00" # D-HH:MM:SS"
 }
