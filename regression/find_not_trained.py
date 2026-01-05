@@ -31,3 +31,9 @@ def find_multi_13():
             check_path = f"{dir_path}/checkpoint/model_final.pth"
             if not os.path.exists(check_path):
                 print(f"{dir_path}: not trained")
+
+
+if __name__ == "__main__":
+    find_single()
+    find_multi_12()
+    find_multi_13()
