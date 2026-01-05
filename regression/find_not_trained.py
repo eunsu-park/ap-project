@@ -5,6 +5,7 @@ import os
 RESULT_ROOT = "/home/hl545/ap/renew/results"
 
 def find_single():
+    result = []
     PREFIX = "SINGLE"
     for I in range(7):
         for T in range(3):
@@ -13,8 +14,11 @@ def find_single():
                 check_path = f"{dir_path}/checkpoint/model_final.pth"
                 if not os.path.exists(check_path):
                     print(f"{dir_path}: not trained")
+                    result.append(dir_path)
+    return result
 
 def find_multi_12():
+    result = []
     PREFIX = "MULTITARGET"
     for I in range(7):
         for S in range(8):
@@ -22,8 +26,11 @@ def find_multi_12():
             check_path = f"{dir_path}/checkpoint/model_final.pth"
             if not os.path.exists(check_path):
                 print(f"{dir_path}: not trained")
+                result.append(dir_path)
+    return result
 
 def find_multi_13():
+    result = []
     PREFIX = "MULTITARGET"
     for I in range(7):
         for S in range(6):
@@ -31,9 +38,12 @@ def find_multi_13():
             check_path = f"{dir_path}/checkpoint/model_final.pth"
             if not os.path.exists(check_path):
                 print(f"{dir_path}: not trained")
-
+                result.append(dir_path)
+    return result
 
 if __name__ == "__main__":
-    find_single()
-    find_multi_12()
-    find_multi_13()
+    result = []
+    result += find_single()
+    result += find_multi_12()
+    result += find_multi_13()
+    print(len(result))
