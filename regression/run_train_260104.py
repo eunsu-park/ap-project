@@ -104,6 +104,26 @@ class WulverSubmitter:
             time.sleep(5)
 
 
+WULVER_CONFIG = {
+    "OUT_DIR": f"{HOME}/ap/renew/train_outs",
+    "ERR_DIR": f"{HOME}/ap/renew/train_errs",
+    "PARTITION": "gpu",
+    "NUM_NODE": 1,
+    "NUM_CPU_CORE": 8,
+    "NUM_GPU": 1,
+    "GPU": "gpu",
+    # "GPU": "gpu:a100_10g",
+    "MEM": 8000,
+    # "QOS": "standard",
+    # "QOS": "low",
+    # "QOS": "high_wangj",
+    "QOS": "standard",
+    "PI": "wangj",
+    "TIME": "3-00:00:00" # D-HH:MM:SS"
+}
+
+submitter = WulverSubmitter(WULVER_CONFIG)
+
 
 
 default_config_path = "./configs/wulver.yaml"
@@ -111,70 +131,43 @@ with open(default_config_path, 'r') as f:
     default_config = yaml.safe_load(f)
 
 
-INPUT_DAYS = [1, 2, 3, 4, 5, 6, 7]
+IT = ((2, 3), (3, 1), (3, 2), (3, 3), (4, 3), (7, 3))
+
+INPUT_DAYS = [2, 3]
 TARGET_DAYS = [[1], [2], [3]]
 NUM_SUBSAMPLING = 14
 
 N_SUBMIT = 0
 
-for I in INPUT_DAYS:
-    for T in range(3):
+for (I, T) in IT :
+    T -= 1
 
-        if N_SUBMIT == 0 :
-            QOS = "high_wangj"
-        elif N_SUBMIT > 0 and N_SUBMIT < 9 :
-            QOS = "low"
-        else :
-            QOS = "standard"
+    commands = []
+    for S in range(NUM_SUBSAMPLING) : 
+        config = default_config.copy()
+        experiment_name = f"SINGLE_{I}_{T+1}_{S:02d}"
+        config["experiment"]["experiment_name"] = experiment_name
 
-        WULVER_CONFIG = {
-            "OUT_DIR": f"{HOME}/ap/renew/train_outs",
-            "ERR_DIR": f"{HOME}/ap/renew/train_errs",
-            "PARTITION": "gpu",
-            "NUM_NODE": 1,
-            "NUM_CPU_CORE": 8,
-            "NUM_GPU": 1,
-            "GPU": "gpu",
-            # "GPU": "gpu:a100_10g",
-            "MEM": 8000,
-            # "QOS": "standard",
-            # "QOS": "low",
-            # "QOS": "high_wangj",
-            "QOS": QOS,
-            "PI": "wangj",
-            "TIME": "3-00:00:00" # D-HH:MM:SS"
-        }
+        config["experiment"]["enable_undersampling"] = True
+        config["experiment"]["subsample_index"] = S
 
-        submitter = WulverSubmitter(WULVER_CONFIG)
+        config["data"]["sdo_start_index"] = 40 - (I*4)
+        config["data"]["input_start_index"] = 80 - (I*8) # 80-48=32
 
-        commands = []
-        for S in range(NUM_SUBSAMPLING) : 
-            config = default_config.copy()
-            experiment_name = f"SINGLE_{I}_{T+1}_{S:02d}"
-            config["experiment"]["experiment_name"] = experiment_name
+        config["data"]["target_days"] = [T+1]
+        config["data"]["target_start_index"] = 80 + (T * 8)
+        config["data"]["target_end_index"] = 80 + ((T+1) * 8)
 
-            config["experiment"]["enable_undersampling"] = True
-            config["experiment"]["subsample_index"] = S
+        config_name = f"AUTO-TRAIN_{experiment_name}.yaml"
+        config_path = f"./configs/{config_name}"
+        config_path = os.path.abspath(config_path)
+        with open(config_path, 'w') as f:
+            yaml.dump(config, f)
+        commands.append(f"{PYTHON_PATH} train.py --config-name {config_name}")
 
-            config["data"]["sdo_start_index"] = 40 - (I*4)
-            config["data"]["input_start_index"] = 80 - (I*8) # 80-48=32
-
-            config["data"]["target_days"] = [T+1]
-            config["data"]["target_start_index"] = 80 + (T * 8)
-            config["data"]["target_end_index"] = 80 + ((T+1) * 8)
-
-            config_name = f"AUTO-TRAIN_{experiment_name}.yaml"
-            config_path = f"./configs/{config_name}"
-            config_path = os.path.abspath(config_path)
-            with open(config_path, 'w') as f:
-                yaml.dump(config, f)
-            commands.append(f"{PYTHON_PATH} train.py --config-name {config_name}")
-
-        job_name = f"AUTO-TRAIN_{I}_{T+1}_UNDER"
-        script_path = f"{job_name}.sh"
-        submitter.submit(job_name = job_name,
-                        commands = commands,
-                        script_path = script_path,
-                        dry_run=False)
-
-        N_SUBMIT += 1
+    job_name = f"AUTO-TRAIN_{I}_{T+1}_UNDER"
+    script_path = f"{job_name}.sh"
+    submitter.submit(job_name = job_name,
+                    commands = commands,
+                    script_path = script_path,
+                    dry_run=False)
