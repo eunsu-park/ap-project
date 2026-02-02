@@ -1,44 +1,35 @@
-"""Model architectures for multi-modal solar wind prediction.
-
-This module contains:
-- ConvLSTMCell, ConvLSTMModel: For processing SDO image sequences
-- PositionalEncoding, TransformerEncoderModel: For processing OMNI time series
-- CrossModalAttention, CrossModalFusion: For fusing modalities
-- ConvLSTMOnlyModel: SDO-only model
-- TransformerOnlyModel: OMNI-only model
-- MultiModalModel: Fusion model combining both modalities
-- create_model: Factory function to create model based on config
-"""
-
+# python standard library
 from typing import Tuple, Optional, Union
 import math
 
+# third-party library
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import hydra
 
+# custom library
 
-class ConvLSTMCell(nn.Module):
-    """Convolutional LSTM cell for spatial-temporal processing."""
 
-    def __init__(self, input_channels: int, hidden_channels: int,
+class ConvLSTMCell(nn.Module):    
+    def __init__(self, input_channels: int, hidden_channels: int, 
                  kernel_size: int = 3, bias: bool = True):
         super().__init__()
-
+        
         if input_channels <= 0 or hidden_channels <= 0:
             raise ValueError("Input and hidden channels must be positive")
         if kernel_size <= 0 or kernel_size % 2 == 0:
             raise ValueError("Kernel size must be positive and odd")
-
+        
         self.input_channels = input_channels
         self.hidden_channels = hidden_channels
         self.kernel_size = kernel_size
         self.padding = kernel_size // 2
         self.bias = bias
-
+        
+        # Convolutional layers for input-to-hidden and hidden-to-hidden
         self.conv_ih = nn.Conv2d(
-            input_channels, 4 * hidden_channels,
+            input_channels, 4 * hidden_channels, 
             kernel_size, padding=self.padding, bias=bias
         )
         self.conv_hh = nn.Conv2d(
@@ -373,147 +364,23 @@ class CrossModalFusion(nn.Module):
         return output
 
 
-class ConvLSTMOnlyModel(nn.Module):
-    """SDO image-only model using ConvLSTM.
-
-    Uses only SDO image sequences for prediction, ignoring OMNI time series.
-    """
-
-    def __init__(
-        self,
-        num_target_variables: int,
-        target_sequence_length: int,
-        d_model: int,
-        convlstm_input_channels: int,
-        convlstm_hidden_channels: int,
-        convlstm_kernel_size: int,
-        convlstm_num_layers: int,
-        dropout: float = 0.1
-    ):
-        super().__init__()
-
-        self.num_target_variables = num_target_variables
-        self.target_sequence_length = target_sequence_length
-
-        self.convlstm_model = ConvLSTMModel(
-            input_channels=convlstm_input_channels,
-            hidden_channels=convlstm_hidden_channels,
-            kernel_size=convlstm_kernel_size,
-            num_layers=convlstm_num_layers,
-            output_dim=d_model
-        )
-
-        self.regression_head = nn.Sequential(
-            nn.Linear(d_model, d_model // 2),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(d_model // 2, target_sequence_length * num_target_variables)
-        )
-
-    def forward(
-        self,
-        solar_wind_input: Optional[torch.Tensor],
-        image_input: torch.Tensor,
-        return_features: bool = False
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, None, torch.Tensor]]:
-        # Only use image_input, ignore solar_wind_input
-        convlstm_features = self.convlstm_model(image_input)
-
-        predictions = self.regression_head(convlstm_features)
-        output = predictions.reshape(
-            predictions.size(0), self.target_sequence_length, self.num_target_variables
-        )
-
-        if return_features:
-            return output, None, convlstm_features
-        return output
-
-
-class TransformerOnlyModel(nn.Module):
-    """OMNI time series-only model using Transformer.
-
-    Uses only OMNI time series for prediction, ignoring SDO images.
-    """
-
-    def __init__(
-        self,
-        num_input_variables: int,
-        input_sequence_length: int,
-        num_target_variables: int,
-        target_sequence_length: int,
-        d_model: int,
-        transformer_nhead: int,
-        transformer_num_layers: int,
-        transformer_dim_feedforward: int,
-        transformer_dropout: float
-    ):
-        super().__init__()
-
-        self.num_target_variables = num_target_variables
-        self.target_sequence_length = target_sequence_length
-
-        self.transformer_model = TransformerEncoderModel(
-            num_input_variables=num_input_variables,
-            input_sequence_length=input_sequence_length,
-            d_model=d_model,
-            nhead=transformer_nhead,
-            num_layers=transformer_num_layers,
-            dim_feedforward=transformer_dim_feedforward,
-            dropout=transformer_dropout
-        )
-
-        self.regression_head = nn.Sequential(
-            nn.Linear(d_model, d_model // 2),
-            nn.ReLU(),
-            nn.Dropout(transformer_dropout),
-            nn.Linear(d_model // 2, target_sequence_length * num_target_variables)
-        )
-
-    def forward(
-        self,
-        solar_wind_input: torch.Tensor,
-        image_input: Optional[torch.Tensor] = None,
-        return_features: bool = False
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, None]]:
-        # Only use solar_wind_input, ignore image_input
-        transformer_features = self.transformer_model(solar_wind_input)
-
-        predictions = self.regression_head(transformer_features)
-        output = predictions.reshape(
-            predictions.size(0), self.target_sequence_length, self.num_target_variables
-        )
-
-        if return_features:
-            return output, transformer_features, None
-        return output
-
-
 class MultiModalModel(nn.Module):
-    """Fusion model combining both OMNI time series and SDO images."""
-
     def __init__(
-        self,
-        num_input_variables: int,
-        input_sequence_length: int,
-        num_target_variables: int,
-        target_sequence_length: int,
-        transformer_d_model: int,
-        transformer_nhead: int,
-        transformer_num_layers: int,
-        transformer_dim_feedforward: int,
-        transformer_dropout: float,
-        convlstm_input_channels: int,
-        convlstm_hidden_channels: int,
-        convlstm_kernel_size: int,
-        convlstm_num_layers: int,
-        fusion_num_heads: int = 4,
-        fusion_dropout: float = 0.1
-    ):
+        self, num_input_variables: int, input_sequence_length: int,
+        num_target_variables: int, target_sequence_length: int,
+        transformer_d_model: int, transformer_nhead: int, transformer_num_layers: int,
+        transformer_dim_feedforward: int, transformer_dropout: float,
+        convlstm_input_channels: int, convlstm_hidden_channels: int,
+        convlstm_kernel_size: int, convlstm_num_layers: int,
+        fusion_num_heads: int = 4, fusion_dropout: float = 0.1
+        ):
         super().__init__()
 
+        # Validate input parameters
         if num_target_variables <= 0 or target_sequence_length <= 0:
-            raise ValueError("Target variables and sequence length must be positive")
+            raise ValueError("Target variables and number of groups must be positive")
 
+        # Transformer model for solar wind time series
         self.transformer_model = TransformerEncoderModel(
             num_input_variables=num_input_variables,
             input_sequence_length=input_sequence_length,
@@ -521,23 +388,25 @@ class MultiModalModel(nn.Module):
             nhead=transformer_nhead,
             num_layers=transformer_num_layers,
             dim_feedforward=transformer_dim_feedforward,
-            dropout=transformer_dropout
-        )
+            dropout=transformer_dropout)
 
+        # ConvLSTM model for image sequences
         self.convlstm_model = ConvLSTMModel(
             input_channels=convlstm_input_channels,
             hidden_channels=convlstm_hidden_channels,
             kernel_size=convlstm_kernel_size,
             num_layers=convlstm_num_layers,
-            output_dim=transformer_d_model
-        )
+            output_dim=transformer_d_model)  # Same dimension as transformer
 
+        # Cross-modal fusion module
         self.cross_modal_fusion = CrossModalFusion(
             feature_dim=transformer_d_model,
             num_heads=fusion_num_heads,
             dropout=fusion_dropout
         )
-
+        
+        # Regression head - outputs continuous values (no final activation)
+        # Output shape: (batch_size, target_sequence_length, num_target_variables)
         self.regression_head = nn.Sequential(
             nn.Linear(transformer_d_model, transformer_d_model // 2),
             nn.ReLU(),
@@ -549,113 +418,82 @@ class MultiModalModel(nn.Module):
         self.target_sequence_length = target_sequence_length
 
     def forward(
-        self,
-        solar_wind_input: torch.Tensor,
-        image_input: torch.Tensor,
+        self, 
+        solar_wind_input: torch.Tensor, 
+        image_input: torch.Tensor, 
         return_features: bool = False
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
+        # Validate input tensors
         if solar_wind_input is None or image_input is None:
             raise ValueError("Both solar_wind_input and image_input must be provided")
-
+        
         if solar_wind_input.size(0) != image_input.size(0):
-            raise ValueError(f"Batch sizes must match: {solar_wind_input.size(0)} vs {image_input.size(0)}")
+            raise ValueError(f"Batch sizes must match: solar_wind={solar_wind_input.size(0)}, image={image_input.size(0)}")
 
+        # Extract features from each modality
         transformer_features = self.transformer_model(solar_wind_input)
         convlstm_features = self.convlstm_model(image_input)
-
+        
+        # Apply cross-modal fusion
         fused_features = self.cross_modal_fusion(transformer_features, convlstm_features)
-
+        
+        # Generate regression predictions
         predictions = self.regression_head(fused_features)
-        output = predictions.reshape(
-            predictions.size(0), self.target_sequence_length, self.num_target_variables
-        )
-
+        
+        # Reshape to (batch, target_sequence_length, num_target_variables)
+        output = predictions.reshape(predictions.size(0), self.target_sequence_length, self.num_target_variables)
+        
+        # # Optional: Clamp values to valid range [0, 400] during inference
+        # if not self.training:
+        #     output = torch.clamp(output, min=0, max=400)
+        
+        # Return features if requested (for contrastive loss)
         if return_features:
             return output, transformer_features, convlstm_features
-
+        
         return output
 
 
 def create_model(config):
-    """Create model based on configuration.
-
-    Args:
-        config: Hydra configuration object with model settings.
-
-    Returns:
-        Model instance based on config.model.model_type:
-        - "convlstm": ConvLSTMOnlyModel (SDO only)
-        - "transformer": TransformerOnlyModel (OMNI only)
-        - "fusion" (default): MultiModalModel (both modalities)
-    """
-    # Get model type, default to "fusion" for backward compatibility
-    model_type = getattr(config.model, 'model_type', 'fusion')
-
+    """Create MultiModalModel from configuration."""
+    
     num_input_variables = len(config.data.input_variables)
     input_sequence_length = config.data.input_end_index - config.data.input_start_index
+
     num_target_variables = len(config.data.target_variables)
     target_sequence_length = config.data.target_end_index - config.data.target_start_index
 
-    print(f"Creating {model_type} model: Output shape (batch, {target_sequence_length}, {num_target_variables})")
-
-    if model_type == "convlstm":
-        return ConvLSTMOnlyModel(
-            num_target_variables=num_target_variables,
-            target_sequence_length=target_sequence_length,
-            d_model=config.model.transformer_d_model,
-            convlstm_input_channels=config.model.convlstm_input_channels,
-            convlstm_hidden_channels=config.model.convlstm_hidden_channels,
-            convlstm_kernel_size=config.model.convlstm_kernel_size,
-            convlstm_num_layers=config.model.convlstm_num_layers,
-            dropout=config.model.fusion_dropout
-        )
-
-    elif model_type == "transformer":
-        return TransformerOnlyModel(
-            num_input_variables=num_input_variables,
-            input_sequence_length=input_sequence_length,
-            num_target_variables=num_target_variables,
-            target_sequence_length=target_sequence_length,
-            d_model=config.model.transformer_d_model,
-            transformer_nhead=config.model.transformer_nhead,
-            transformer_num_layers=config.model.transformer_num_layers,
-            transformer_dim_feedforward=config.model.transformer_dim_feedforward,
-            transformer_dropout=config.model.transformer_dropout
-        )
-
-    elif model_type == "fusion":
-        return MultiModalModel(
-            num_input_variables=num_input_variables,
-            input_sequence_length=input_sequence_length,
-            num_target_variables=num_target_variables,
-            target_sequence_length=target_sequence_length,
-            transformer_d_model=config.model.transformer_d_model,
-            transformer_nhead=config.model.transformer_nhead,
-            transformer_num_layers=config.model.transformer_num_layers,
-            transformer_dim_feedforward=config.model.transformer_dim_feedforward,
-            transformer_dropout=config.model.transformer_dropout,
-            convlstm_input_channels=config.model.convlstm_input_channels,
-            convlstm_hidden_channels=config.model.convlstm_hidden_channels,
-            convlstm_kernel_size=config.model.convlstm_kernel_size,
-            convlstm_num_layers=config.model.convlstm_num_layers,
-            fusion_num_heads=config.model.fusion_num_heads,
-            fusion_dropout=config.model.fusion_dropout
-        )
-
-    else:
-        raise ValueError(f"Unknown model_type: {model_type}. Choose from: convlstm, transformer, fusion")
+    print(
+        f"Creating MultiModalModel: "
+        f"Output shape (batch, {target_sequence_length}, {num_target_variables})"
+    )
+    
+    return MultiModalModel(
+        num_input_variables=num_input_variables,
+        input_sequence_length=input_sequence_length,
+        num_target_variables=num_target_variables,
+        target_sequence_length=target_sequence_length,
+        transformer_d_model=config.model.transformer_d_model,
+        transformer_nhead=config.model.transformer_nhead,
+        transformer_num_layers=config.model.transformer_num_layers,
+        transformer_dim_feedforward=config.model.transformer_dim_feedforward,
+        transformer_dropout=config.model.transformer_dropout,
+        convlstm_input_channels=config.model.convlstm_input_channels,
+        convlstm_hidden_channels=config.model.convlstm_hidden_channels,
+        convlstm_kernel_size=config.model.convlstm_kernel_size,
+        convlstm_num_layers=config.model.convlstm_num_layers,
+        fusion_num_heads=config.model.fusion_num_heads,
+        fusion_dropout=config.model.fusion_dropout
+    )
 
 
 @hydra.main(config_path="./configs", version_base=None)
 def main(config):
-    """Test model creation and forward pass."""
     model = create_model(config)
     print(model)
 
-    batch_size = config.experiment.batch_size
-
     sdo_shape = (
-        batch_size,
+        config.experiment.batch_size,
         len(config.data.sdo_wavelengths),
         config.data.sdo_end_index - config.data.sdo_start_index,
         config.data.sdo_image_size,
@@ -663,26 +501,27 @@ def main(config):
     )
 
     inputs_shape = (
-        batch_size,
+        config.experiment.batch_size,
         config.data.input_end_index - config.data.input_start_index,
         len(config.data.input_variables)
     )
 
+    targets_shape = (
+        config.experiment.batch_size,
+        config.data.target_end_index - config.data.target_start_index,
+        len(config.data.target_variables)
+    )
+
     sdo = torch.randn(size=sdo_shape)
+    print(f"sdo: {sdo.shape}")
     inputs = torch.randn(size=inputs_shape)
+    print(f"inputs: {inputs.shape}")
+    targets = torch.randn(size=targets_shape)
+    print(f"targets: {targets.shape}")
 
-    print(f"SDO shape: {sdo.shape}")
-    print(f"OMNI inputs shape: {inputs.shape}")
+    outputs, transformer_features, convlstm_features = model(inputs, sdo, return_features=True)
+    print(f"outputs: {outputs.shape}")
+    
 
-    # Forward pass
-    model.eval()
-    with torch.no_grad():
-        outputs, tf_feat, cl_feat = model(inputs, sdo, return_features=True)
-
-    print(f"Outputs shape: {outputs.shape}")
-    print(f"Transformer features: {tf_feat.shape if tf_feat is not None else None}")
-    print(f"ConvLSTM features: {cl_feat.shape if cl_feat is not None else None}")
-
-
-if __name__ == "__main__":
+if __name__ == "__main__" :
     main()

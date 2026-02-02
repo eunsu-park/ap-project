@@ -14,9 +14,9 @@ hydra:
     chdir: false
 
 experiment:
-  experiment_name: 'local'
+  experiment_name: 'MULTITARGET_6_1-3_00'
   seed: 250104
-  batch_size: 4
+  batch_size: 1
   enable_undersampling: true
   num_subsample: 14
   subsample_index: 0
@@ -27,7 +27,6 @@ experiment:
    - 4
    - 5
    - 6
-   - 7
   target_days:
     - 1
     - 2
@@ -48,7 +47,7 @@ data:
     - 'aia_211'
     - 'hmi_magnetogram'
   sdo_image_size: 64
-  sdo_start_index: 12
+  sdo_start_index: 16
   sdo_end_index: 40
 
   input_variables:
@@ -64,7 +63,7 @@ data:
       - 'dst_index_nt'
       - 'f10_7_index_sfu'
       - 'sunspot_number_r'
-  input_start_index: 24
+  input_start_index: 32
   input_end_index: 80
 
   target_variables:
@@ -73,9 +72,6 @@ data:
   target_end_index: 104
 
 model:
-  # Model type: "fusion" (default), "transformer", "convlstm"
-  model_type: 'fusion'
-
   # Transformer configuration
   transformer_d_model: 256
   transformer_nhead: 8
@@ -107,8 +103,8 @@ training:
   model_save_freq: 1
 
 validation:
-  checkpoint_path: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth'
-  output_dir: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/validation/epoch_0010'
+  checkpoint_path: '/opt/projects/10_Harim/01_AP/04_Result/MULTITARGET_6_1-3_00/checkpoint/model_epoch0080.pth'
+  output_dir: '/Volumes/work/NJIT/01_AP/06_Saliency/MULTITARGET_6_1-3_00/epoch_0080'
   compute_alignment: true  # Whether to compute feature alignment (cosine similarity)
   save_plots: true  # Whether to save individual validation plots
 

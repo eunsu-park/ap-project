@@ -1,0 +1,94 @@
+data:
+  data_dir_name: oversampling_13
+  dataset_name: three_twelve_to_one
+  input_end_index: 80
+  input_start_index: 24
+  input_variables:
+  - bx_gse_gsm_nt
+  - by_gsm_nt
+  - bz_gsm_nt
+  - b_magnitude_of_avg_field_vector_nt
+  - plasma_flow_speed_km_s
+  - proton_density_n_cm3
+  - proton_temperature_k
+  - kp_index
+  - ap_index_nt
+  - dst_index_nt
+  - f10_7_index_sfu
+  - sunspot_number_r
+  sdo_end_index: 40
+  sdo_image_size: 64
+  sdo_start_index: 12
+  sdo_wavelengths:
+  - aia_193
+  - aia_211
+  - hmi_magnetogram
+  target_end_index: 104
+  target_start_index: 80
+  target_variables:
+  - ap_index_nt
+defaults:
+- _self_
+- override hydra/job_logging: none
+- override hydra/hydra_logging: none
+environment:
+  data_root: /mmfs1/home/hl545/ap/renew/datasets
+  device: cuda
+  num_workers: 2
+  save_root: /mmfs1/home/hl545/ap/renew/results
+experiment:
+  batch_size: 4
+  enable_undersampling: true
+  experiment_name: TRANSFORMER_7_3_0
+  input_days:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  num_subsample: 6
+  seed: 250104
+  subsample_index: 0
+  target_days:
+  - 1
+  - 2
+  - 3
+hydra:
+  job:
+    chdir: false
+  output_subdir: null
+  run:
+    dir: .
+mcd:
+  checkpoint_path: /opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth
+  output_dir: /opt/projects/10_Harim/01_AP/04_Result/local_dev/mcd/epoch_0010
+model:
+  convlstm_hidden_channels: 64
+  convlstm_input_channels: 3
+  convlstm_kernel_size: 3
+  convlstm_num_layers: 2
+  fusion_dropout: 0.1
+  fusion_num_heads: 4
+  model_type: transformer
+  transformer_d_model: 256
+  transformer_dim_feedforward: 512
+  transformer_dropout: 0.1
+  transformer_nhead: 8
+  transformer_num_layers: 3
+training:
+  contrastive_loss_type: consistency
+  infonce_temperature: 0.3
+  lambda_contrastive: 0.1
+  learning_rate: 0.0002
+  model_save_freq: 20
+  num_epochs: 100
+  optimizer: adam
+  regression_loss_type: mse
+  report_freq: 100
+validation:
+  checkpoint_path: /opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth
+  compute_alignment: true
+  output_dir: /opt/projects/10_Harim/01_AP/04_Result/local_dev/validation/epoch_0010
+  save_plots: true

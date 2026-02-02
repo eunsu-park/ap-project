@@ -1,0 +1,40 @@
+#!/bin/bash -l
+
+#SBATCH --job-name=AP_TRANSFORMER
+#SBATCH --output=/home/hl545/ap/renew/train_outs/%x.%j.out
+#SBATCH --error=/home/hl545/ap/renew/train_errs/%x.%j.err
+#SBATCH --partition=gpu
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --gres=gpu:1
+#SBATCH --mem=8000M
+#SBATCH --qos=high_wangj
+#SBATCH --account=wangj
+#SBATCH --time=7-00:00:00
+
+module purge > /dev/null 2>&1
+module load wulver # Load slurm, easybuild
+conda activate ap
+
+# Transformer models
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_1_1_4
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_1_2_6
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_1_3_3
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_2_1_8
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_2_2_6
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_2_3_3
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_3_1_2
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_3_2_1
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_3_3_1
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_4_1_9
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_4_2_2
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_4_3_3
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_5_1_1
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_5_2_6
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_5_3_2
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_6_1_13
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_6_2_7
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_6_3_5
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_7_1_6
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_7_2_0
+/home/hl545/miniconda3/envs/ap/bin/python train.py --config-name TRANSFORMER_7_3_0

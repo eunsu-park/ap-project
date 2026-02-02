@@ -73,6 +73,9 @@ data:
   target_end_index: 104
 
 model:
+  # Model type: "fusion" (default), "transformer", "convlstm"
+  model_type: 'fusion'
+
   # Transformer configuration
   transformer_d_model: 256
   transformer_nhead: 8
@@ -108,3 +111,7 @@ validation:
   output_dir: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/validation/epoch_0010'
   compute_alignment: true  # Whether to compute feature alignment (cosine similarity)
   save_plots: true  # Whether to save individual validation plots
+
+mcd:
+  checkpoint_path: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth'
+  output_dir: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/mcd/epoch_0010'

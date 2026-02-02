@@ -1,5 +1,5 @@
-# Enhanced Multi-Modal Model Configuration (v2)
-# Updated for refactored codebase with pipeline_v2, train_v2, validation_v2
+# Enhanced Multi-Modal Model Configuration
+# Configuration for transformer + ConvLSTM + CrossModalFusion architecture
 
 defaults:
   - _self_
@@ -14,7 +14,7 @@ hydra:
     chdir: false
 
 experiment:
-  experiment_name: 'local'
+  experiment_name: 'wulver'
   seed: 250104
   batch_size: 4
   enable_undersampling: true
@@ -34,10 +34,10 @@ experiment:
     - 3
 
 environment:
-  device: 'mps'
-  data_root: '/opt/projects/10_Harim/01_AP/03_Dataset'
-  save_root: '/opt/projects/10_Harim/01_AP/04_Result'
-  num_workers: 8
+  device: 'cuda'
+  data_root: '/mmfs1/home/hl545/ap/renew/datasets'
+  save_root: '/mmfs1/home/hl545/ap/renew/results'
+  num_workers: 2
 
 data:
   data_dir_name: 'oversampling_13'
@@ -73,9 +73,6 @@ data:
   target_end_index: 104
 
 model:
-  # Model type: "fusion" (default), "transformer", "convlstm"
-  model_type: 'fusion'
-
   # Transformer configuration
   transformer_d_model: 256
   transformer_nhead: 8
@@ -102,16 +99,12 @@ training:
   optimizer: 'adam'  # 'adam' or 'sgd'
   learning_rate: 0.0002
 
-  num_epochs: 10
+  num_epochs: 100
   report_freq: 100
-  model_save_freq: 1
+  model_save_freq: 20
 
 validation:
   checkpoint_path: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth'
   output_dir: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/validation/epoch_0010'
   compute_alignment: true  # Whether to compute feature alignment (cosine similarity)
   save_plots: true  # Whether to save individual validation plots
-
-mcd:
-  checkpoint_path: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth'
-  output_dir: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/mcd/epoch_0010'

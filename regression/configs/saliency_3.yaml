@@ -14,29 +14,22 @@ hydra:
     chdir: false
 
 experiment:
-  experiment_name: 'local'
+  experiment_name: 'MULTITARGET_4_1-2_02'
   seed: 250104
-  batch_size: 4
+  batch_size: 1
   enable_undersampling: true
-  num_subsample: 14
-  subsample_index: 0
+  num_subsample: 8
+  subsample_index: 2
   input_days:
-   - 1
-   - 2
-   - 3
    - 4
-   - 5
-   - 6
-   - 7
   target_days:
     - 1
     - 2
-    - 3
 
 environment:
-  device: 'mps'
-  data_root: '/opt/projects/10_Harim/01_AP/03_Dataset'
-  save_root: '/opt/projects/10_Harim/01_AP/04_Result'
+  device: 'cuda'
+  data_root: '/mmfs1/home/hl545/ap/renew/datasets'
+  save_root: '/mmfs1/home/hl545/ap/renew/results'
   num_workers: 8
 
 data:
@@ -48,7 +41,7 @@ data:
     - 'aia_211'
     - 'hmi_magnetogram'
   sdo_image_size: 64
-  sdo_start_index: 12
+  sdo_start_index: 24
   sdo_end_index: 40
 
   input_variables:
@@ -64,18 +57,15 @@ data:
       - 'dst_index_nt'
       - 'f10_7_index_sfu'
       - 'sunspot_number_r'
-  input_start_index: 24
+  input_start_index: 48
   input_end_index: 80
 
   target_variables:
     - 'ap_index_nt'
   target_start_index: 80
-  target_end_index: 104
+  target_end_index: 96
 
 model:
-  # Model type: "fusion" (default), "transformer", "convlstm"
-  model_type: 'fusion'
-
   # Transformer configuration
   transformer_d_model: 256
   transformer_nhead: 8
@@ -107,11 +97,26 @@ training:
   model_save_freq: 1
 
 validation:
-  checkpoint_path: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth'
-  output_dir: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/validation/epoch_0010'
+  checkpoint_path: '/home/hl545/ap/renew/results/MULTITARGET_4_1-2_02/checkpoint/model_epoch0040.pth'
+  output_dir: '/home/hl545/ap/renew/results/MULTITARGET_4_1-2_02/saliency/epoch_0040'
   compute_alignment: true  # Whether to compute feature alignment (cosine similarity)
   save_plots: true  # Whether to save individual validation plots
 
 mcd:
-  checkpoint_path: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth'
-  output_dir: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/mcd/epoch_0010'
+  checkpoint_path: '/home/hl545/ap/renew/results/MULTITARGET_4_1-2_02/checkpoint/model_epoch0040.pth'
+  output_dir: '/home/hl545/ap/renew/results/MULTITARGET_4_1-2_02/mcd/epoch_0040'
+
+# Attention-specific settings (optional)
+attention:
+  # Which layer to analyze primarily (-1 = last layer)
+  target_layer: -1
+  
+  # Temporal importance calculation method
+  importance_method: 'incoming'  # 'incoming' or 'outgoing'
+  
+  # Create visualizations
+  create_plots: false  # Set to true for plots (slower)
+  
+  # Analysis options
+  analyze_all_layers: true
+  compute_statistics: true
