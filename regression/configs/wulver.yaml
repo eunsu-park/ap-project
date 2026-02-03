@@ -107,11 +107,22 @@ training:
   model_save_freq: 20
 
 validation:
-  checkpoint_path: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth'
-  output_dir: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/validation/epoch_0010'
-  compute_alignment: true  # Whether to compute feature alignment (cosine similarity)
-  save_plots: true  # Whether to save individual validation plots
+  checkpoint_path: '/mmfs1/home/hl545/ap/renew/results/${experiment.experiment_name}/checkpoint/model_epoch0100.pth'
+  output_dir: '/mmfs1/home/hl545/ap/renew/results/${experiment.experiment_name}/validation/epoch_0100'
+  compute_alignment: true
+  save_plots: true
 
 mcd:
-  checkpoint_path: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth'
-  output_dir: '/opt/projects/10_Harim/01_AP/04_Result/local_dev/mcd/epoch_0010'
+  checkpoint_path: '/mmfs1/home/hl545/ap/renew/results/${experiment.experiment_name}/checkpoint/model_epoch0100.pth'
+  output_dir: '/mmfs1/home/hl545/ap/renew/results/${experiment.experiment_name}/mcd/epoch_0100'
+
+saliency:
+  checkpoint_path: '/mmfs1/home/hl545/ap/renew/results/${experiment.experiment_name}/checkpoint/model_epoch0100.pth'
+  output_dir: '/mmfs1/home/hl545/ap/renew/results/${experiment.experiment_name}/saliency/epoch_0100'
+  n_steps: 30
+  target_variable: 0
+
+attention:
+  checkpoint_path: '/mmfs1/home/hl545/ap/renew/results/${experiment.experiment_name}/checkpoint/model_epoch0100.pth'
+  output_dir: '/mmfs1/home/hl545/ap/renew/results/${experiment.experiment_name}/attention/epoch_0100'
+  create_plots: false

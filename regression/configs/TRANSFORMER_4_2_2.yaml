@@ -1,3 +1,7 @@
+attention:
+  checkpoint_path: /mmfs1/home/hl545/ap/renew/results/TRANSFORMER_4_2_2/checkpoint/model_epoch0100.pth
+  create_plots: false
+  output_dir: /mmfs1/home/hl545/ap/renew/results/TRANSFORMER_4_2_2/attention/epoch_0100
 data:
   data_dir_name: oversampling_13
   dataset_name: three_twelve_to_one
@@ -58,8 +62,8 @@ hydra:
   run:
     dir: .
 mcd:
-  checkpoint_path: /opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth
-  output_dir: /opt/projects/10_Harim/01_AP/04_Result/local_dev/mcd/epoch_0010
+  checkpoint_path: /mmfs1/home/hl545/ap/renew/results/TRANSFORMER_4_2_2/checkpoint/model_epoch0100.pth
+  output_dir: /mmfs1/home/hl545/ap/renew/results/TRANSFORMER_4_2_2/mcd/epoch_0100
 model:
   convlstm_hidden_channels: 64
   convlstm_input_channels: 3
@@ -73,6 +77,11 @@ model:
   transformer_dropout: 0.1
   transformer_nhead: 8
   transformer_num_layers: 3
+saliency:
+  checkpoint_path: /mmfs1/home/hl545/ap/renew/results/TRANSFORMER_4_2_2/checkpoint/model_epoch0100.pth
+  n_steps: 30
+  output_dir: /mmfs1/home/hl545/ap/renew/results/TRANSFORMER_4_2_2/saliency/epoch_0100
+  target_variable: 0
 training:
   contrastive_loss_type: consistency
   infonce_temperature: 0.3
@@ -84,7 +93,7 @@ training:
   regression_loss_type: mse
   report_freq: 100
 validation:
-  checkpoint_path: /opt/projects/10_Harim/01_AP/04_Result/local_dev/checkpoint/model_epoch0010.pth
+  checkpoint_path: /mmfs1/home/hl545/ap/renew/results/TRANSFORMER_4_2_2/checkpoint/model_epoch0100.pth
   compute_alignment: true
-  output_dir: /opt/projects/10_Harim/01_AP/04_Result/local_dev/validation/epoch_0010
+  output_dir: /mmfs1/home/hl545/ap/renew/results/TRANSFORMER_4_2_2/validation/epoch_0100
   save_plots: true

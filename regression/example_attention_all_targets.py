@@ -286,22 +286,36 @@ print(f"Attention entropy: {{attention_entropy:.4f}}")
 @hydra.main(config_path="./configs", config_name="attention_0", version_base=None)
 def main(config: DictConfig):
     """메인 실행 함수"""
-    
+
     # ========================================
     # 설정
     # ========================================
-    checkpoint_path = config.validation.checkpoint_path
-    
+    checkpoint_path = config.attention.checkpoint_path
+
     # Device 설정
-    device = config["environment"]["device"]  # or "cuda" or "cpu"
-    
+    device = config["environment"]["device"]
+
     # 출력 디렉토리
-    output_dir = Path(config.validation.output_dir)
+    output_dir = Path(config.attention.output_dir)
     output_dir.mkdir(exist_ok=True, parents=True)
-    
+
+    # Model type
+    model_type = config.model.model_type
+
+    # ConvLSTM-only models don't have transformer attention
+    if model_type == 'convlstm':
+        print("=" * 70)
+        print("⚠️  ATTENTION ANALYSIS NOT AVAILABLE FOR CONVLSTM-ONLY MODEL")
+        print("=" * 70)
+        print("ConvLSTM models don't have Transformer attention weights.")
+        print("Use saliency analysis (IG) instead for ConvLSTM interpretability.")
+        print()
+        return
+
     print("=" * 70)
     print("ATTENTION ANALYSIS - ALL BATCHES MODE")
     print("=" * 70)
+    print(f"Model type: {model_type}")
     print(f"Device: {device}")
     print(f"Output directory: {output_dir}")
     print(f"Checkpoint: {checkpoint_path}")
@@ -332,9 +346,9 @@ def main(config: DictConfig):
     # ========================================
     MAX_BATCHES = len(dataloader)
     # MAX_BATCHES = 3  # 테스트용
-    
-    # 시각화 생성 여부
-    CREATE_PLOTS = False  # True로 설정하면 plot도 생성 (시간 소요)
+
+    # 시각화 생성 여부 (from config)
+    CREATE_PLOTS = config.attention.create_plots
     
     # ========================================
     # 배치 처리

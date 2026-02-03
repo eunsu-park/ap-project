@@ -203,7 +203,10 @@ class Trainer:
         self.contrastive_criterion = contrastive_criterion
         self.device = device
         self.logger = logger
-        
+
+        # Model type for handling single-modality models
+        self.model_type = getattr(config.model, 'model_type', 'fusion')
+
         # Components
         self.metrics_tracker = MetricsTracker()
         self.checkpoint_manager = CheckpointManager(
@@ -246,8 +249,14 @@ class Trainer:
         
         # Compute losses
         reg_loss = self.criterion(outputs, targets)
-        cont_loss = self.contrastive_criterion(transformer_features, convlstm_features)
-        total_loss = reg_loss + self.lambda_contrastive * cont_loss
+
+        # Contrastive loss only for fusion model (requires both features)
+        if self.model_type == 'fusion' and transformer_features is not None and convlstm_features is not None:
+            cont_loss = self.contrastive_criterion(transformer_features, convlstm_features)
+            total_loss = reg_loss + self.lambda_contrastive * cont_loss
+        else:
+            cont_loss = torch.tensor(0.0, device=self.device)
+            total_loss = reg_loss
         
         # Backward pass
         total_loss.backward()
@@ -263,15 +272,19 @@ class Trainer:
             mae = F.l1_loss(outputs, targets).item()
             mse = F.mse_loss(outputs, targets).item()
             rmse = np.sqrt(mse)
-            
-            cosine_sim = F.cosine_similarity(
-                transformer_features, convlstm_features, dim=1
-            ).mean().item()
-        
+
+            # Cosine similarity only for fusion model (requires both features)
+            if self.model_type == 'fusion' and transformer_features is not None and convlstm_features is not None:
+                cosine_sim = F.cosine_similarity(
+                    transformer_features, convlstm_features, dim=1
+                ).mean().item()
+            else:
+                cosine_sim = 0.0
+
         return {
             'loss': total_loss.item(),
             'reg_loss': reg_loss.item(),
-            'cont_loss': cont_loss.item(),
+            'cont_loss': cont_loss.item() if isinstance(cont_loss, torch.Tensor) else cont_loss,
             'mae': mae,
             'rmse': rmse,
             'cosine_sim': cosine_sim

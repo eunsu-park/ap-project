@@ -22,6 +22,15 @@ def main(config):
     output_dir = config.mcd.output_dir
     os.makedirs(output_dir, exist_ok=True)
 
+    # Model type
+    model_type = config.model.model_type
+
+    print("=" * 70)
+    print("MONTE CARLO DROPOUT - UNCERTAINTY ESTIMATION")
+    print("=" * 70)
+    print(f"Model type: {model_type}")
+    print(f"Output directory: {output_dir}")
+
     # Create validation dataloader
     validation_dataloader = create_dataloader(config, 'validation')
     print(

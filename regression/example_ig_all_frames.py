@@ -278,24 +278,29 @@ print(f"Target {{most_temporal_target}} uses temporal info most")
 @hydra.main(config_path="./configs", config_name="config", version_base=None)
 def main(config: DictConfig):
     """메인 실행 함수"""
-    
+
     # ========================================
     # 설정
     # ========================================
-    checkpoint_path = config.validation.checkpoint_path
-    
+    checkpoint_path = config.saliency.checkpoint_path
+
     # Device 설정
     device = config["environment"]["device"]
-    
+
     # 출력 디렉토리
-    output_dir = Path(config.validation.output_dir)
+    output_dir = Path(config.saliency.output_dir)
     output_dir.mkdir(exist_ok=True, parents=True)
-    
+
+    # Model type
+    model_type = config.model.model_type
+
     print("=" * 70)
     print("IG GENERATION - ALL TARGETS MODE")
     print("=" * 70)
+    print(f"Model type: {model_type}")
     print(f"Device: {device}")
     print(f"Output directory: {output_dir}")
+    print(f"Checkpoint: {checkpoint_path}")
     print(f"Image size: 64×64")
     print()
     print("⚠️  NOTE: This will compute IG for ALL target indices")
@@ -324,13 +329,13 @@ def main(config: DictConfig):
     # ========================================
     MAX_BATCHES = len(dataloader)
     # MAX_BATCHES = 3  # 처리할 배치 수
-    
-    # 분석 파라미터
-    target_variable = 0  # Kp, Dst, etc.
+
+    # 분석 파라미터 (from config)
+    target_variable = config.saliency.target_variable
     channel_names = ['193Å', '211Å', 'magnetogram']
-    
-    # IG 파라미터
-    N_STEPS = 30  # 50 steps recommended
+
+    # IG 파라미터 (from config)
+    N_STEPS = config.saliency.n_steps
     
     # ========================================
     # 배치 처리
