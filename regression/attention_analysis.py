@@ -106,13 +106,18 @@ class AttentionExtractor:
             transformer_features = transformer.output_projection(x)
             
             # ================================================================
-            # 4. Rest of the model (ConvLSTM + Fusion + Regression)
+            # 4. Rest of the model (model-type dependent)
             # ================================================================
-            convlstm_features = self.model.convlstm_model(image_input)
-            fused_features = self.model.cross_modal_fusion(
-                transformer_features, convlstm_features
-            )
-            predictions = self.model.regression_head(fused_features)
+            if hasattr(self.model, 'convlstm_model') and hasattr(self.model, 'cross_modal_fusion'):
+                # Fusion model: ConvLSTM + Cross-modal fusion + Regression
+                convlstm_features = self.model.convlstm_model(image_input)
+                fused_features = self.model.cross_modal_fusion(
+                    transformer_features, convlstm_features
+                )
+                predictions = self.model.regression_head(fused_features)
+            else:
+                # Transformer-only model: direct regression
+                predictions = self.model.regression_head(transformer_features)
             
             # Reshape output
             output = predictions.reshape(
