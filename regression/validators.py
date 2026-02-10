@@ -333,16 +333,22 @@ class Validator:
         self.device = device
         self.logger = logger
         self.save_plots = save_plots
-        
+
+        # Model type for handling single-modality models
+        self.model_type = getattr(config.model, 'model_type', 'fusion')
+
         # Components
         self.metrics_aggregator = MetricsAggregator(config.data.target_variables)
         self.results_writer = ResultsWriter(
             output_dir=config.validation.output_dir,
             logger=logger
         )
-        
-        # Compute alignment flag
-        self.compute_alignment = getattr(config.validation, 'compute_alignment', True)
+
+        # Compute alignment only for fusion model
+        self.compute_alignment = (
+            getattr(config.validation, 'compute_alignment', True)
+            and self.model_type == 'fusion'
+        )
     
     def validate_batch(self, data_dict: Dict[str, torch.Tensor]) -> Dict[str, Any]:
         """Validate single batch.
