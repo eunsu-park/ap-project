@@ -41,7 +41,7 @@ environment:
   num_workers: 2
   save_root: /mmfs1/home/hl545/ap/renew/results
 experiment:
-  batch_size: 4
+  batch_size: 1
   enable_undersampling: true
   experiment_name: TRANSFORMER_4_1_9
   input_days:

@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-#SBATCH --job-name=AP_CONVLSTM
+#SBATCH --job-name=AP_MCD
 #SBATCH --output=/home/hl545/ap/renew/train_outs/%x.%j.out
 #SBATCH --error=/home/hl545/ap/renew/train_errs/%x.%j.err
 #SBATCH --partition=gpu
