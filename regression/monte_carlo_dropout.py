@@ -45,7 +45,7 @@ def main(config):
     checkpoint_path = config.mcd.checkpoint_path
     print(f"Loading checkpoint: {checkpoint_path}")
     
-    checkpoint = torch.load(checkpoint_path, map_location=config.environment.device)
+    checkpoint = torch.load(checkpoint_path, map_location='cpu')
     if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
         model.load_state_dict(checkpoint['model_state_dict'])
     else:

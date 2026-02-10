@@ -42,7 +42,7 @@ def load_trained_model(checkpoint_path: str, config: DictConfig, device: str = '
     """
     model = create_model(config)
     
-    checkpoint = torch.load(checkpoint_path, map_location=device)
+    checkpoint = torch.load(checkpoint_path, map_location='cpu')
     
     if 'model_state_dict' in checkpoint:
         model.load_state_dict(checkpoint['model_state_dict'])
