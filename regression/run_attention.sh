@@ -1,4 +1,20 @@
-#!/bin/bash
+#!/bin/bash -l
+
+#SBATCH --job-name=AP_CONVLSTM
+#SBATCH --output=/home/hl545/ap/renew/train_outs/%x.%j.out
+#SBATCH --error=/home/hl545/ap/renew/train_errs/%x.%j.err
+#SBATCH --partition=gpu
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --gres=gpu:1
+#SBATCH --mem=8000M
+#SBATCH --qos=high_wangj
+#SBATCH --account=wangj
+#SBATCH --time=09:00:00
+
+module purge > /dev/null 2>&1
+module load wulver # Load slurm, easybuild
+conda activate ap
 
 # Attention analysis for Transformer models only
 # Note: ConvLSTM models don't have attention weights (will be skipped automatically)

@@ -10,7 +10,7 @@
 #SBATCH --mem=8000M
 #SBATCH --qos=high_wangj
 #SBATCH --account=wangj
-#SBATCH --time=7-00:00:00
+#SBATCH --time=09:00:00
 
 module purge > /dev/null 2>&1
 module load wulver # Load slurm, easybuild
