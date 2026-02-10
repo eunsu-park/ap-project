@@ -26,6 +26,7 @@ from omegaconf import DictConfig
 from networks import create_model
 from pipeline import create_dataloader
 from saliency_maps import SaliencyExtractor
+from utils import setup_device
 
 
 def load_trained_model(checkpoint_path: str, config: DictConfig, device: str = 'cuda'):
@@ -285,7 +286,7 @@ def main(config: DictConfig):
     checkpoint_path = config.saliency.checkpoint_path
 
     # Device 설정
-    device = config["environment"]["device"]
+    device = setup_device(config["environment"]["device"])
 
     # 출력 디렉토리
     output_dir = Path(config.saliency.output_dir)

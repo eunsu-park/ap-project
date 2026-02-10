@@ -34,32 +34,32 @@ def main(config):
     )
     
     # Create model
-    model = create_model(config).to(config.environment.device)
+    model = create_model(config).to(device)
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Model: {total_params:,} parameters")
-    
+
     # Load checkpoint
     checkpoint_path = config.validation.checkpoint_path
     print(f"Loading checkpoint: {checkpoint_path}")
-    
+
     checkpoint = torch.load(checkpoint_path, map_location='cpu')
     if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
         model.load_state_dict(checkpoint['model_state_dict'])
     else:
         model.load_state_dict(checkpoint)
-    
+
     model.eval()
     print("Checkpoint loaded successfully")
-    
+
     # Create loss criterion
     criterion = nn.MSELoss()
-    
+
     # Create validator
     validator = Validator(
         config=config,
         model=model,
         criterion=criterion,
-        device=torch.device(config.environment.device),
+        device=device,
         logger=logger,
         save_plots=config.validation.save_plots
     )

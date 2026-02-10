@@ -28,13 +28,19 @@ def setup_seed(seed: int = 250104) -> None:
     print(f"Random seed: {seed}")
 
 
-def setup_device(requested_device) -> torch.device:    
+def setup_device(requested_device) -> torch.device:
     # CUDA
     if requested_device == 'cuda':
         if torch.cuda.is_available():
-            device = torch.device('cuda')
-            gpu_name = torch.cuda.get_device_name(0)
-            print(f"Using CUDA: {gpu_name}")
+            try:
+                # Test actual GPU availability (driver may report available but GPU busy)
+                torch.zeros(1, device='cuda')
+                device = torch.device('cuda')
+                gpu_name = torch.cuda.get_device_name(0)
+                print(f"Using CUDA: {gpu_name}")
+            except (RuntimeError, torch.cuda.CudaError):
+                device = torch.device('cpu')
+                print("CUDA device busy/unavailable, falling back to CPU")
         else:
             device = torch.device('cpu')
             print("CUDA not available, using CPU")

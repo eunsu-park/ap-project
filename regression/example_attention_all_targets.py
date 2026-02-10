@@ -34,6 +34,7 @@ sys.path.append('.')
 from networks import create_model
 from pipeline import create_dataloader
 from attention_analysis import AttentionExtractor
+from utils import setup_device
 
 
 def load_trained_model(checkpoint_path: str, config: DictConfig, device: str = 'cuda'):
@@ -293,7 +294,7 @@ def main(config: DictConfig):
     checkpoint_path = config.attention.checkpoint_path
 
     # Device 설정
-    device = config["environment"]["device"]
+    device = setup_device(config["environment"]["device"])
 
     # 출력 디렉토리
     output_dir = Path(config.attention.output_dir)
