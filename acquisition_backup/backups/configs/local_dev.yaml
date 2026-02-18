@@ -1,9 +1,0 @@
-
-
-sdo_fits :
-  csv_dir : ""
-  date_start : ""
-  eate_end : ""
-  save_root : ""
-  email : ""
-  
